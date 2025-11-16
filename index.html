@@ -1,0 +1,2033 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>CoAST – Calculator of All Structural Tuning</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<style>
+  :root {
+    --bg: #020617;
+    --panel: #020617;
+    --accent: #38bdf8;
+    --accent2: #22c55e;
+    --border: #1f2937;
+    --text: #e5e7ff;
+    --muted: #9ca3c7;
+    --danger: #f97373;
+    --radius: 12px;
+  }
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    padding: 0;
+    background:
+      radial-gradient(circle at top left, #0f172a 0, #020617 40%, #000814 100%);
+    color: var(--text);
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    font-size: 15px;
+  }
+
+  h1, h2, h3 {
+    margin: 0 0 0.4em;
+    letter-spacing: 0.04em;
+  }
+
+  h1 {
+    font-size: 1.7rem;
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+  }
+
+  .logo-coast {
+    font-weight: 800;
+    letter-spacing: 0.18em;
+  }
+
+  .pill {
+    font-size: 0.7rem;
+    padding: 3px 8px;
+    border-radius: 999px;
+    border: 1px solid rgba(56,189,248,0.35);
+    color: var(--accent);
+    background: rgba(15,23,42,0.9);
+  }
+
+  .shell {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 16px;
+  }
+
+  .muted {
+    color: var(--muted);
+    font-size: 0.85rem;
+  }
+
+  button {
+    border-radius: 999px;
+    border: none;
+    padding: 8px 18px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: linear-gradient(135deg, #22c55e, #38bdf8);
+    color: white;
+    box-shadow: 0 10px 22px rgba(56,189,248,0.4);
+  }
+  button.secondary {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--muted);
+    box-shadow: none;
+  }
+  button.danger {
+    background: linear-gradient(135deg, #f97373, #fb7185);
+    box-shadow: 0 10px 22px rgba(248,113,113,0.4);
+  }
+  button:disabled {
+    opacity: 0.5;
+    cursor: default;
+    box-shadow: none;
+  }
+
+  input[type="text"],
+  input[type="number"],
+  select,
+  textarea {
+    background: #020617;
+    color: var(--text);
+    border-radius: 999px;
+    border: 1px solid var(--border);
+    padding: 6px 10px;
+    font-size: 0.85rem;
+    font-family: inherit;
+    box-shadow: inset 0 0 0 1px #000, inset 0 6px 12px rgba(0,0,0,0.7);
+  }
+
+  textarea {
+    border-radius: 10px;
+    resize: vertical;
+  }
+
+  label {
+    font-size: 0.8rem;
+    color: var(--muted);
+  }
+
+  .card {
+    background:
+      radial-gradient(circle at top left, #0b1220 0, #020617 55%);
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    padding: 14px;
+    box-shadow: 0 14px 32px rgba(0,0,0,0.55);
+  }
+
+  /* Input spaces bevel in */
+  .panel-inset {
+    border-radius: var(--radius);
+    background: #020617;
+    border: 1px solid #020617;
+    box-shadow: inset 0 0 0 1px #111827, inset 0 8px 16px rgba(0,0,0,0.7);
+    padding: 10px;
+  }
+
+  /* Output spaces bevel out */
+  .panel-raised {
+    border-radius: var(--radius);
+    background:
+      radial-gradient(circle at top left, #020617 0, #020617 55%);
+    border: 1px solid #111827;
+    box-shadow: 0 12px 26px rgba(15,23,42,0.9);
+    padding: 10px;
+  }
+
+  .start-screen {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    align-items: flex-start;
+    margin-top: 18px;
+  }
+
+  .start-options {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  .deck-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr);
+    gap: 16px;
+    margin-top: 14px;
+  }
+
+  .topbar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+    margin-bottom: 10px;
+  }
+
+  .topbar-right {
+    margin-left: auto;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+  }
+
+  .chip {
+    font-size: 0.75rem;
+    padding: 3px 8px;
+    border-radius: 999px;
+    border: 1px solid var(--border);
+    color: var(--muted);
+    background: rgba(15,23,42,0.9);
+  }
+  .chip.bad {
+    border-color: var(--danger);
+    color: var(--danger);
+  }
+  .chip.warn {
+    border-color: #facc15;
+    color: #facc15;
+  }
+  .chip.ok {
+    border-color: var(--accent2);
+    color: var(--accent2);
+  }
+
+  .row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+    margin-bottom: 6px;
+  }
+  .row > div { min-width: 120px; }
+
+  .deck-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+    justify-content: space-between;
+    margin: 10px 0 6px;
+  }
+
+  .deck-container {
+    background: rgba(15,23,42,0.9);
+    border-radius: 9px;
+    border: 1px solid var(--border);
+    max-height: 340px;
+    overflow: auto;
+    padding: 6px;
+  }
+
+  .deck-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 8px;
+  }
+
+  .deck-card {
+    background: #020617;
+    border-radius: 10px;
+    border: 1px solid #111827;
+    padding: 5px 5px 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    font-size: 0.8rem;
+    cursor: pointer;
+    overflow: hidden;
+  }
+
+  .deck-card img {
+    width: 100%;
+    border-radius: 8px;
+    display: block;
+  }
+
+  .deck-card-header {
+    display: flex;
+    justify-content: space-between;
+    gap: 4px;
+    align-items: center;
+    margin-top: 4px;
+  }
+
+  .qty-pill {
+    font-size: 0.7rem;
+    padding: 3px 7px;
+    border-radius: 999px;
+    border: 1px solid #1f2937;
+    background: rgba(15,23,42,0.9);
+  }
+
+  .pip-row {
+    display: flex;
+    gap: 3px;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+  .pip {
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.7rem;
+    border: 1px solid #0f172a;
+  }
+  .pip-W { background: #f9fafb; color: #111827; }
+  .pip-U { background: #0ea5e9; color: #0b1120; }
+  .pip-B { background: #111827; color: #e5e7eb; }
+  .pip-R { background: #ef4444; color: #111827; }
+  .pip-G { background: #16a34a; color: #022c22; }
+  .pip-C { background: #9ca3af; color: #111827; }
+
+  .deck-list-row {
+    display: grid;
+    grid-template-columns: 40px minmax(0, 1.4fr) minmax(0, 1.2fr) 70px;
+    gap: 6px;
+    padding: 4px 4px;
+    font-size: 0.8rem;
+    align-items: center;
+    border-radius: 6px;
+    cursor: pointer;
+  }
+  .deck-list-row:nth-child(odd) {
+    background: rgba(15,23,42,0.9);
+  }
+
+  .summary-panel {
+    background: rgba(15,23,42,0.95);
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    padding: 10px;
+    max-height: 260px;
+    overflow: auto;
+    font-size: 0.8rem;
+  }
+
+  .summary-section {
+    margin-bottom: 10px;
+  }
+  .summary-title {
+    font-size: 0.9rem;
+    font-weight: 600;
+    margin-bottom: 4px;
+  }
+
+  .summary-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .summary-chip {
+    padding: 4px 8px;
+    border-radius: 999px;
+    border: 1px solid var(--border);
+    background: rgba(15,23,42,0.9);
+    font-size: 0.75rem;
+  }
+
+  .summary-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.75rem;
+  }
+  .summary-table th,
+  .summary-table td {
+    border-bottom: 1px solid rgba(15,23,42,0.8);
+    padding: 3px 4px;
+    text-align: right;
+    white-space: nowrap;
+  }
+  .summary-table th:first-child,
+  .summary-table td:first-child {
+    text-align: left;
+  }
+  .summary-table tr:last-child th,
+  .summary-table tr:last-child td {
+    border-bottom: none;
+  }
+
+  .land-layout {
+    display: grid;
+    grid-template-columns: minmax(0,0.9fr) minmax(0,1.1fr);
+    gap: 16px;
+    margin-top: 14px;
+  }
+
+  .modal-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.65);
+    display: none;
+    align-items: flex-start;   /* top-align modal */
+    justify-content: center;
+    z-index: 20;
+    overflow-y: auto;          /* scroll on small screens */
+    padding: 24px 0;
+  }
+
+  .modal {
+    background:
+      radial-gradient(circle at top left, #0b1220 0, #020617 65%);
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    padding: 14px;
+    max-width: 460px;
+    width: calc(100% - 32px);
+    max-height: 90vh;          /* never exceed viewport height */
+    overflow-y: auto;          /* scroll inside modal if needed */
+    box-shadow: 0 18px 40px rgba(0,0,0,0.8);
+  }
+
+  .modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 6px;
+  }
+
+  .modal-body {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 8px;
+  }
+
+  .modal-img-wrap {
+    width: 100%;
+    text-align: center;
+  }
+  .modal-img-wrap img {
+    max-width: 100%;
+    border-radius: 10px;
+    border: 1px solid #111827;
+  }
+
+  .field-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    align-items: center;
+  }
+  .field-group > * {
+    flex: 1 1 120px;
+  }
+
+  hr {
+    border: none;
+    border-top: 1px solid var(--border);
+    margin: 6px 0;
+  }
+
+  .error {
+    color: var(--danger);
+    font-size: 0.8rem;
+    margin-top: 4px;
+  }
+
+  .plan-card {
+    margin-top: 8px;
+  }
+
+  .plan-tabs {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 6px;
+    overflow-x: auto;
+  }
+  .plan-tab-btn {
+    border-radius: 999px;
+    border: 1px solid var(--border);
+    background: rgba(15,23,42,0.9);
+    color: var(--muted);
+    font-size: 0.75rem;
+    padding: 3px 10px;
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+  .plan-tab-btn.active {
+    border-color: var(--accent);
+    color: var(--accent);
+    box-shadow: 0 0 0 1px rgba(56,189,248,0.6);
+  }
+
+  .plan-section-title {
+    font-size: 0.8rem;
+    font-weight: 600;
+    margin: 4px 0;
+  }
+
+  .pill-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 2px 8px;
+    border-radius: 999px;
+    border: 1px solid var(--border);
+    font-size: 0.7rem;
+    background: rgba(15,23,42,0.9);
+  }
+
+  .plan-hand {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
+    gap: 4px;
+    margin-top: 4px;
+  }
+  .plan-hand-card {
+    min-width: 0;
+    border-radius: 8px;
+    border: 1px solid #111827;
+    background: #020617;
+    padding: 3px 5px;
+    font-size: 0.72rem;
+  }
+
+  .tiny-label {
+    font-size: 0.7rem;
+    color: var(--muted);
+  }
+
+  .plan-metric {
+    font-size: 0.75rem;
+    margin-bottom: 2px;
+  }
+
+  .mini-summary {
+    font-size: 0.75rem;
+    background: rgba(15,23,42,0.9);
+    border-radius: 8px;
+    border: 1px solid #111827;
+    padding: 6px;
+  }
+
+  /* ===== RESPONSIVE / DEVICE-AWARE ===== */
+
+  @media (max-width: 1000px) {
+    .deck-layout {
+      grid-template-columns: 1fr;  /* stack builder & summary */
+    }
+  }
+
+  @media (max-width: 700px) {
+    .shell {
+      padding: 10px;
+    }
+    body {
+      font-size: 16px;
+    }
+    h1 {
+      font-size: 1.4rem;
+      flex-direction: column;
+      align-items: flex-start;
+    }
+    .topbar {
+      flex-direction: column;
+      align-items: stretch;
+      gap: 6px;
+    }
+    .topbar-right {
+      margin-left: 0;
+      justify-content: flex-start;
+    }
+    .deck-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr)); /* 2 cards per row on phone */
+    }
+    .deck-container {
+      max-height: none;    /* let it grow; whole page scrolls */
+    }
+    .summary-panel {
+      max-height: none;
+    }
+    button {
+      font-size: 0.9rem;
+      padding: 8px 14px;
+    }
+    input[type="text"],
+    input[type="number"],
+    select,
+    textarea {
+      font-size: 0.9rem;
+      padding: 8px 12px;
+    }
+    .deck-list-row {
+      grid-template-columns: 36px minmax(0, 1.5fr) minmax(0, 1fr) 60px;
+      font-size: 0.78rem;
+    }
+    .modal {
+      margin-top: 12px;
+      padding: 12px;
+    }
+    .modal-img-wrap img {
+      max-height: 50vh;
+      object-fit: cover;
+    }
+  }
+
+  @media (min-width: 701px) and (max-width: 1024px) {
+    .deck-layout {
+      grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr);
+      gap: 12px;
+    }
+    .deck-container {
+      max-height: 320px;
+    }
+    .deck-grid {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 8px;
+    }
+    .deck-card img {
+      max-height: 150px;
+      object-fit: cover;
+    }
+  }
+
+  @media (min-width: 1025px) {
+    .deck-layout {
+      grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr);
+      gap: 16px;
+    }
+    .deck-container {
+      max-height: 360px;
+    }
+  }
+</style>
+</head>
+<body>
+<div class="shell">
+
+  <h1>
+    <span class="logo-coast">CoaST</span>
+    <span class="pill">Calculator of All Structural Tuning</span>
+  </h1>
+  <p class="muted">
+    A deck-building sandbar: curve hills, land odds, colour sources, and plans tuned together so your mana feels as good as your spells.
+  </p>
+
+  <!-- START SCREEN -->
+  <div id="startScreen" class="card start-screen panel-raised">
+    <h2>Where are we sailing?</h2>
+    <div class="start-options">
+      <button id="btnBuild">Build a deck</button>
+      <button id="btnImport">Import a deck</button>
+      <button class="secondary" id="btnLandCalc">Land odds only</button>
+    </div>
+    <p class="muted">
+      • <b>Build</b>: search cards, tweak quantities, tag ramp/cantrips/plans, & see structure update live.<br/>
+      • <b>Import</b>: paste a list and let CoaST read its bones.<br/>
+      • <b>Land odds</b>: quick hypergeometric land calculator without a decklist.
+    </p>
+  </div>
+
+  <!-- DECK APP -->
+  <div id="deckApp" style="display:none; margin-top:10px;">
+    <div class="topbar">
+      <button class="secondary" id="backToHome">← Home</button>
+      <div>
+        <label>Deck name</label><br/>
+        <input type="text" id="deckName" placeholder="Untitled deck" />
+      </div>
+      <div>
+        <label>Format</label><br/>
+        <select id="deckFormat">
+          <option value="auto">Auto (from size)</option>
+          <option value="limited">Limited (40)</option>
+          <option value="constructed">Constructed (60)</option>
+          <option value="commander">Commander (99/100)</option>
+          <option value="custom">Custom</option>
+        </select>
+      </div>
+      <div>
+        <label>Target size</label><br/>
+        <input type="number" id="deckSizeInput" min="1" step="1" value="60" />
+      </div>
+      <div>
+        <label>Land count</label><br/>
+        <input type="number" id="landCountInput" min="0" step="1" value="24" />
+      </div>
+      <div class="topbar-right">
+        <span id="deckStatusChip" class="chip">No cards yet</span>
+        <button class="secondary" id="saveDeckBtn">Save locally</button>
+        <select id="savedDecksSelect">
+          <option value="">Saved decks…</option>
+        </select>
+        <button class="secondary" id="loadDeckBtn">Load</button>
+        <button class="danger" id="deleteDeckBtn">Delete</button>
+      </div>
+    </div>
+
+    <div class="deck-layout">
+      <!-- LEFT: Builder / Importer -->
+      <div class="card panel-inset">
+        <h2 id="builderTitle">Deck builder</h2>
+
+        <div class="row">
+          <div>
+            <label>Mode</label><br/>
+            <select id="builderMode">
+              <option value="build">Build with search</option>
+              <option value="import">Paste deck text</option>
+            </select>
+          </div>
+          <div id="cardCountSummary" class="muted"></div>
+        </div>
+
+        <!-- Build controls -->
+        <div id="buildControls" class="panel-inset" style="margin-bottom:6px;">
+          <div class="row">
+            <div style="flex: 2;">
+              <label>Add card (Scryfall search)</label><br/>
+              <input type="text" id="cardSearchName" placeholder="Lightning Bolt" />
+            </div>
+            <div>
+              <label>Qty</label><br/>
+              <input type="number" id="cardSearchQty" min="1" step="1" value="1" />
+            </div>
+            <div>
+              <label>&nbsp;</label><br/>
+              <button class="secondary" id="addCardBtn">Add</button>
+            </div>
+          </div>
+          <p class="muted">
+            Type a card name & hit Enter. Tap a card tile to open its full image & tuning profile.
+          </p>
+        </div>
+
+        <!-- Import controls -->
+        <div id="importControls" class="panel-inset" style="display:none; margin-top:4px;">
+          <label>Paste decklist</label><br/>
+          <textarea id="deckText" rows="8" spellcheck="false"
+            placeholder="4 Lightning Bolt&#10;4 Monastery Swiftspear&#10;2 Searing Blaze&#10;20 Mountain"></textarea>
+          <p class="muted">
+            Formats like <code>4 Lightning Bolt</code> or <code>4 Lightning Bolt (2XM) 123</code>. Lines starting with
+            <code>//</code> or <code>#</code> are ignored.
+          </p>
+        </div>
+
+        <!-- Deck view controls -->
+        <div class="deck-toolbar">
+          <div>
+            <label>View</label>
+            <select id="viewMode">
+              <option value="grid">Grid (images)</option>
+              <option value="list">List</option>
+            </select>
+            &nbsp;&nbsp;
+            <label>Group</label>
+            <select id="groupMode">
+              <option value="none">None</option>
+              <option value="type">Type</option>
+              <option value="mv">Mana value</option>
+              <option value="color">Color</option>
+            </select>
+          </div>
+          <div>
+            <span id="summaryBadge" class="chip">Deck: 0 cards</span>
+          </div>
+        </div>
+
+        <!-- Deck list -->
+        <div id="deckContainer" class="deck-container">
+          <div class="muted">No cards yet. Use the search above or paste a list.</div>
+        </div>
+
+        <div id="builderStatus" class="muted" style="margin-top:6px;"></div>
+      </div>
+
+      <!-- RIGHT: Summary + Plans -->
+      <div class="card panel-raised">
+        <h2>Summary & Plans</h2>
+        <div class="summary-panel" id="summary">
+          <div class="muted">(No analysis yet. Add cards or paste a deck.)</div>
+        </div>
+        <div id="summaryError" class="error"></div>
+
+        <div class="plan-card panel-raised">
+          <div class="plan-tabs">
+            <button class="plan-tab-btn active" data-plan="A">Plan A</button>
+            <button class="plan-tab-btn" data-plan="B">Plan B</button>
+            <button class="plan-tab-btn" data-plan="C">Plan C</button>
+            <button class="plan-tab-btn" data-plan="D">Plan D</button>
+            <button class="plan-tab-btn" data-plan="E">Plan E</button>
+          </div>
+          <div class="row">
+            <div>
+              <label>Target turn</label><br/>
+              <input type="number" id="planTargetTurn" min="1" step="1" value="3" />
+            </div>
+            <div class="muted" id="planMeta"></div>
+          </div>
+          <div id="planContent" style="font-size:0.8rem;">
+            <div class="muted">(Tag cards with Plan A–E in their detail panel to see plan summaries.)</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- LAND CALC APP -->
+  <div id="landCalcApp" style="display:none; margin-top:10px;">
+    <div class="topbar">
+      <button class="secondary" id="backFromLand">← Home</button>
+      <h2>Land odds calculator</h2>
+    </div>
+    <div class="land-layout">
+      <div class="card panel-inset">
+        <h3>Inputs</h3>
+        <div class="row">
+          <div>
+            <label>Deck size</label><br/>
+            <input type="number" id="lcDeckSize" min="1" step="1" value="60" />
+          </div>
+          <div>
+            <label>Land count</label><br/>
+            <input type="number" id="lcLandCount" min="0" step="1" value="24" />
+          </div>
+        </div>
+        <div class="row">
+          <div>
+            <label>Turns (max)</label><br/>
+            <input type="number" id="lcMaxTurn" min="1" step="1" value="5" />
+          </div>
+          <div>
+            <label>Play / draw</label><br/>
+            <select id="lcPlayDraw">
+              <option value="play">On the play</option>
+              <option value="draw">On the draw (+1 card)</option>
+            </select>
+          </div>
+        </div>
+        <button id="lcCalcBtn">Calculate</button>
+      </div>
+      <div class="card panel-raised">
+        <h3>Results</h3>
+        <pre id="lcResults" style="white-space:pre-wrap; font-family:'Fira Code',monospace; font-size:11px;">
+(No calculation yet.)</pre>
+      </div>
+    </div>
+  </div>
+
+  <!-- CARD PROFILE MODAL -->
+  <div id="cardModalBackdrop" class="modal-backdrop">
+    <div class="modal">
+      <div class="modal-header">
+        <div>
+          <h3 id="modalCardName">Card</h3>
+          <div class="muted" id="modalCardType"></div>
+        </div>
+        <button class="secondary" id="closeModalBtn">✕</button>
+      </div>
+
+      <div class="modal-body">
+        <div class="modal-img-wrap">
+          <img id="modalCardImg" alt="Card image" />
+        </div>
+
+        <hr />
+
+        <div class="panel-inset">
+          <div>
+            <label>Effective mana value (optional override)</label><br/>
+            <input type="number" id="modalEffMV" min="0" step="1" placeholder="Use printed MV" />
+            <p class="muted">
+              For patterns like “7-drop we actually cast for 4”. Leave empty to use printed mana value.
+            </p>
+          </div>
+
+          <hr />
+
+          <div>
+            <label>Ramp profile (optional)</label>
+            <div class="field-group" style="margin-top:4px;">
+              <div>
+                <label>Ramp type</label><br/>
+                <select id="modalRampType">
+                  <option value="">None</option>
+                  <option value="dork">Dork (creature)</option>
+                  <option value="rock">Rock (artifact)</option>
+                  <option value="land">Land tutor / ramp</option>
+                  <option value="burst">Burst (ritual)</option>
+                  <option value="cheat">Cheat (reanimate / sneak)</option>
+                </select>
+              </div>
+              <div>
+                <label>Online turn</label><br/>
+                <input type="number" id="modalRampTurn" min="1" step="1" placeholder="2" />
+              </div>
+              <div>
+                <label>Net mana</label><br/>
+                <input type="number" id="modalRampNet" step="1" placeholder="+1" />
+              </div>
+            </div>
+          </div>
+
+          <hr />
+
+          <div>
+            <label>Cantrip / selection (optional)</label>
+            <div class="field-group" style="margin-top:4px;">
+              <div>
+                <label>Extra cards seen (avg)</label><br/>
+                <input type="number" id="modalCantrip" min="0" step="0.1" placeholder="0.6" />
+              </div>
+            </div>
+            <p class="muted">
+              Rough guidelines: scry / small peeks ~0.6, Impulse-style ~1.2–1.5. Used in plan odds.
+            </p>
+          </div>
+
+          <hr />
+
+          <div>
+            <label>Plan tags</label>
+            <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:4px;">
+              <label class="pill-tag"><input type="checkbox" id="modalPlanA" /> Plan A</label>
+              <label class="pill-tag"><input type="checkbox" id="modalPlanB" /> Plan B</label>
+              <label class="pill-tag"><input type="checkbox" id="modalPlanC" /> Plan C</label>
+              <label class="pill-tag"><input type="checkbox" id="modalPlanD" /> Plan D</label>
+              <label class="pill-tag"><input type="checkbox" id="modalPlanE" /> Plan E</label>
+            </div>
+          </div>
+        </div>
+
+        <div style="margin-top:6px;" id="modalSummary" class="mini-summary">
+          (Per-card summary will appear here.)
+        </div>
+
+        <button id="modalSaveBtn" style="margin-top:6px;">Save card profile</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// ===== combinatorics / hypergeometric =====
+function comb(n, k) {
+  if (k < 0 || k > n) return 0;
+  if (k === 0 || k === n) return 1;
+  k = Math.min(k, n - k);
+  let res = 1;
+  for (let i = 1; i <= k; i++) {
+    res = res * (n - k + i) / i;
+  }
+  return res;
+}
+function hyperPMF(k, K, N, n) {
+  if (n > N) return 0;
+  const num = comb(K, k) * comb(N - K, n - k);
+  const den = comb(N, n);
+  return den === 0 ? 0 : num / den;
+}
+function probAtLeast(k, K, N, n) {
+  let p = 0;
+  const maxK = Math.min(K, n);
+  for (let i = k; i <= maxK; i++) p += hyperPMF(i, K, N, n);
+  return p;
+}
+function pct(p) {
+  if (!Number.isFinite(p)) return '0.0%';
+  return (p * 100).toFixed(1) + '%';
+}
+
+// ===== Scryfall fetch with image =====
+const scryfallCache = new Map();
+
+async function fetchCardData(name, mode = 'fuzzy') {
+  const key = (mode + ':' + name).toLowerCase();
+  if (scryfallCache.has(key)) return scryfallCache.get(key);
+
+  const param = mode === 'exact' ? 'exact' : 'fuzzy';
+  const url = `https://api.scryfall.com/cards/named?${param}=${encodeURIComponent(name)}`;
+  let data;
+  try {
+    const resp = await fetch(url);
+    if (!resp.ok) throw new Error('Scryfall error');
+    data = await resp.json();
+  } catch {
+    data = {
+      name,
+      cmc: 0,
+      type_line: 'Unknown',
+      color_identity: [],
+      mana_cost: ''
+    };
+  }
+
+  let image = null;
+  if (data.image_uris && data.image_uris.normal) {
+    image = data.image_uris.normal;
+  } else if (Array.isArray(data.card_faces) &&
+             data.card_faces[0] &&
+             data.card_faces[0].image_uris &&
+             data.card_faces[0].image_uris.normal) {
+    image = data.card_faces[0].image_uris.normal;
+  }
+  data._coast_image = image;
+
+  scryfallCache.set(key, data);
+  return data;
+}
+
+// ===== CoaST state =====
+const state = {
+  mode: 'build',
+  viewMode: 'grid',
+  groupMode: 'none',
+  deckEntries: {},
+  cardInfos: [],
+  tuning: {},
+  lastResult: null,
+  activePlan: 'A',
+  planSettings: {
+    A: { targetTurn: 3 },
+    B: { targetTurn: 3 },
+    C: { targetTurn: 3 },
+    D: { targetTurn: 3 },
+    E: { targetTurn: 3 }
+  }
+};
+
+// Anchor hills (skeletons; you can extend from your spreadsheets)
+const ANCHOR_CURVES = {
+  40: { 16: {1: 6, 2: 12, 3: 6} },
+  60: { 24: {1: 10, 2: 14, 3: 7, 4: 5, 5: 3, 6: 1} },
+  99: { 35: {1: 5, 2: 12, 3: 13, 4: 10, 5: 7, 6: 5, 7: 3, 8: 1} }
+};
+
+function getAnchor(sizeBucket, landCount) {
+  const entry = ANCHOR_CURVES[sizeBucket];
+  if (!entry) return null;
+  if (entry[landCount]) return entry[landCount];
+  const keys = Object.keys(entry).map(x => parseInt(x,10));
+  if (!keys.length) return null;
+  let nearest = keys[0];
+  for (const k of keys) {
+    if (Math.abs(k - landCount) < Math.abs(nearest - landCount)) nearest = k;
+  }
+  return entry[nearest];
+}
+
+// ===== helpers =====
+function show(id){ document.getElementById(id).style.display = ''; }
+function hide(id){ document.getElementById(id).style.display = 'none'; }
+
+function deckEntriesFromText(text) {
+  const LINE_RE = /^\s*(\d+)[xX]?\s+(.+?)(?:\s+\([^)]+\)\s+\d+)?\s*$/;
+  const lines = text.split(/\r?\n/);
+  const entries = {};
+  for (const raw of lines) {
+    const line = raw.trim();
+    if (!line) continue;
+    if (line.startsWith('#') || line.startsWith('//')) continue;
+    const m = line.match(LINE_RE);
+    if (!m) continue;
+    const qty = parseInt(m[1], 10);
+    const name = m[2].trim();
+    if (!name || !Number.isFinite(qty)) continue;
+    entries[name] = (entries[name] || 0) + qty;
+  }
+  return entries;
+}
+function deckEntriesToText(entries) {
+  return Object.keys(entries)
+    .sort((a,b)=>a.localeCompare(b))
+    .map(name => `${entries[name]} ${name}`)
+    .join('\n');
+}
+function rebuildDeckTextFromState() {
+  const textarea = document.getElementById('deckText');
+  if (!textarea) return;
+  textarea.value = deckEntriesToText(state.deckEntries);
+}
+
+// ===== main analysis =====
+async function analyzeDeck() {
+  const summaryError = document.getElementById('summaryError');
+  summaryError.textContent = '';
+
+  const names = Object.keys(state.deckEntries);
+  const summaryEl = document.getElementById('summary');
+
+  if (!names.length) {
+    state.cardInfos = [];
+    state.lastResult = null;
+    summaryEl.innerHTML = '<div class="muted">(No analysis yet. Add cards or paste a deck.)</div>';
+    renderDeckView();
+    updateDeckStatusChip();
+    renderPlanPanel();
+    return;
+  }
+
+  const cardInfos = [];
+  for (const name of names) {
+    const info = await fetchCardData(name, 'exact');
+    const profile = state.tuning[info.name] || state.tuning[name] || {};
+    const printedMV = Math.round(info.cmc || 0);
+    const effMV = (profile.effMV !== undefined && profile.effMV !== null && !Number.isNaN(profile.effMV))
+      ? Number(profile.effMV)
+      : printedMV;
+
+    cardInfos.push({
+      name: info.name || name,
+      key: info.name || name,
+      qty: state.deckEntries[name],
+      mv: effMV,
+      printed_mv: printedMV,
+      type_line: info.type_line || 'Unknown',
+      colors: info.colors || [],
+      color_identity: info.color_identity || [],
+      mana_cost: info.mana_cost || '',
+      image_url: info._coast_image || null
+    });
+  }
+  state.cardInfos = cardInfos;
+
+  const deckSize = cardInfos.reduce((a,c)=>a + c.qty, 0);
+  const landInput = parseInt(document.getElementById('landCountInput').value,10);
+  let landCount = Number.isFinite(landInput) ? landInput : 0;
+
+  if (landCount === 0) {
+    landCount = cardInfos.reduce((a,c)=>{
+      if ((c.type_line || '').toLowerCase().includes('land')) return a + c.qty;
+      return a;
+    }, 0);
+  }
+
+  const nonlandCount = deckSize - landCount;
+  const curve = {};
+  for (let mv=0; mv<=10; mv++) curve[mv] = 0;
+  let deckWeight = 0;
+
+  for (const c of cardInfos) {
+    const isLand = (c.type_line || '').toLowerCase().includes('land');
+    if (!isLand) {
+      const mv = Math.max(0, Math.min(10, c.mv));
+      curve[mv] += c.qty;
+      deckWeight += mv * c.qty;
+    }
+  }
+
+  const wpl = landCount ? deckWeight / landCount : 0;
+
+  const landTable = [];
+  for (let turn=1; turn<=5; turn++) {
+    let seen = 7 + (turn - 1);
+    if (seen > deckSize) seen = deckSize;
+    landTable.push({
+      turn,
+      seen,
+      p1: probAtLeast(1, landCount, deckSize, seen),
+      p2: probAtLeast(2, landCount, deckSize, seen),
+      p3: probAtLeast(3, landCount, deckSize, seen),
+      p4: probAtLeast(4, landCount, deckSize, seen)
+    });
+  }
+
+  let totalRampCopies = 0;
+  let totalCantripExtra = 0;
+  for (const c of cardInfos) {
+    const profile = state.tuning[c.name] || {};
+    if (profile.rampType) totalRampCopies += c.qty;
+    if (profile.cantripExtra) totalCantripExtra += profile.cantripExtra * c.qty;
+  }
+
+  const virtualLandCount = landCount + totalRampCopies;
+  const landTableVirtual = [];
+  for (let turn=1; turn<=5; turn++) {
+    let seen = 7 + (turn - 1);
+    if (seen > deckSize) seen = deckSize;
+    landTableVirtual.push({
+      turn,
+      seen,
+      p1: probAtLeast(1, virtualLandCount, deckSize, seen),
+      p2: probAtLeast(2, virtualLandCount, deckSize, seen),
+      p3: probAtLeast(3, virtualLandCount, deckSize, seen),
+      p4: probAtLeast(4, virtualLandCount, deckSize, seen)
+    });
+  }
+
+  const pipTotals = {};
+  const pipRegex = /\{([WUBRG])\}/g;
+  for (const c of cardInfos) {
+    let m;
+    const cost = c.mana_cost || '';
+    while ((m = pipRegex.exec(cost)) !== null) {
+      pipTotals[m[1]] = (pipTotals[m[1]] || 0) + c.qty;
+    }
+  }
+
+  const landSources = {};
+  for (const c of cardInfos) {
+    const isLand = (c.type_line || '').toLowerCase().includes('land');
+    if (!isLand) continue;
+    for (const col of (c.color_identity || [])) {
+      landSources[col] = (landSources[col] || 0) + c.qty;
+    }
+  }
+
+  const neededSources = {};
+  const deltaSources = {};
+  const colSet = new Set([...Object.keys(pipTotals), ...Object.keys(landSources)]);
+  for (const col of colSet) {
+    const pips = pipTotals[col] || 0;
+    const need = Math.ceil(pips / 3);
+    neededSources[col] = need;
+    const have = landSources[col] || 0;
+    deltaSources[col] = have - need;
+  }
+
+  const formatSel = document.getElementById('deckFormat').value;
+  let sizeBucket;
+  if (formatSel === 'limited') sizeBucket = 40;
+  else if (formatSel === 'constructed') sizeBucket = 60;
+  else if (formatSel === 'commander') sizeBucket = 99;
+  else {
+    if (deckSize >= 35 && deckSize <= 50) sizeBucket = 40;
+    else if (deckSize >= 51 && deckSize <= 75) sizeBucket = 60;
+    else if (deckSize >= 90 && deckSize <= 110) sizeBucket = 99;
+    else sizeBucket = null;
+  }
+
+  const anchor = sizeBucket ? getAnchor(sizeBucket, landCount) : null;
+  let anchorInfo = null;
+  if (anchor) {
+    const anchorNonlands = Object.values(anchor).reduce((a,b)=>a+b,0);
+    const scale = anchorNonlands ? (nonlandCount / anchorNonlands) : 1;
+    const scaled = {};
+    for (const [mv, qty] of Object.entries(anchor)) {
+      scaled[mv] = Math.round(qty * scale);
+    }
+    anchorInfo = {raw: anchor, scaled};
+  }
+
+  const result = {
+    deckName: document.getElementById('deckName').value || 'Untitled deck',
+    deckSize,
+    landCount,
+    nonlandCount,
+    deckWeight,
+    wpl,
+    curve,
+    landTable,
+    landTableVirtual,
+    pipTotals,
+    landSources,
+    neededSources,
+    deltaSources,
+    anchorInfo,
+    totalRampCopies,
+    totalCantripExtra
+  };
+
+  state.lastResult = result;
+  renderDeckView();
+  updateDeckStatusChip(result);
+  renderSummary(result);
+  renderPlanPanel();
+}
+
+// ===== Summary UI =====
+function renderSummary(r) {
+  const el = document.getElementById('summary');
+  if (!r) {
+    el.innerHTML = '<div class="muted">(No analysis yet. Add cards or paste a deck.)</div>';
+    return;
+  }
+
+  const wplClass =
+    r.wpl < 2.4 ? 'bad' :
+    r.wpl <= 3.6 ? 'good' : 'warn';
+
+  const landClass =
+    r.landCount <= 0 ? 'warn' :
+    'good';
+
+  let html = '';
+
+  html += '<div class="summary-section">';
+  html += '<div class="summary-title">Deck snapshot</div>';
+  html += '<div class="summary-grid">';
+  html += `<span class="summary-chip"><b>${r.deckName}</b></span>`;
+  html += `<span class="summary-chip ${landClass}">Size: ${r.deckSize} (lands ${r.landCount}, nonlands ${r.nonlandCount})</span>`;
+  html += `<span class="summary-chip ${wplClass}">Weight / land (WPL): ${r.wpl.toFixed(3)}</span>`;
+  html += `<span class="summary-chip">Ramp copies tagged: ${r.totalRampCopies}</span>`;
+  html += `<span class="summary-chip">Cantrip extra cards (sum): ${r.totalCantripExtra.toFixed(1)}</span>`;
+  html += '</div>';
+  html += '</div>';
+
+  html += '<div class="summary-section">';
+  html += '<div class="summary-title">Curve vs anchor hill</div>';
+  html += '<p class="muted">Anchor hill is a “default” curve for your deck size & land count. Green-ish rows are close; big ±Δ mean heavy or light at that mana value.</p>';
+
+  html += '<table class="summary-table"><thead><tr><th>MV</th><th>In deck</th><th>Anchor*</th><th>Δ</th></tr></thead><tbody>';
+  if (r.anchorInfo) {
+    for (let mv=0; mv<=10; mv++) {
+      const dq = r.curve[mv] || 0;
+      const aq = r.anchorInfo.scaled[mv] || 0;
+      if (!dq && !aq) continue;
+      const diff = dq - aq;
+      html += `<tr><td>${mv}</td><td>${dq}</td><td>${aq}</td><td>${diff >= 0 ? '+' : ''}${diff}</td></tr>`;
+    }
+  } else {
+    for (let mv=0; mv<=10; mv++) {
+      const dq = r.curve[mv] || 0;
+      if (!dq) continue;
+      html += `<tr><td>${mv}</td><td>${dq}</td><td>–</td><td>–</td></tr>`;
+    }
+  }
+  html += '</tbody></table>';
+  if (r.anchorInfo) {
+    html += '<p class="muted" style="margin-top:4px;">*Anchor scaled to match your total non-land card count.</p>';
+  }
+  html += '</div>';
+
+  html += '<div class="summary-section">';
+  html += '<div class="summary-title">Land availability (on the play, 7-card opener)</div>';
+  html += '<table class="summary-table"><thead><tr><th>Turn</th><th>Cards seen</th><th>P(≥1 land)</th><th>P(≥2)</th><th>P(≥3)</th><th>P(≥4)</th></tr></thead><tbody>';
+  for (const row of r.landTable) {
+    html += `<tr><td>${row.turn}</td><td>${row.seen}</td><td>${pct(row.p1)}</td><td>${pct(row.p2)}</td><td>${pct(row.p3)}</td><td>${pct(row.p4)}</td></tr>`;
+  }
+  html += '</tbody></table>';
+  html += '</div>';
+
+  html += '<div class="summary-section">';
+  html += '<div class="summary-title">Virtual lands (ramp included – rough)</div>';
+  html += '<p class="muted">Each tagged ramp card is currently counted as +1 land source. This is deliberately conservative.</p>';
+  html += '<table class="summary-table"><thead><tr><th>Turn</th><th>Cards seen</th><th>P(≥1 land)</th><th>P(≥2)</th><th>P(≥3)</th><th>P(≥4)</th></tr></thead><tbody>';
+  for (const row of r.landTableVirtual) {
+    html += `<tr><td>${row.turn}</td><td>${row.seen}</td><td>${pct(row.p1)}</td><td>${pct(row.p2)}</td><td>${pct(row.p3)}</td><td>${pct(row.p4)}</td></tr>`;
+  }
+  html += '</tbody></table>';
+  html += '</div>';
+
+  const cols = new Set([...Object.keys(r.pipTotals), ...Object.keys(r.landSources)]);
+  html += '<div class="summary-section">';
+  html += '<div class="summary-title">Colour pips vs land sources</div>';
+  if (!cols.size) {
+    html += '<p class="muted">No coloured mana symbols were detected in mana costs yet.</p>';
+  } else {
+    html += '<p class="muted">Rule of thumb: every ~3 pips of a colour wants ~1 source of that colour.</p>';
+    html += '<table class="summary-table"><thead><tr><th>Colour</th><th>Pips</th><th>Needed</th><th>Sources</th><th>Δ</th></tr></thead><tbody>';
+    for (const col of Array.from(cols).sort()) {
+      const pips = r.pipTotals[col] || 0;
+      const need = r.neededSources[col] || 0;
+      const have = r.landSources[col] || 0;
+      const d = r.deltaSources[col] || 0;
+      html += `<tr><td>${col}</td><td>${pips}</td><td>${need}</td><td>${have}</td><td>${d >= 0 ? '+' : ''}${d}</td></tr>`;
+    }
+    html += '</tbody></table>';
+  }
+  html += '</div>';
+
+  el.innerHTML = html;
+}
+
+// ===== Deck view =====
+function createPipRow(color_identity) {
+  const container = document.createElement('div');
+  container.className = 'pip-row';
+  if (!color_identity || !color_identity.length) {
+    const pip = document.createElement('span');
+    pip.className = 'pip pip-C';
+    pip.textContent = 'C';
+    container.appendChild(pip);
+    return container;
+  }
+  for (const col of color_identity) {
+    const pip = document.createElement('span');
+    pip.className = 'pip pip-' + col;
+    pip.textContent = col;
+    container.appendChild(pip);
+  }
+  return container;
+}
+
+function renderDeckView() {
+  const container = document.getElementById('deckContainer');
+  const badge = document.getElementById('summaryBadge');
+
+  if (!state.cardInfos.length) {
+    container.innerHTML = '<div class="muted">No cards yet. Use the search above or paste a list.</div>';
+    badge.textContent = 'Deck: 0 cards';
+    document.getElementById('cardCountSummary').textContent = '';
+    return;
+  }
+
+  const deckSize = state.cardInfos.reduce((a,c)=>a + c.qty, 0);
+  const landsAuto = state.cardInfos.reduce((a,c)=>{
+    if ((c.type_line || '').toLowerCase().includes('land')) return a + c.qty;
+    return a;
+  }, 0);
+
+  badge.textContent = `Deck: ${deckSize} cards (${landsAuto} land by type)`;
+  document.getElementById('cardCountSummary').textContent = `${deckSize} cards tracked (${landsAuto} lands detected by type).`;
+
+  const grouped = {};
+  const gm = state.groupMode;
+
+  function groupKey(c) {
+    if (gm === 'type') return (c.type_line || 'Other').split('—')[0].trim() || 'Other';
+    if (gm === 'mv') return 'MV ' + c.mv;
+    if (gm === 'color') {
+      if (!c.color_identity || !c.color_identity.length) return 'Colorless';
+      return c.color_identity.join('');
+    }
+    return 'Deck';
+  }
+
+  for (const c of state.cardInfos) {
+    const k = groupKey(c);
+    if (!grouped[k]) grouped[k] = [];
+    grouped[k].push(c);
+  }
+
+  const groups = Object.keys(grouped).sort((a,b)=>{
+    if (a === 'Deck') return -1;
+    if (b === 'Deck') return 1;
+    return a.localeCompare(b);
+  });
+
+  const viewMode = state.viewMode;
+  container.innerHTML = '';
+
+  for (const gKey of groups) {
+    const header = document.createElement('div');
+    header.className = 'muted';
+    header.style.margin = '4px 0 2px';
+    header.textContent = gKey;
+    container.appendChild(header);
+
+    const cards = grouped[gKey];
+
+    if (viewMode === 'grid') {
+      const grid = document.createElement('div');
+      grid.className = 'deck-grid';
+      for (const c of cards) {
+        const div = document.createElement('div');
+        div.className = 'deck-card';
+        div.dataset.cardName = c.name;
+
+        if (c.image_url) {
+          const img = document.createElement('img');
+          img.src = c.image_url;
+          img.alt = c.name;
+          div.appendChild(img);
+        }
+
+        const head = document.createElement('div');
+        head.className = 'deck-card-header';
+        const nameSpan = document.createElement('span');
+        nameSpan.textContent = c.name;
+        const qtySpan = document.createElement('span');
+        qtySpan.className = 'qty-pill';
+        qtySpan.textContent = `x${c.qty}`;
+        head.appendChild(nameSpan);
+        head.appendChild(qtySpan);
+        div.appendChild(head);
+
+        const typeSpan = document.createElement('div');
+        typeSpan.className = 'muted';
+        typeSpan.style.fontSize = '0.75rem';
+        typeSpan.textContent = (c.type_line || '').split('—')[0].trim();
+        div.appendChild(typeSpan);
+
+        const mvSpan = document.createElement('div');
+        mvSpan.className = 'muted';
+        mvSpan.style.fontSize = '0.75rem';
+        mvSpan.textContent = `MV ${c.mv}`;
+        div.appendChild(mvSpan);
+
+        div.appendChild(createPipRow(c.color_identity));
+
+        div.addEventListener('click', ()=>openCardModal(c.name));
+        grid.appendChild(div);
+      }
+      container.appendChild(grid);
+    } else {
+      for (const c of cards) {
+        const row = document.createElement('div');
+        row.className = 'deck-list-row';
+        row.dataset.cardName = c.name;
+
+        const qty = document.createElement('div');
+        qty.textContent = `x${c.qty}`;
+        row.appendChild(qty);
+
+        const name = document.createElement('div');
+        name.textContent = c.name;
+        row.appendChild(name);
+
+        const type = document.createElement('div');
+        type.innerHTML = `<span class="chip">${(c.type_line || '').split('—')[0].trim()}</span>`;
+        row.appendChild(type);
+
+        const mv = document.createElement('div');
+        mv.textContent = `MV ${c.mv}`;
+        row.appendChild(mv);
+
+        row.addEventListener('click', ()=>openCardModal(c.name));
+        container.appendChild(row);
+      }
+    }
+  }
+}
+
+// ===== status chip =====
+function updateDeckStatusChip(result = null) {
+  const chip = document.getElementById('deckStatusChip');
+  const sizeTarget = parseInt(document.getElementById('deckSizeInput').value,10) || 60;
+  const formatSel = document.getElementById('deckFormat').value;
+  const deckSize = result ? result.deckSize : 0;
+
+  let status = '';
+  let cls = 'chip';
+
+  if (!deckSize) {
+    status = 'No cards yet';
+  } else {
+    const diff = deckSize - sizeTarget;
+    const abs = Math.abs(diff);
+    if (formatSel === 'constructed' && deckSize < 60) {
+      status = `Invalid: ${deckSize}/60 for constructed`;
+      cls += ' bad';
+    } else if (formatSel === 'limited' && deckSize < 40) {
+      status = `Invalid: ${deckSize}/40 for limited`;
+      cls += ' bad';
+    } else if (formatSel === 'commander' && deckSize !== 99 && deckSize !== 100) {
+      status = `Warn: ${deckSize} cards; EDH is usually 99+1`;
+      cls += ' warn';
+    } else if (abs <= 2) {
+      status = `${deckSize}/${sizeTarget} (within band)`;
+      cls += ' ok';
+    } else {
+      status = `${deckSize}/${sizeTarget} (±${diff})`;
+      cls += ' warn';
+    }
+  }
+
+  chip.className = cls;
+  chip.textContent = status;
+}
+
+// ===== modal =====
+let modalCurrentName = null;
+
+function buildCardMiniSummary(card, profile) {
+  const r = state.lastResult;
+  const lines = [];
+
+  const totalWeight = r ? r.deckWeight : null;
+  const weight = card.mv * card.qty;
+  if (totalWeight && totalWeight > 0) {
+    const pctWeight = (weight / totalWeight) * 100;
+    lines.push(`• Contributes ~${weight.toFixed(1)} MV of non-land weight (~${pctWeight.toFixed(1)}% of total).`);
+  } else {
+    lines.push(`• Effective MV ${card.mv} × ${card.qty} copies = ${weight.toFixed(1)} weight.`);
+  }
+
+  if (profile.effMV !== null && profile.effMV !== undefined && !Number.isNaN(profile.effMV)) {
+    lines.push(`• Using override MV ${profile.effMV} (printed MV ${card.printed_mv}).`);
+  } else {
+    lines.push(`• Using printed MV ${card.printed_mv} for curve analysis.`);
+  }
+
+  if (profile.rampType) {
+    lines.push(`• Tagged as ramp (${profile.rampType}) – counts as +1 virtual land in land odds.`);
+  }
+
+  if (profile.cantripExtra) {
+    const totalExtra = profile.cantripExtra * card.qty;
+    lines.push(`• Tagged as cantrip: ~${profile.cantripExtra.toFixed(2)} extra cards seen per cast (~${totalExtra.toFixed(2)} total if all copies are used).`);
+  }
+
+  const plans = profile.plans || [];
+  if (plans.length) {
+    lines.push(`• Included in plan(s): ${plans.join(', ')}.`);
+  }
+
+  return lines.join('\n');
+}
+
+function openCardModal(name) {
+  const card = state.cardInfos.find(c => c.name === name);
+  if (!card) return;
+  modalCurrentName = name;
+  const profile = state.tuning[name] || {};
+
+  document.getElementById('modalCardName').textContent = card.name;
+  document.getElementById('modalCardType').textContent = card.type_line || '';
+
+  const imgEl = document.getElementById('modalCardImg');
+  if (card.image_url) {
+    imgEl.src = card.image_url;
+    imgEl.style.display = '';
+  } else {
+    imgEl.style.display = 'none';
+  }
+
+  const effMVEl = document.getElementById('modalEffMV');
+  effMVEl.value = (profile.effMV !== undefined && profile.effMV !== null && !Number.isNaN(profile.effMV))
+    ? String(profile.effMV)
+    : '';
+
+  document.getElementById('modalRampType').value = profile.rampType || '';
+  document.getElementById('modalRampTurn').value = profile.rampTurn || '';
+  document.getElementById('modalRampNet').value =
+    (profile.rampNet !== undefined && profile.rampNet !== null) ? String(profile.rampNet) : '';
+  document.getElementById('modalCantrip').value =
+    (profile.cantripExtra !== undefined && profile.cantripExtra !== null) ? String(profile.cantripExtra) : '';
+
+  const plans = profile.plans || [];
+  document.getElementById('modalPlanA').checked = plans.includes('A');
+  document.getElementById('modalPlanB').checked = plans.includes('B');
+  document.getElementById('modalPlanC').checked = plans.includes('C');
+  document.getElementById('modalPlanD').checked = plans.includes('D');
+  document.getElementById('modalPlanE').checked = plans.includes('E');
+
+  document.getElementById('modalSummary').textContent = buildCardMiniSummary(card, profile);
+
+  document.getElementById('cardModalBackdrop').style.display = 'flex';
+}
+function closeCardModal() {
+  document.getElementById('cardModalBackdrop').style.display = 'none';
+  modalCurrentName = null;
+}
+function saveCardProfile() {
+  if (!modalCurrentName) return;
+  const name = modalCurrentName;
+  const effMVRaw = document.getElementById('modalEffMV').value.trim();
+  const effMV = effMVRaw === '' ? null : Number(effMVRaw);
+
+  const rampType = document.getElementById('modalRampType').value || null;
+  const rampTurnRaw = document.getElementById('modalRampTurn').value.trim();
+  const rampTurn = rampTurnRaw === '' ? null : Number(rampTurnRaw);
+  const rampNetRaw = document.getElementById('modalRampNet').value.trim();
+  const rampNet = rampNetRaw === '' ? null : Number(rampNetRaw);
+
+  const cantripRaw = document.getElementById('modalCantrip').value.trim();
+  const cantripExtra = cantripRaw === '' ? null : Number(cantripRaw);
+
+  const plans = [];
+  if (document.getElementById('modalPlanA').checked) plans.push('A');
+  if (document.getElementById('modalPlanB').checked) plans.push('B');
+  if (document.getElementById('modalPlanC').checked) plans.push('C');
+  if (document.getElementById('modalPlanD').checked) plans.push('D');
+  if (document.getElementById('modalPlanE').checked) plans.push('E');
+
+  state.tuning[name] = {
+    effMV: Number.isFinite(effMV) ? effMV : null,
+    rampType,
+    rampTurn: Number.isFinite(rampTurn) ? rampTurn : null,
+    rampNet: Number.isFinite(rampNet) ? rampNet : null,
+    cantripExtra: Number.isFinite(cantripExtra) ? cantripExtra : null,
+    plans
+  };
+
+  const card = state.cardInfos.find(c => c.name === name);
+  if (card) {
+    document.getElementById('modalSummary').textContent = buildCardMiniSummary(card, state.tuning[name]);
+  }
+
+  closeCardModal();
+  scheduleAnalyze();
+}
+
+// ===== auto analyze debounce =====
+let analyzeTimer = null;
+function scheduleAnalyze() {
+  clearTimeout(analyzeTimer);
+  analyzeTimer = setTimeout(()=> {
+    analyzeDeck().catch(err => {
+      console.error(err);
+      document.getElementById('summaryError').textContent = String(err);
+    });
+  }, 250);
+}
+
+// ===== local storage =====
+const STORAGE_KEY = 'coast_decks_v7';
+
+function getSavedDecks() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return {};
+    const obj = JSON.parse(raw);
+    return typeof obj === 'object' && obj ? obj : {};
+  } catch { return {}; }
+}
+function refreshSavedSelect() {
+  const decks = getSavedDecks();
+  const select = document.getElementById('savedDecksSelect');
+  const current = select.value;
+  select.innerHTML = '<option value="">Saved decks…</option>';
+  Object.keys(decks).sort().forEach(name => {
+    const opt = document.createElement('option');
+    opt.value = name;
+    opt.textContent = name;
+    select.appendChild(opt);
+  });
+  if (decks[current]) select.value = current;
+}
+function saveDeckLocally() {
+  const name = document.getElementById('deckName').value.trim() || 'Untitled deck';
+  const decks = getSavedDecks();
+  decks[name] = {
+    entries: state.deckEntries,
+    tuning: state.tuning,
+    format: document.getElementById('deckFormat').value,
+    targetSize: parseInt(document.getElementById('deckSizeInput').value,10) || 60,
+    landCount: parseInt(document.getElementById('landCountInput').value,10) || 0,
+    planSettings: state.planSettings
+  };
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(decks));
+  refreshSavedSelect();
+  document.getElementById('builderStatus').textContent = `Saved deck "${name}" locally.`;
+}
+function loadDeckLocally() {
+  const select = document.getElementById('savedDecksSelect');
+  const name = select.value;
+  if (!name) return;
+  const decks = getSavedDecks();
+  const data = decks[name];
+  if (!data) return;
+  document.getElementById('deckName').value = name;
+  document.getElementById('deckFormat').value = data.format || 'auto';
+  document.getElementById('deckSizeInput').value = data.targetSize || 60;
+  document.getElementById('landCountInput').value = data.landCount || 0;
+  state.deckEntries = data.entries || {};
+  state.tuning = data.tuning || {};
+  state.planSettings = data.planSettings || state.planSettings;
+  rebuildDeckTextFromState();
+  document.getElementById('builderStatus').textContent = `Loaded deck "${name}".`;
+  const active = state.activePlan;
+  const pt = state.planSettings[active] && state.planSettings[active].targetTurn || 3;
+  document.getElementById('planTargetTurn').value = pt;
+  scheduleAnalyze();
+}
+function deleteDeckLocally() {
+  const select = document.getElementById('savedDecksSelect');
+  const name = select.value;
+  if (!name) return;
+  const decks = getSavedDecks();
+  delete decks[name];
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(decks));
+  refreshSavedSelect();
+  document.getElementById('builderStatus').textContent = `Deleted deck "${name}".`;
+}
+
+// ===== Plan panel =====
+function shuffleInPlace(arr) {
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    const tmp = arr[i];
+    arr[i] = arr[j];
+    arr[j] = tmp;
+  }
+  return arr;
+}
+
+function renderPlanPanel() {
+  const content = document.getElementById('planContent');
+  const meta = document.getElementById('planMeta');
+  const plan = state.activePlan;
+  const settings = state.planSettings[plan] || { targetTurn: 3 };
+  const targetTurn = settings.targetTurn || 3;
+  document.getElementById('planTargetTurn').value = targetTurn;
+
+  const cards = state.cardInfos;
+  if (!cards.length) {
+    content.innerHTML = '<div class="muted">(No deck yet. Tag cards with Plan A–E in their detail panels.)</div>';
+    meta.textContent = '';
+    return;
+  }
+
+  const planCards = [];
+  let deckSize = 0;
+  for (const c of cards) {
+    deckSize += c.qty;
+    const profile = state.tuning[c.name] || {};
+    const plans = profile.plans || [];
+    if (plans.includes(plan)) {
+      planCards.push({ card: c, profile, qty: c.qty });
+    }
+  }
+
+  meta.textContent = `${planCards.length} different card(s) tagged for Plan ${plan}, deck size ${deckSize}.`;
+
+  if (!planCards.length) {
+    content.innerHTML = `<div class="muted">(No cards currently tagged for Plan ${plan}. Open a card and toggle the Plan tag.)</div>`;
+    return;
+  }
+
+  let seen = 7 + (targetTurn - 1);
+  if (seen > deckSize) seen = deckSize;
+
+  let planProbApprox = 1;
+  const cardLines = [];
+  for (const pc of planCards) {
+    const K = pc.qty;
+    const pSeen = probAtLeast(1, K, deckSize, seen);
+    planProbApprox *= pSeen;
+    cardLines.push({
+      name: pc.card.name,
+      qty: pc.qty,
+      pSeen
+    });
+  }
+  if (!Number.isFinite(planProbApprox)) planProbApprox = 0;
+
+  const expanded = [];
+  for (const pc of planCards) {
+    for (let i = 0; i < pc.qty; i++) expanded.push(pc.card.name);
+  }
+  shuffleInPlace(expanded);
+  const handNames = expanded.slice(0,7);
+  if (handNames.length < 7) {
+    const allNames = [];
+    for (const c of cards) {
+      for (let i = 0; i < c.qty; i++) allNames.push(c.name);
+    }
+    shuffleInPlace(allNames);
+    for (const n of allNames) {
+      if (handNames.length >= 7) break;
+      handNames.push(n);
+    }
+  }
+
+  let landCount = 0;
+  let cheapCount = 0;
+  let midCount = 0;
+  let bigCount = 0;
+  for (const c of cards) {
+    const isLand = (c.type_line || '').toLowerCase().includes('land');
+    if (isLand) {
+      landCount += c.qty;
+    } else {
+      if (c.mv <= 2) cheapCount += c.qty;
+      else if (c.mv <= 4) midCount += c.qty;
+      else bigCount += c.qty;
+    }
+  }
+  const totalCards = landCount + cheapCount + midCount + bigCount || 1;
+  const landPct = landCount / totalCards;
+  const cheapPct = cheapCount / totalCards;
+  const midPct = midCount / totalCards;
+  const bigPct = bigCount / totalCards;
+
+  const sortedBySeen = [...cardLines].sort((a,b)=>a.pSeen - b.pSeen);
+  const worst1 = sortedBySeen[0];
+  const worst2 = sortedBySeen[1];
+
+  let html = '';
+
+  html += '<div class="plan-section-title">Plan completion odds</div>';
+  html += `<div class="plan-metric">Target turn: <b>T${targetTurn}</b>, cards seen (no mulligan model): ~<b>${seen}</b>.</div>`;
+  html += `<div class="plan-metric">Approx P(all Plan ${plan} pieces seen by T${targetTurn}): <b>${pct(planProbApprox)}</b></div>`;
+
+  html += '<div class="plan-section-title">Per-card appearance</div>';
+  html += '<table class="summary-table"><thead><tr><th>Card</th><th>Copies</th><th>P(seen ≥1 by T)</th></tr></thead><tbody>';
+  for (const cl of cardLines) {
+    html += `<tr><td>${cl.name}</td><td>${cl.qty}</td><td>${pct(cl.pSeen)}</td></tr>`;
+  }
+  html += '</tbody></table>';
+
+  html += '<div class="plan-section-title">Wishlist hand (example)</div>';
+  html += '<div class="tiny-label">Sample 7-card opener including Plan cards (not a guarantee, just one roll).</div>';
+  html += '<div class="plan-hand">';
+  for (const n of handNames) {
+    html += `<div class="plan-hand-card">${n}</div>`;
+  }
+  html += '</div>';
+
+  html += '<div class="plan-section-title">Likely follow-up draws (whole deck)</div>';
+  html += `<div class="plan-metric">Land: <b>${pct(landPct)}</b></div>`;
+  html += `<div class="plan-metric">1–2 MV spells: <b>${pct(cheapPct)}</b></div>`;
+  html += `<div class="plan-metric">3–4 MV spells: <b>${pct(midPct)}</b></div>`;
+  html += `<div class="plan-metric">5+ MV spells: <b>${pct(bigPct)}</b></div>`;
+
+  html += '<div class="plan-section-title">Bottlenecks</div>';
+  html += '<div class="tiny-label">Cards that most often fail to show up by the target turn.</div>';
+  html += '<ul style="padding-left:18px;margin-top:2px;">';
+  if (worst1) {
+    html += `<li>${worst1.name}: seen by T${targetTurn} only ~${pct(worst1.pSeen)}</li>`;
+  }
+  if (worst2) {
+    html += `<li>${worst2.name}: seen by T${targetTurn} ~${pct(worst2.pSeen)}</li>`;
+  }
+  html += '</ul>';
+
+  content.innerHTML = html;
+}
+
+// ===== land calc standalone =====
+function runLandCalc() {
+  const N = parseInt(document.getElementById('lcDeckSize').value,10) || 60;
+  const K = parseInt(document.getElementById('lcLandCount').value,10) || 24;
+  const maxTurn = parseInt(document.getElementById('lcMaxTurn').value,10) || 5;
+  const pd = document.getElementById('lcPlayDraw').value;
+  const resultsEl = document.getElementById('lcResults');
+
+  let txt = '';
+  txt += `Deck size: ${N}, lands: ${K}, on the ${pd === 'play' ? 'play' : 'draw'}\n\n`;
+  txt += `Turn  Seen  P(≥1)   P(≥2)   P(≥3)   P(≥4)\n`;
+
+  for (let t=1; t<=maxTurn; t++) {
+    let seen = 7 + (t - 1);
+    if (pd === 'draw') seen += 1;
+    if (seen > N) seen = N;
+    const p1 = probAtLeast(1, K, N, seen);
+    const p2 = probAtLeast(2, K, N, seen);
+    const p3 = probAtLeast(3, K, N, seen);
+    const p4 = probAtLeast(4, K, N, seen);
+    txt += `${String(t).padStart(4)}  ${String(seen).padStart(4)}  ${pct(p1).padStart(6)}  ${pct(p2).padStart(6)}  ${pct(p3).padStart(6)}  ${pct(p4).padStart(6)}\n`;
+  }
+
+  resultsEl.textContent = txt;
+}
+
+// ===== wiring =====
+document.getElementById('btnBuild').addEventListener('click', () => {
+  hide('startScreen'); show('deckApp');
+  state.mode = 'build';
+  document.getElementById('builderMode').value = 'build';
+  document.getElementById('builderTitle').textContent = 'Deck builder';
+});
+
+document.getElementById('btnImport').addEventListener('click', () => {
+  hide('startScreen'); show('deckApp');
+  state.mode = 'import';
+  document.getElementById('builderMode').value = 'import';
+  document.getElementById('builderTitle').textContent = 'Deck importer';
+  show('importControls'); hide('buildControls');
+});
+
+document.getElementById('btnLandCalc').addEventListener('click', () => {
+  hide('startScreen'); show('landCalcApp');
+});
+
+document.getElementById('backToHome').addEventListener('click', () => {
+  hide('deckApp'); show('startScreen');
+});
+document.getElementById('backFromLand').addEventListener('click', () => {
+  hide('landCalcApp'); show('startScreen');
+});
+
+document.getElementById('builderMode').addEventListener('change', e => {
+  const mode = e.target.value;
+  state.mode = mode;
+  if (mode === 'build') {
+    show('buildControls'); hide('importControls');
+    document.getElementById('builderTitle').textContent = 'Deck builder';
+  } else {
+    hide('buildControls'); show('importControls');
+    document.getElementById('builderTitle').textContent = 'Deck importer';
+    rebuildDeckTextFromState();
+  }
+});
+
+document.getElementById('cardSearchName').addEventListener('keydown', e => {
+  if (e.key === 'Enter') document.getElementById('addCardBtn').click();
+});
+document.getElementById('addCardBtn').addEventListener('click', async () => {
+  const name = document.getElementById('cardSearchName').value.trim();
+  const qty = parseInt(document.getElementById('cardSearchQty').value,10) || 1;
+  const status = document.getElementById('builderStatus');
+  if (!name) { status.textContent = 'Enter a card name.'; return; }
+  status.textContent = 'Searching Scryfall…';
+  try {
+    const info = await fetchCardData(name, 'fuzzy');
+    const actual = info.name || name;
+    state.deckEntries[actual] = (state.deckEntries[actual] || 0) + qty;
+    document.getElementById('cardSearchName').value = '';
+    document.getElementById('cardSearchQty').value = '1';
+    status.textContent = `Added ${qty}× ${actual}.`;
+    scheduleAnalyze();
+  } catch (err) {
+    console.error(err);
+    status.textContent = 'Failed to add card.';
+  }
+});
+
+document.getElementById('deckText').addEventListener('input', e => {
+  if (state.mode !== 'import') return;
+  state.deckEntries = deckEntriesFromText(e.target.value);
+  scheduleAnalyze();
+});
+
+document.getElementById('viewMode').addEventListener('change', e => {
+  state.viewMode = e.target.value;
+  renderDeckView();
+});
+document.getElementById('groupMode').addEventListener('change', e => {
+  state.groupMode = e.target.value;
+  renderDeckView();
+});
+
+document.getElementById('deckSizeInput').addEventListener('input', () => {
+  updateDeckStatusChip(state.lastResult);
+});
+document.getElementById('landCountInput').addEventListener('input', () => {
+  scheduleAnalyze();
+});
+document.getElementById('deckFormat').addEventListener('change', () => {
+  scheduleAnalyze();
+});
+
+document.getElementById('modalSaveBtn').addEventListener('click', saveCardProfile);
+document.getElementById('closeModalBtn').addEventListener('click', closeCardModal);
+document.getElementById('cardModalBackdrop').addEventListener('click', e => {
+  if (e.target.id === 'cardModalBackdrop') closeCardModal();
+});
+
+document.getElementById('saveDeckBtn').addEventListener('click', saveDeckLocally);
+document.getElementById('loadDeckBtn').addEventListener('click', loadDeckLocally);
+document.getElementById('deleteDeckBtn').addEventListener('click', deleteDeckLocally);
+
+document.getElementById('lcCalcBtn').addEventListener('click', runLandCalc);
+
+// Plan tab switching
+document.querySelectorAll('.plan-tab-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const plan = btn.dataset.plan;
+    state.activePlan = plan;
+    document.querySelectorAll('.plan-tab-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    const settings = state.planSettings[plan] || { targetTurn: 3 };
+    document.getElementById('planTargetTurn').value = settings.targetTurn || 3;
+    renderPlanPanel();
+  });
+});
+
+document.getElementById('planTargetTurn').addEventListener('input', e => {
+  const v = parseInt(e.target.value,10);
+  const plan = state.activePlan;
+  if (!state.planSettings[plan]) state.planSettings[plan] = { targetTurn: 3 };
+  if (Number.isFinite(v) && v >= 1) {
+    state.planSettings[plan].targetTurn = v;
+    renderPlanPanel();
+  }
+});
+
+// init
+refreshSavedSelect();
+</script>
+</body>
+</html>
