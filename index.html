@@ -376,10 +376,10 @@
     inset: 0;
     background: rgba(0,0,0,0.65);
     display: none;
-    align-items: flex-start;   /* top-align modal */
+    align-items: flex-start;
     justify-content: center;
     z-index: 20;
-    overflow-y: auto;          /* scroll on small screens */
+    overflow-y: auto;
     padding: 24px 0;
   }
 
@@ -391,8 +391,8 @@
     padding: 14px;
     max-width: 460px;
     width: calc(100% - 32px);
-    max-height: 90vh;          /* never exceed viewport height */
-    overflow-y: auto;          /* scroll inside modal if needed */
+    max-height: 90vh;
+    overflow-y: auto;
     box-shadow: 0 18px 40px rgba(0,0,0,0.8);
   }
 
@@ -518,11 +518,28 @@
     padding: 6px;
   }
 
+  /* Toast */
+  #toast {
+    position: fixed;
+    bottom: 12px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(15,23,42,0.98);
+    color: var(--text);
+    padding: 8px 14px;
+    border-radius: 999px;
+    border: 1px solid var(--border);
+    font-size: 0.8rem;
+    box-shadow: 0 10px 26px rgba(0,0,0,0.8);
+    z-index: 50;
+    display: none;
+  }
+
   /* ===== RESPONSIVE / DEVICE-AWARE ===== */
 
   @media (max-width: 1000px) {
     .deck-layout {
-      grid-template-columns: 1fr;  /* stack builder & summary */
+      grid-template-columns: 1fr;
     }
   }
 
@@ -548,10 +565,10 @@
       justify-content: flex-start;
     }
     .deck-grid {
-      grid-template-columns: repeat(2, minmax(0, 1fr)); /* 2 cards per row on phone */
+      grid-template-columns: repeat(2, minmax(0, 1fr));
     }
     .deck-container {
-      max-height: none;    /* let it grow; whole page scrolls */
+      max-height: none;
     }
     .summary-panel {
       max-height: none;
@@ -614,12 +631,15 @@
 <div class="shell">
 
   <h1>
-    <span class="logo-coast">CoaST</span>
+    <span class="logo-coast">CoAST</span>
     <span class="pill">Calculator of All Structural Tuning</span>
   </h1>
   <p class="muted">
     A deck-building sandbar: curve hills, land odds, colour sources, and plans tuned together so your mana feels as good as your spells.
   </p>
+
+  <!-- Toast -->
+  <div id="toast"></div>
 
   <!-- START SCREEN -->
   <div id="startScreen" class="card start-screen panel-raised">
@@ -630,8 +650,8 @@
       <button class="secondary" id="btnLandCalc">Land odds only</button>
     </div>
     <p class="muted">
-      • <b>Build</b>: search cards, tweak quantities, tag ramp/cantrips/plans, & see structure update live.<br/>
-      • <b>Import</b>: paste a list and let CoaST read its bones.<br/>
+      • <b>Build</b>: search cards, tweak quantities, tag ramp/cantrips/plans, &amp; see structure update live.<br/>
+      • <b>Import</b>: paste a list and let CoAST read its bones.<br/>
       • <b>Land odds</b>: quick hypergeometric land calculator without a decklist.
     </p>
   </div>
@@ -683,7 +703,7 @@
             <label>Mode</label><br/>
             <select id="builderMode">
               <option value="build">Build with search</option>
-              <option value="import">Paste deck text</option>
+              <option value="import">Paste &amp; edit list</option>
             </select>
           </div>
           <div id="cardCountSummary" class="muted"></div>
@@ -706,18 +726,18 @@
             </div>
           </div>
           <p class="muted">
-            Type a card name & hit Enter. Tap a card tile to open its full image & tuning profile.
+            Type a card name &amp; hit Enter. Tap a card tile to open its full image &amp; tuning profile.
           </p>
         </div>
 
-        <!-- Import controls -->
+        <!-- Import / text controls -->
         <div id="importControls" class="panel-inset" style="display:none; margin-top:4px;">
-          <label>Paste decklist</label><br/>
+          <label>Decklist text (live with builder)</label><br/>
           <textarea id="deckText" rows="8" spellcheck="false"
             placeholder="4 Lightning Bolt&#10;4 Monastery Swiftspear&#10;2 Searing Blaze&#10;20 Mountain"></textarea>
           <p class="muted">
             Formats like <code>4 Lightning Bolt</code> or <code>4 Lightning Bolt (2XM) 123</code>. Lines starting with
-            <code>//</code> or <code>#</code> are ignored.
+            <code>//</code> or <code>#</code> are ignored. Edits here update the same deck used by the builder.
           </p>
         </div>
 
@@ -753,7 +773,7 @@
 
       <!-- RIGHT: Summary + Plans -->
       <div class="card panel-raised">
-        <h2>Summary & Plans</h2>
+        <h2>Summary &amp; Plans</h2>
         <div class="summary-panel" id="summary">
           <div class="muted">(No analysis yet. Add cards or paste a deck.)</div>
         </div>
@@ -843,12 +863,21 @@
         <hr />
 
         <div class="panel-inset">
-          <div>
-            <label>Effective mana value (optional override)</label><br/>
-            <input type="number" id="modalEffMV" min="0" step="1" placeholder="Use printed MV" />
-            <p class="muted">
-              For patterns like “7-drop we actually cast for 4”. Leave empty to use printed mana value.
-            </p>
+          <div class="field-group">
+            <div>
+              <label>Quantity in deck</label><br/>
+              <input type="number" id="modalQty" min="0" step="1" />
+              <p class="muted">
+                Set to 0 to remove this card from the deck.
+              </p>
+            </div>
+            <div>
+              <label>Effective mana value (optional override)</label><br/>
+              <input type="number" id="modalEffMV" min="0" step="1" placeholder="Use printed MV" />
+              <p class="muted">
+                For patterns like “7-drop we actually cast for 4”. Leave empty to use printed mana value.
+              </p>
+            </div>
           </div>
 
           <hr />
@@ -916,6 +945,35 @@
     </div>
   </div>
 
+  <!-- ABOUT / README IN-APP -->
+  <div id="aboutCard" class="card panel-raised" style="margin-top:14px;">
+    <div class="row" style="justify-content:space-between;">
+      <h2 style="margin-bottom:0;">About CoAST</h2>
+      <button class="secondary" id="toggleAboutBtn">Show details</button>
+    </div>
+    <div id="aboutContent" class="muted" style="display:none; margin-top:8px; font-size:0.8rem;">
+      <p><b>CoAST</b> (Calculator of All Structural Tuning) is a client-side tool for Magic: the Gathering that treats your deck like a system: lands, spells, ramp, cantrips, colour pips, and game plans are all analysed together.</p>
+      <p>Core ideas:</p>
+      <ul style="padding-left:18px;">
+        <li>Use <b>curve hills</b> and <b>WPL (weight per land)</b> to understand how heavy your deck actually is.</li>
+        <li>Use hypergeometric math to estimate <b>land consistency</b> with and without ramp.</li>
+        <li>Use pip counts and colour sources to sanity check your mana base.</li>
+        <li>Tag cards into <b>Plans A–E</b> and see how often your core plans actually come together by a target turn.</li>
+      </ul>
+      <p>All calculations run in your browser. No accounts, no servers, no paywalls. Card data and art are fetched from the public Scryfall API.</p>
+    </div>
+  </div>
+
+  <!-- DIAGNOSTICS / TESTS -->
+  <div id="testsCard" class="card panel-inset" style="margin-top:10px;">
+    <div class="row" style="justify-content:space-between;">
+      <h2 style="margin-bottom:0;">Diagnostics &amp; Tests</h2>
+      <button class="secondary" id="runTestsBtn">Run self-check</button>
+    </div>
+    <pre id="testsOutput" class="muted" style="white-space:pre-wrap; font-size:0.75rem; margin-top:8px; max-height:220px; overflow:auto;">
+(No tests run yet.)</pre>
+  </div>
+
 </div>
 
 <script>
@@ -945,6 +1003,18 @@ function probAtLeast(k, K, N, n) {
 function pct(p) {
   if (!Number.isFinite(p)) return '0.0%';
   return (p * 100).toFixed(1) + '%';
+}
+
+// ===== Toast =====
+let toastTimer = null;
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.style.display = 'block';
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => {
+    t.style.display = 'none';
+  }, 2600);
 }
 
 // ===== Scryfall fetch with image =====
@@ -986,7 +1056,7 @@ async function fetchCardData(name, mode = 'fuzzy') {
   return data;
 }
 
-// ===== CoaST state =====
+// ===== CoAST state =====
 const state = {
   mode: 'build',
   viewMode: 'grid',
@@ -1005,7 +1075,7 @@ const state = {
   }
 };
 
-// Anchor hills (skeletons; you can extend from your spreadsheets)
+// Anchor hills (skeletons; can be extended from spreadsheets)
 const ANCHOR_CURVES = {
   40: { 16: {1: 6, 2: 12, 3: 6} },
   60: { 24: {1: 10, 2: 14, 3: 7, 4: 5, 5: 3, 6: 1} },
@@ -1275,7 +1345,7 @@ function renderSummary(r) {
 
   html += '<div class="summary-section">';
   html += '<div class="summary-title">Curve vs anchor hill</div>';
-  html += '<p class="muted">Anchor hill is a “default” curve for your deck size & land count. Green-ish rows are close; big ±Δ mean heavy or light at that mana value.</p>';
+  html += '<p class="muted">Anchor hill is a “default” curve for your deck size &amp; land count. Green-ish rows are close; big ±Δ mean heavy or light at that mana value.</p>';
 
   html += '<table class="summary-table"><thead><tr><th>MV</th><th>In deck</th><th>Anchor*</th><th>Δ</th></tr></thead><tbody>';
   if (r.anchorInfo) {
@@ -1583,6 +1653,9 @@ function openCardModal(name) {
     imgEl.style.display = 'none';
   }
 
+  const qtyEl = document.getElementById('modalQty');
+  qtyEl.value = card.qty;
+
   const effMVEl = document.getElementById('modalEffMV');
   effMVEl.value = (profile.effMV !== undefined && profile.effMV !== null && !Number.isNaN(profile.effMV))
     ? String(profile.effMV)
@@ -1613,6 +1686,9 @@ function closeCardModal() {
 function saveCardProfile() {
   if (!modalCurrentName) return;
   const name = modalCurrentName;
+  const qtyRaw = document.getElementById('modalQty').value.trim();
+  let qty = qtyRaw === '' ? null : Number(qtyRaw);
+
   const effMVRaw = document.getElementById('modalEffMV').value.trim();
   const effMV = effMVRaw === '' ? null : Number(effMVRaw);
 
@@ -1632,6 +1708,19 @@ function saveCardProfile() {
   if (document.getElementById('modalPlanD').checked) plans.push('D');
   if (document.getElementById('modalPlanE').checked) plans.push('E');
 
+  // Update quantity / remove card
+  if (qty === null || !Number.isFinite(qty) || qty < 0) qty = 0;
+  if (qty === 0) {
+    delete state.deckEntries[name];
+    delete state.tuning[name];
+    rebuildDeckTextFromState();
+    closeCardModal();
+    scheduleAnalyze();
+    return;
+  } else {
+    state.deckEntries[name] = Math.round(qty);
+  }
+
   state.tuning[name] = {
     effMV: Number.isFinite(effMV) ? effMV : null,
     rampType,
@@ -1643,9 +1732,14 @@ function saveCardProfile() {
 
   const card = state.cardInfos.find(c => c.name === name);
   if (card) {
+    card.qty = state.deckEntries[name];
+    card.mv = (state.tuning[name].effMV !== null && state.tuning[name].effMV !== undefined && !Number.isNaN(state.tuning[name].effMV))
+      ? state.tuning[name].effMV
+      : card.printed_mv;
     document.getElementById('modalSummary').textContent = buildCardMiniSummary(card, state.tuning[name]);
   }
 
+  rebuildDeckTextFromState();
   closeCardModal();
   scheduleAnalyze();
 }
@@ -1663,7 +1757,7 @@ function scheduleAnalyze() {
 }
 
 // ===== local storage =====
-const STORAGE_KEY = 'coast_decks_v7';
+const STORAGE_KEY = 'coast_decks_v8';
 
 function getSavedDecks() {
   try {
@@ -1699,7 +1793,9 @@ function saveDeckLocally() {
   };
   localStorage.setItem(STORAGE_KEY, JSON.stringify(decks));
   refreshSavedSelect();
-  document.getElementById('builderStatus').textContent = `Saved deck "${name}" locally.`;
+  const msg = `Saved deck "${name}" locally.`;
+  document.getElementById('builderStatus').textContent = msg;
+  showToast(msg);
 }
 function loadDeckLocally() {
   const select = document.getElementById('savedDecksSelect');
@@ -1716,10 +1812,12 @@ function loadDeckLocally() {
   state.tuning = data.tuning || {};
   state.planSettings = data.planSettings || state.planSettings;
   rebuildDeckTextFromState();
-  document.getElementById('builderStatus').textContent = `Loaded deck "${name}".`;
+  const msg = `Loaded deck "${name}".`;
+  document.getElementById('builderStatus').textContent = msg;
   const active = state.activePlan;
   const pt = state.planSettings[active] && state.planSettings[active].targetTurn || 3;
   document.getElementById('planTargetTurn').value = pt;
+  showToast(msg);
   scheduleAnalyze();
 }
 function deleteDeckLocally() {
@@ -1730,7 +1828,9 @@ function deleteDeckLocally() {
   delete decks[name];
   localStorage.setItem(STORAGE_KEY, JSON.stringify(decks));
   refreshSavedSelect();
-  document.getElementById('builderStatus').textContent = `Deleted deck "${name}".`;
+  const msg = `Deleted deck "${name}".`;
+  document.getElementById('builderStatus').textContent = msg;
+  showToast(msg);
 }
 
 // ===== Plan panel =====
@@ -1903,6 +2003,57 @@ function runLandCalc() {
   resultsEl.textContent = txt;
 }
 
+// ===== Diagnostics / tests =====
+function runSelfTests() {
+  const out = [];
+  out.push('CoAST self-check\n------------------');
+
+  // Test 1: hypergeometric monotonic P(≥1 land) as we see more cards
+  out.push('\n[1] Hypergeometric P(≥1 land) monotonicity:');
+  let ok1 = true;
+  const N = 60, K = 24;
+  let last = 0;
+  for (let n = 7; n <= 14; n++) {
+    const p = probAtLeast(1, K, N, n);
+    out.push(`  Seen ${n} -> P(≥1 land) = ${pct(p)}`);
+    if (p + 1e-9 < last) ok1 = false;
+    last = p;
+  }
+  out.push(`  Result: ${ok1 ? 'PASS' : 'FAIL (P decreased when more cards were seen)'}`);
+
+  // Test 2: simple synthetic deck weight / WPL
+  out.push('\n[2] Synthetic deck weight sanity:');
+  const testNonlands = 20;
+  const testMV = 1;
+  const testLands = 20;
+  const totalWeight = testNonlands * testMV;
+  const wpl = totalWeight / testLands;
+  out.push(`  20 nonlands at MV1, 20 lands => weight=${totalWeight}, WPL=${wpl.toFixed(3)}`);
+  out.push(`  Expected WPL = 1.000 -> ${Math.abs(wpl - 1) < 1e-9 ? 'PASS' : 'FAIL'}`);
+
+  // Test 3: anchor curve scaling
+  out.push('\n[3] Anchor hill scaling:');
+  const anchor = getAnchor(60, 24);
+  if (!anchor) {
+    out.push('  No anchor found for (60,24).');
+  } else {
+    const rawTotal = Object.values(anchor).reduce((a,b)=>a+b,0);
+    const targetNonlands = 36; // e.g. 60-card deck with 24 lands
+    const scale = rawTotal ? targetNonlands / rawTotal : 1;
+    const scaledTotal = Object.values(anchor).reduce((a,b)=>a + Math.round(b*scale),0);
+    out.push(`  Raw anchor nonlands = ${rawTotal}, target = ${targetNonlands}, scaled sum = ${scaledTotal}`);
+    out.push(`  Result: ${Math.abs(scaledTotal - targetNonlands) <= 2 ? 'PASS (within 2 cards tolerance)' : 'WARN (off by more than 2)'}`);
+  }
+
+  // Test 4: probability bounds
+  out.push('\n[4] Probability bounds check:');
+  const pEx = probAtLeast(2, 24, 60, 10);
+  out.push(`  Example P(≥2 lands | N=60, K=24, seen=10) = ${pct(pEx)}`);
+  out.push(`  Result: ${(pEx >= -1e-9 && pEx <= 1+1e-9) ? 'PASS' : 'FAIL (outside [0,1])'}`);
+
+  document.getElementById('testsOutput').textContent = out.join('\n');
+}
+
 // ===== wiring =====
 document.getElementById('btnBuild').addEventListener('click', () => {
   hide('startScreen'); show('deckApp');
@@ -1916,6 +2067,7 @@ document.getElementById('btnImport').addEventListener('click', () => {
   state.mode = 'import';
   document.getElementById('builderMode').value = 'import';
   document.getElementById('builderTitle').textContent = 'Deck importer';
+  rebuildDeckTextFromState();
   show('importControls'); hide('buildControls');
 });
 
@@ -1959,6 +2111,7 @@ document.getElementById('addCardBtn').addEventListener('click', async () => {
     document.getElementById('cardSearchName').value = '';
     document.getElementById('cardSearchQty').value = '1';
     status.textContent = `Added ${qty}× ${actual}.`;
+    rebuildDeckTextFromState();   // keep text deck in sync with search builder
     scheduleAnalyze();
   } catch (err) {
     console.error(err);
@@ -1966,10 +2119,25 @@ document.getElementById('addCardBtn').addEventListener('click', async () => {
   }
 });
 
+// Deck text: always represents same deck, used mainly in "import" mode
 document.getElementById('deckText').addEventListener('input', e => {
-  if (state.mode !== 'import') return;
-  state.deckEntries = deckEntriesFromText(e.target.value);
+  const text = e.target.value;
+  const entries = deckEntriesFromText(text);
+  state.deckEntries = entries;
+  const count = Object.values(entries).reduce((a,b)=>a+b,0);
+  if (count > 0) {
+    document.getElementById('builderStatus').textContent = `Deck from text: ${count} cards.`;
+  } else {
+    document.getElementById('builderStatus').textContent = 'No cards parsed from text.';
+  }
   scheduleAnalyze();
+});
+document.getElementById('deckText').addEventListener('blur', e => {
+  const entries = deckEntriesFromText(e.target.value);
+  const count = Object.values(entries).reduce((a,b)=>a+b,0);
+  if (count > 0) {
+    showToast(`Imported deck from text (${count} cards).`);
+  }
 });
 
 document.getElementById('viewMode').addEventListener('change', e => {
@@ -2026,8 +2194,20 @@ document.getElementById('planTargetTurn').addEventListener('input', e => {
   }
 });
 
+// About toggle
+document.getElementById('toggleAboutBtn').addEventListener('click', () => {
+  const content = document.getElementById('aboutContent');
+  const btn = document.getElementById('toggleAboutBtn');
+  const isHidden = content.style.display === 'none' || !content.style.display;
+  content.style.display = isHidden ? 'block' : 'none';
+  btn.textContent = isHidden ? 'Hide details' : 'Show details';
+});
+
+// Tests
+document.getElementById('runTestsBtn').addEventListener('click', runSelfTests);
+
 // init
 refreshSavedSelect();
 </script>
 </body>
-</html>
+  </html>
