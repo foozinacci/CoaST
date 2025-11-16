@@ -364,6 +364,28 @@
     border-bottom: none;
   }
 
+  .summary-tabs {
+    display: flex;
+    gap: 6px;
+    margin: 4px 0 6px;
+    overflow-x: auto;
+  }
+  .summary-tab-btn {
+    border-radius: 999px;
+    border: 1px solid var(--border);
+    background: rgba(15,23,42,0.9);
+    color: var(--muted);
+    font-size: 0.75rem;
+    padding: 3px 10px;
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+  .summary-tab-btn.active {
+    border-color: var(--accent);
+    color: var(--accent);
+    box-shadow: 0 0 0 1px rgba(56,189,248,0.6);
+  }
+
   .land-layout {
     display: grid;
     grid-template-columns: minmax(0,0.9fr) minmax(0,1.1fr);
@@ -535,8 +557,6 @@
     display: none;
   }
 
-  /* ===== RESPONSIVE / DEVICE-AWARE ===== */
-
   @media (max-width: 1000px) {
     .deck-layout {
       grid-template-columns: 1fr;
@@ -638,7 +658,6 @@
     A deck-building sandbar: curve hills, land odds, colour sources, and plans tuned together so your mana feels as good as your spells.
   </p>
 
-  <!-- Toast -->
   <div id="toast"></div>
 
   <!-- START SCREEN -->
@@ -709,7 +728,6 @@
           <div id="cardCountSummary" class="muted"></div>
         </div>
 
-        <!-- Build controls -->
         <div id="buildControls" class="panel-inset" style="margin-bottom:6px;">
           <div class="row">
             <div style="flex: 2;">
@@ -730,7 +748,6 @@
           </p>
         </div>
 
-        <!-- Import / text controls -->
         <div id="importControls" class="panel-inset" style="display:none; margin-top:4px;">
           <label>Decklist text (live with builder)</label><br/>
           <textarea id="deckText" rows="8" spellcheck="false"
@@ -741,7 +758,6 @@
           </p>
         </div>
 
-        <!-- Deck view controls -->
         <div class="deck-toolbar">
           <div>
             <label>View</label>
@@ -763,7 +779,6 @@
           </div>
         </div>
 
-        <!-- Deck list -->
         <div id="deckContainer" class="deck-container">
           <div class="muted">No cards yet. Use the search above or paste a list.</div>
         </div>
@@ -774,8 +789,31 @@
       <!-- RIGHT: Summary + Plans -->
       <div class="card panel-raised">
         <h2>Summary &amp; Plans</h2>
-        <div class="summary-panel" id="summary">
-          <div class="muted">(No analysis yet. Add cards or paste a deck.)</div>
+
+        <div class="summary-tabs">
+          <button class="summary-tab-btn active" data-summary-tab-btn="overview">Overview</button>
+          <button class="summary-tab-btn" data-summary-tab-btn="curve">Curve</button>
+          <button class="summary-tab-btn" data-summary-tab-btn="lands">Lands</button>
+          <button class="summary-tab-btn" data-summary-tab-btn="virtual">Virtual lands</button>
+          <button class="summary-tab-btn" data-summary-tab-btn="colors">Colours</button>
+        </div>
+
+        <div id="summaryPanel" class="summary-panel">
+          <div id="summaryOverview" data-summary-tab="overview">
+            <div class="muted">(No analysis yet. Add cards or paste a deck.)</div>
+          </div>
+          <div id="summaryCurve" data-summary-tab="curve" style="display:none;">
+            <div class="muted">(No analysis yet. Add cards or paste a deck.)</div>
+          </div>
+          <div id="summaryLands" data-summary-tab="lands" style="display:none;">
+            <div class="muted">(No analysis yet. Add cards or paste a deck.)</div>
+          </div>
+          <div id="summaryVirtual" data-summary-tab="virtual" style="display:none;">
+            <div class="muted">(No analysis yet. Add cards or paste a deck.)</div>
+          </div>
+          <div id="summaryColors" data-summary-tab="colors" style="display:none;">
+            <div class="muted">(No analysis yet. Add cards or paste a deck.)</div>
+          </div>
         </div>
         <div id="summaryError" class="error"></div>
 
@@ -918,7 +956,7 @@
               </div>
             </div>
             <p class="muted">
-              Rough guidelines: scry / small peeks ~0.6, Impulse-style ~1.2–1.5. Used in plan odds.
+              Rough guidelines: scry / small peeks ~0.6, Impulse-style ~1.2–1.5. Used in plan odds buckets.
             </p>
           </div>
 
@@ -933,6 +971,37 @@
               <label class="pill-tag"><input type="checkbox" id="modalPlanD" /> Plan D</label>
               <label class="pill-tag"><input type="checkbox" id="modalPlanE" /> Plan E</label>
             </div>
+          </div>
+
+          <hr />
+
+          <div>
+            <label>Plan-specific MV overrides (optional)</label>
+            <div class="field-group" style="margin-top:4px;">
+              <div>
+                <span class="tiny-label">Plan A MV</span><br/>
+                <input type="number" id="planEffA" min="0" step="1" placeholder="-" />
+              </div>
+              <div>
+                <span class="tiny-label">Plan B MV</span><br/>
+                <input type="number" id="planEffB" min="0" step="1" placeholder="-" />
+              </div>
+              <div>
+                <span class="tiny-label">Plan C MV</span><br/>
+                <input type="number" id="planEffC" min="0" step="1" placeholder="-" />
+              </div>
+              <div>
+                <span class="tiny-label">Plan D MV</span><br/>
+                <input type="number" id="planEffD" min="0" step="1" placeholder="-" />
+              </div>
+              <div>
+                <span class="tiny-label">Plan E MV</span><br/>
+                <input type="number" id="planEffE" min="0" step="1" placeholder="-" />
+              </div>
+            </div>
+            <p class="muted">
+              Used when analysing the active plan’s “follow-up draw” buckets (cheap/mid/big). Global curve still uses the base effective MV above.
+            </p>
           </div>
         </div>
 
@@ -964,8 +1033,8 @@
     </div>
   </div>
 
-  <!-- DIAGNOSTICS / TESTS -->
-  <div id="testsCard" class="card panel-inset" style="margin-top:10px;">
+  <!-- DIAGNOSTICS / TESTS (hidden by default) -->
+  <div id="testsCard" class="card panel-inset" style="margin-top:10px; display:none;">
     <div class="row" style="justify-content:space-between;">
       <h2 style="margin-bottom:0;">Diagnostics &amp; Tests</h2>
       <button class="secondary" id="runTestsBtn">Run self-check</button>
@@ -1072,10 +1141,11 @@ const state = {
     C: { targetTurn: 3 },
     D: { targetTurn: 3 },
     E: { targetTurn: 3 }
-  }
+  },
+  summaryTab: 'overview'
 };
 
-// Anchor hills (skeletons; can be extended from spreadsheets)
+// Anchor hills (skeleton)
 const ANCHOR_CURVES = {
   40: { 16: {1: 6, 2: 12, 3: 6} },
   60: { 24: {1: 10, 2: 14, 3: 7, 4: 5, 5: 3, 6: 1} },
@@ -1095,7 +1165,6 @@ function getAnchor(sizeBucket, landCount) {
   return entry[nearest];
 }
 
-// ===== helpers =====
 function show(id){ document.getElementById(id).style.display = ''; }
 function hide(id){ document.getElementById(id).style.display = 'none'; }
 
@@ -1128,20 +1197,19 @@ function rebuildDeckTextFromState() {
   textarea.value = deckEntriesToText(state.deckEntries);
 }
 
-// ===== main analysis =====
+// ===== analysis =====
 async function analyzeDeck() {
   const summaryError = document.getElementById('summaryError');
   summaryError.textContent = '';
 
   const names = Object.keys(state.deckEntries);
-  const summaryEl = document.getElementById('summary');
 
   if (!names.length) {
     state.cardInfos = [];
     state.lastResult = null;
-    summaryEl.innerHTML = '<div class="muted">(No analysis yet. Add cards or paste a deck.)</div>';
     renderDeckView();
     updateDeckStatusChip();
+    renderSummary(null);
     renderPlanPanel();
     return;
   }
@@ -1314,11 +1382,22 @@ async function analyzeDeck() {
   renderPlanPanel();
 }
 
-// ===== Summary UI =====
+// ===== Summary UI (tabbed) =====
 function renderSummary(r) {
-  const el = document.getElementById('summary');
+  const elOverview = document.getElementById('summaryOverview');
+  const elCurve = document.getElementById('summaryCurve');
+  const elLands = document.getElementById('summaryLands');
+  const elVirtual = document.getElementById('summaryVirtual');
+  const elColors = document.getElementById('summaryColors');
+
   if (!r) {
-    el.innerHTML = '<div class="muted">(No analysis yet. Add cards or paste a deck.)</div>';
+    const msg = '<div class="muted">(No analysis yet. Add cards or paste a deck.)</div>';
+    elOverview.innerHTML = msg;
+    elCurve.innerHTML = msg;
+    elLands.innerHTML = msg;
+    elVirtual.innerHTML = msg;
+    elColors.innerHTML = msg;
+    setSummaryTab(state.summaryTab || 'overview');
     return;
   }
 
@@ -1330,84 +1409,110 @@ function renderSummary(r) {
     r.landCount <= 0 ? 'warn' :
     'good';
 
-  let html = '';
+  // Overview
+  let htmlOverview = '';
+  htmlOverview += '<div class="summary-section">';
+  htmlOverview += '<div class="summary-title">Deck snapshot</div>';
+  htmlOverview += '<div class="summary-grid">';
+  htmlOverview += `<span class="summary-chip"><b>${r.deckName}</b></span>`;
+  htmlOverview += `<span class="summary-chip ${landClass}">Size: ${r.deckSize} (lands ${r.landCount}, nonlands ${r.nonlandCount})</span>`;
+  htmlOverview += `<span class="summary-chip ${wplClass}">Weight / land (WPL): ${r.wpl.toFixed(3)}</span>`;
+  htmlOverview += `<span class="summary-chip">Ramp copies tagged: ${r.totalRampCopies}</span>`;
+  htmlOverview += `<span class="summary-chip">Cantrip extra cards (sum): ${r.totalCantripExtra.toFixed(1)}</span>`;
+  htmlOverview += '</div>';
+  htmlOverview += '</div>';
+  elOverview.innerHTML = htmlOverview;
 
-  html += '<div class="summary-section">';
-  html += '<div class="summary-title">Deck snapshot</div>';
-  html += '<div class="summary-grid">';
-  html += `<span class="summary-chip"><b>${r.deckName}</b></span>`;
-  html += `<span class="summary-chip ${landClass}">Size: ${r.deckSize} (lands ${r.landCount}, nonlands ${r.nonlandCount})</span>`;
-  html += `<span class="summary-chip ${wplClass}">Weight / land (WPL): ${r.wpl.toFixed(3)}</span>`;
-  html += `<span class="summary-chip">Ramp copies tagged: ${r.totalRampCopies}</span>`;
-  html += `<span class="summary-chip">Cantrip extra cards (sum): ${r.totalCantripExtra.toFixed(1)}</span>`;
-  html += '</div>';
-  html += '</div>';
+  // Curve
+  let htmlCurve = '';
+  htmlCurve += '<div class="summary-section">';
+  htmlCurve += '<div class="summary-title">Curve vs anchor hill</div>';
+  htmlCurve += '<p class="muted">Anchor hill is a “default” curve for your deck size &amp; land count. Green-ish rows are close; big ±Δ mean heavy or light at that mana value.</p>';
 
-  html += '<div class="summary-section">';
-  html += '<div class="summary-title">Curve vs anchor hill</div>';
-  html += '<p class="muted">Anchor hill is a “default” curve for your deck size &amp; land count. Green-ish rows are close; big ±Δ mean heavy or light at that mana value.</p>';
-
-  html += '<table class="summary-table"><thead><tr><th>MV</th><th>In deck</th><th>Anchor*</th><th>Δ</th></tr></thead><tbody>';
+  htmlCurve += '<table class="summary-table"><thead><tr><th>MV</th><th>In deck</th><th>Anchor*</th><th>Δ</th></tr></thead><tbody>';
   if (r.anchorInfo) {
     for (let mv=0; mv<=10; mv++) {
       const dq = r.curve[mv] || 0;
       const aq = r.anchorInfo.scaled[mv] || 0;
       if (!dq && !aq) continue;
       const diff = dq - aq;
-      html += `<tr><td>${mv}</td><td>${dq}</td><td>${aq}</td><td>${diff >= 0 ? '+' : ''}${diff}</td></tr>`;
+      htmlCurve += `<tr><td>${mv}</td><td>${dq}</td><td>${aq}</td><td>${diff >= 0 ? '+' : ''}${diff}</td></tr>`;
     }
   } else {
     for (let mv=0; mv<=10; mv++) {
       const dq = r.curve[mv] || 0;
       if (!dq) continue;
-      html += `<tr><td>${mv}</td><td>${dq}</td><td>–</td><td>–</td></tr>`;
+      htmlCurve += `<tr><td>${mv}</td><td>${dq}</td><td>–</td><td>–</td></tr>`;
     }
   }
-  html += '</tbody></table>';
+  htmlCurve += '</tbody></table>';
   if (r.anchorInfo) {
-    html += '<p class="muted" style="margin-top:4px;">*Anchor scaled to match your total non-land card count.</p>';
+    htmlCurve += '<p class="muted" style="margin-top:4px;">*Anchor scaled to match your total non-land card count.</p>';
   }
-  html += '</div>';
+  htmlCurve += '</div>';
+  elCurve.innerHTML = htmlCurve;
 
-  html += '<div class="summary-section">';
-  html += '<div class="summary-title">Land availability (on the play, 7-card opener)</div>';
-  html += '<table class="summary-table"><thead><tr><th>Turn</th><th>Cards seen</th><th>P(≥1 land)</th><th>P(≥2)</th><th>P(≥3)</th><th>P(≥4)</th></tr></thead><tbody>';
+  // Lands (base)
+  let htmlLands = '';
+  htmlLands += '<div class="summary-section">';
+  htmlLands += '<div class="summary-title">Land availability (on the play, 7-card opener)</div>';
+  htmlLands += '<table class="summary-table"><thead><tr><th>Turn</th><th>Cards seen</th><th>P(≥1 land)</th><th>P(≥2)</th><th>P(≥3)</th><th>P(≥4)</th></tr></thead><tbody>';
   for (const row of r.landTable) {
-    html += `<tr><td>${row.turn}</td><td>${row.seen}</td><td>${pct(row.p1)}</td><td>${pct(row.p2)}</td><td>${pct(row.p3)}</td><td>${pct(row.p4)}</td></tr>`;
+    htmlLands += `<tr><td>${row.turn}</td><td>${row.seen}</td><td>${pct(row.p1)}</td><td>${pct(row.p2)}</td><td>${pct(row.p3)}</td><td>${pct(row.p4)}</td></tr>`;
   }
-  html += '</tbody></table>';
-  html += '</div>';
+  htmlLands += '</tbody></table>';
+  htmlLands += '</div>';
+  elLands.innerHTML = htmlLands;
 
-  html += '<div class="summary-section">';
-  html += '<div class="summary-title">Virtual lands (ramp included – rough)</div>';
-  html += '<p class="muted">Each tagged ramp card is currently counted as +1 land source. This is deliberately conservative.</p>';
-  html += '<table class="summary-table"><thead><tr><th>Turn</th><th>Cards seen</th><th>P(≥1 land)</th><th>P(≥2)</th><th>P(≥3)</th><th>P(≥4)</th></tr></thead><tbody>';
+  // Virtual lands
+  let htmlVirtual = '';
+  htmlVirtual += '<div class="summary-section">';
+  htmlVirtual += '<div class="summary-title">Virtual lands (ramp included – rough)</div>';
+  htmlVirtual += '<p class="muted">Each tagged ramp card is currently counted as +1 land source. This is deliberately conservative.</p>';
+  htmlVirtual += '<table class="summary-table"><thead><tr><th>Turn</th><th>Cards seen</th><th>P(≥1 land)</th><th>P(≥2)</th><th>P(≥3)</th><th>P(≥4)</th></tr></thead><tbody>';
   for (const row of r.landTableVirtual) {
-    html += `<tr><td>${row.turn}</td><td>${row.seen}</td><td>${pct(row.p1)}</td><td>${pct(row.p2)}</td><td>${pct(row.p3)}</td><td>${pct(row.p4)}</td></tr>`;
+    htmlVirtual += `<tr><td>${row.turn}</td><td>${row.seen}</td><td>${pct(row.p1)}</td><td>${pct(row.p2)}</td><td>${pct(row.p3)}</td><td>${pct(row.p4)}</td></tr>`;
   }
-  html += '</tbody></table>';
-  html += '</div>';
+  htmlVirtual += '</tbody></table>';
+  htmlVirtual += '</div>';
+  elVirtual.innerHTML = htmlVirtual;
 
+  // Colours
   const cols = new Set([...Object.keys(r.pipTotals), ...Object.keys(r.landSources)]);
-  html += '<div class="summary-section">';
-  html += '<div class="summary-title">Colour pips vs land sources</div>';
+  let htmlColors = '';
+  htmlColors += '<div class="summary-section">';
+  htmlColors += '<div class="summary-title">Colour pips vs land sources</div>';
   if (!cols.size) {
-    html += '<p class="muted">No coloured mana symbols were detected in mana costs yet.</p>';
+    htmlColors += '<p class="muted">No coloured mana symbols were detected in mana costs yet.</p>';
   } else {
-    html += '<p class="muted">Rule of thumb: every ~3 pips of a colour wants ~1 source of that colour.</p>';
-    html += '<table class="summary-table"><thead><tr><th>Colour</th><th>Pips</th><th>Needed</th><th>Sources</th><th>Δ</th></tr></thead><tbody>';
+    htmlColors += '<p class="muted">Rule of thumb: every ~3 pips of a colour wants ~1 source of that colour.</p>';
+    htmlColors += '<table class="summary-table"><thead><tr><th>Colour</th><th>Pips</th><th>Needed</th><th>Sources</th><th>Δ</th></tr></thead><tbody>';
     for (const col of Array.from(cols).sort()) {
       const pips = r.pipTotals[col] || 0;
       const need = r.neededSources[col] || 0;
       const have = r.landSources[col] || 0;
       const d = r.deltaSources[col] || 0;
-      html += `<tr><td>${col}</td><td>${pips}</td><td>${need}</td><td>${have}</td><td>${d >= 0 ? '+' : ''}${d}</td></tr>`;
+      htmlColors += `<tr><td>${col}</td><td>${pips}</td><td>${need}</td><td>${have}</td><td>${d >= 0 ? '+' : ''}${d}</td></tr>`;
     }
-    html += '</tbody></table>';
+    htmlColors += '</tbody></table>';
   }
-  html += '</div>';
+  htmlColors += '</div>';
+  elColors.innerHTML = htmlColors;
 
-  el.innerHTML = html;
+  setSummaryTab(state.summaryTab || 'overview');
+}
+
+function setSummaryTab(tab) {
+  state.summaryTab = tab;
+  const panels = document.querySelectorAll('[data-summary-tab]');
+  panels.forEach(p => {
+    p.style.display = (p.getAttribute('data-summary-tab') === tab) ? '' : 'none';
+  });
+  const buttons = document.querySelectorAll('[data-summary-tab-btn]');
+  buttons.forEach(b => {
+    if (b.getAttribute('data-summary-tab-btn') === tab) b.classList.add('active');
+    else b.classList.remove('active');
+  });
 }
 
 // ===== Deck view =====
@@ -1633,6 +1738,13 @@ function buildCardMiniSummary(card, profile) {
     lines.push(`• Included in plan(s): ${plans.join(', ')}.`);
   }
 
+  const pe = profile.planEffMV || {};
+  const overrides = Object.entries(pe).filter(([k,v]) => Number.isFinite(v));
+  if (overrides.length) {
+    const parts = overrides.map(([k,v]) => `${k}: ${v}`);
+    lines.push(`• Plan-specific MV overrides: ${parts.join(', ')} (used for that plan's draw buckets).`);
+  }
+
   return lines.join('\n');
 }
 
@@ -1653,8 +1765,7 @@ function openCardModal(name) {
     imgEl.style.display = 'none';
   }
 
-  const qtyEl = document.getElementById('modalQty');
-  qtyEl.value = card.qty;
+  document.getElementById('modalQty').value = card.qty;
 
   const effMVEl = document.getElementById('modalEffMV');
   effMVEl.value = (profile.effMV !== undefined && profile.effMV !== null && !Number.isNaN(profile.effMV))
@@ -1674,6 +1785,13 @@ function openCardModal(name) {
   document.getElementById('modalPlanC').checked = plans.includes('C');
   document.getElementById('modalPlanD').checked = plans.includes('D');
   document.getElementById('modalPlanE').checked = plans.includes('E');
+
+  const pe = profile.planEffMV || {};
+  document.getElementById('planEffA').value = Number.isFinite(pe.A) ? String(pe.A) : '';
+  document.getElementById('planEffB').value = Number.isFinite(pe.B) ? String(pe.B) : '';
+  document.getElementById('planEffC').value = Number.isFinite(pe.C) ? String(pe.C) : '';
+  document.getElementById('planEffD').value = Number.isFinite(pe.D) ? String(pe.D) : '';
+  document.getElementById('planEffE').value = Number.isFinite(pe.E) ? String(pe.E) : '';
 
   document.getElementById('modalSummary').textContent = buildCardMiniSummary(card, profile);
 
@@ -1708,7 +1826,28 @@ function saveCardProfile() {
   if (document.getElementById('modalPlanD').checked) plans.push('D');
   if (document.getElementById('modalPlanE').checked) plans.push('E');
 
-  // Update quantity / remove card
+  const planEffMV = {};
+  const rawA = document.getElementById('planEffA').value.trim();
+  const rawB = document.getElementById('planEffB').value.trim();
+  const rawC = document.getElementById('planEffC').value.trim();
+  const rawD = document.getElementById('planEffD').value.trim();
+  const rawE = document.getElementById('planEffE').value.trim();
+  const parsePlan = (raw) => {
+    if (raw === '') return null;
+    const v = Number(raw);
+    return Number.isFinite(v) ? v : null;
+  };
+  const vA = parsePlan(rawA);
+  const vB = parsePlan(rawB);
+  const vC = parsePlan(rawC);
+  const vD = parsePlan(rawD);
+  const vE = parsePlan(rawE);
+  if (vA !== null) planEffMV.A = vA;
+  if (vB !== null) planEffMV.B = vB;
+  if (vC !== null) planEffMV.C = vC;
+  if (vD !== null) planEffMV.D = vD;
+  if (vE !== null) planEffMV.E = vE;
+
   if (qty === null || !Number.isFinite(qty) || qty < 0) qty = 0;
   if (qty === 0) {
     delete state.deckEntries[name];
@@ -1721,7 +1860,7 @@ function saveCardProfile() {
     state.deckEntries[name] = Math.round(qty);
   }
 
-  state.tuning[name] = {
+  const profile = {
     effMV: Number.isFinite(effMV) ? effMV : null,
     rampType,
     rampTurn: Number.isFinite(rampTurn) ? rampTurn : null,
@@ -1729,14 +1868,16 @@ function saveCardProfile() {
     cantripExtra: Number.isFinite(cantripExtra) ? cantripExtra : null,
     plans
   };
+  if (Object.keys(planEffMV).length) profile.planEffMV = planEffMV;
+  state.tuning[name] = profile;
 
   const card = state.cardInfos.find(c => c.name === name);
   if (card) {
     card.qty = state.deckEntries[name];
-    card.mv = (state.tuning[name].effMV !== null && state.tuning[name].effMV !== undefined && !Number.isNaN(state.tuning[name].effMV))
-      ? state.tuning[name].effMV
+    card.mv = (profile.effMV !== null && profile.effMV !== undefined && !Number.isNaN(profile.effMV))
+      ? profile.effMV
       : card.printed_mv;
-    document.getElementById('modalSummary').textContent = buildCardMiniSummary(card, state.tuning[name]);
+    document.getElementById('modalSummary').textContent = buildCardMiniSummary(card, profile);
   }
 
   rebuildDeckTextFromState();
@@ -1757,7 +1898,7 @@ function scheduleAnalyze() {
 }
 
 // ===== local storage =====
-const STORAGE_KEY = 'coast_decks_v8';
+const STORAGE_KEY = 'coast_decks_v9';
 
 function getSavedDecks() {
   try {
@@ -1912,6 +2053,7 @@ function renderPlanPanel() {
     }
   }
 
+  // Bucket classification using plan-specific MV overrides if present
   let landCount = 0;
   let cheapCount = 0;
   let midCount = 0;
@@ -1921,8 +2063,11 @@ function renderPlanPanel() {
     if (isLand) {
       landCount += c.qty;
     } else {
-      if (c.mv <= 2) cheapCount += c.qty;
-      else if (c.mv <= 4) midCount += c.qty;
+      const profile = state.tuning[c.name] || {};
+      const mvOverride = profile.planEffMV && profile.planEffMV[plan];
+      const mvForBuckets = Number.isFinite(mvOverride) ? mvOverride : c.mv;
+      if (mvForBuckets <= 2) cheapCount += c.qty;
+      else if (mvForBuckets <= 4) midCount += c.qty;
       else bigCount += c.qty;
     }
   }
@@ -2008,7 +2153,6 @@ function runSelfTests() {
   const out = [];
   out.push('CoAST self-check\n------------------');
 
-  // Test 1: hypergeometric monotonic P(≥1 land) as we see more cards
   out.push('\n[1] Hypergeometric P(≥1 land) monotonicity:');
   let ok1 = true;
   const N = 60, K = 24;
@@ -2021,7 +2165,6 @@ function runSelfTests() {
   }
   out.push(`  Result: ${ok1 ? 'PASS' : 'FAIL (P decreased when more cards were seen)'}`);
 
-  // Test 2: simple synthetic deck weight / WPL
   out.push('\n[2] Synthetic deck weight sanity:');
   const testNonlands = 20;
   const testMV = 1;
@@ -2031,21 +2174,19 @@ function runSelfTests() {
   out.push(`  20 nonlands at MV1, 20 lands => weight=${totalWeight}, WPL=${wpl.toFixed(3)}`);
   out.push(`  Expected WPL = 1.000 -> ${Math.abs(wpl - 1) < 1e-9 ? 'PASS' : 'FAIL'}`);
 
-  // Test 3: anchor curve scaling
   out.push('\n[3] Anchor hill scaling:');
   const anchor = getAnchor(60, 24);
   if (!anchor) {
     out.push('  No anchor found for (60,24).');
   } else {
     const rawTotal = Object.values(anchor).reduce((a,b)=>a+b,0);
-    const targetNonlands = 36; // e.g. 60-card deck with 24 lands
+    const targetNonlands = 36;
     const scale = rawTotal ? targetNonlands / rawTotal : 1;
     const scaledTotal = Object.values(anchor).reduce((a,b)=>a + Math.round(b*scale),0);
     out.push(`  Raw anchor nonlands = ${rawTotal}, target = ${targetNonlands}, scaled sum = ${scaledTotal}`);
     out.push(`  Result: ${Math.abs(scaledTotal - targetNonlands) <= 2 ? 'PASS (within 2 cards tolerance)' : 'WARN (off by more than 2)'}`);
   }
 
-  // Test 4: probability bounds
   out.push('\n[4] Probability bounds check:');
   const pEx = probAtLeast(2, 24, 60, 10);
   out.push(`  Example P(≥2 lands | N=60, K=24, seen=10) = ${pct(pEx)}`);
@@ -2111,7 +2252,7 @@ document.getElementById('addCardBtn').addEventListener('click', async () => {
     document.getElementById('cardSearchName').value = '';
     document.getElementById('cardSearchQty').value = '1';
     status.textContent = `Added ${qty}× ${actual}.`;
-    rebuildDeckTextFromState();   // keep text deck in sync with search builder
+    rebuildDeckTextFromState();
     scheduleAnalyze();
   } catch (err) {
     console.error(err);
@@ -2119,7 +2260,6 @@ document.getElementById('addCardBtn').addEventListener('click', async () => {
   }
 });
 
-// Deck text: always represents same deck, used mainly in "import" mode
 document.getElementById('deckText').addEventListener('input', e => {
   const text = e.target.value;
   const entries = deckEntriesFromText(text);
@@ -2160,9 +2300,13 @@ document.getElementById('deckFormat').addEventListener('change', () => {
 });
 
 document.getElementById('modalSaveBtn').addEventListener('click', saveCardProfile);
-document.getElementById('closeModalBtn').addEventListener('click', closeCardModal);
+// Close button should also save updates
+document.getElementById('closeModalBtn').addEventListener('click', saveCardProfile);
+// Clicking outside modal saves & closes
 document.getElementById('cardModalBackdrop').addEventListener('click', e => {
-  if (e.target.id === 'cardModalBackdrop') closeCardModal();
+  if (e.target.id === 'cardModalBackdrop') {
+    saveCardProfile();
+  }
 });
 
 document.getElementById('saveDeckBtn').addEventListener('click', saveDeckLocally);
@@ -2170,6 +2314,14 @@ document.getElementById('loadDeckBtn').addEventListener('click', loadDeckLocally
 document.getElementById('deleteDeckBtn').addEventListener('click', deleteDeckLocally);
 
 document.getElementById('lcCalcBtn').addEventListener('click', runLandCalc);
+
+// Summary tabs
+document.querySelectorAll('[data-summary-tab-btn]').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const tab = btn.getAttribute('data-summary-tab-btn');
+    setSummaryTab(tab);
+  });
+});
 
 // Plan tab switching
 document.querySelectorAll('.plan-tab-btn').forEach(btn => {
@@ -2203,11 +2355,13 @@ document.getElementById('toggleAboutBtn').addEventListener('click', () => {
   btn.textContent = isHidden ? 'Hide details' : 'Show details';
 });
 
-// Tests
-document.getElementById('runTestsBtn').addEventListener('click', runSelfTests);
+// Diagnostics (still callable if you unhide testsCard in dev)
+const runTestsBtn = document.getElementById('runTestsBtn');
+if (runTestsBtn) runTestsBtn.addEventListener('click', runSelfTests);
 
 // init
 refreshSavedSelect();
+setSummaryTab('overview');
 </script>
 </body>
 </html>
