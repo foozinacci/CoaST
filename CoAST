@@ -29,17 +29,6 @@
     transition: background 0.35s ease, color 0.25s ease;
   }
 
-  body.theme-light {
-    background:
-      radial-gradient(circle at top left, #e5e7eb 0, #f9fafb 40%, #e5e7eb 100%);
-    color: var(--text);
-  }
-
-  body.theme-neon {
-    background:
-      radial-gradient(circle at top left, var(--accent) 0, #020617 45%, #000 100%);
-  }
-
   h1, h2, h3 {
     margin: 0 0 0.4em;
     letter-spacing: 0.04em;
@@ -129,16 +118,6 @@
     box-shadow: inset 0 0 0 1px #000, inset 0 6px 12px rgba(0,0,0,0.7);
   }
 
-  body.theme-light input[type="text"],
-  body.theme-light input[type="number"],
-  body.theme-light select,
-  body.theme-light textarea {
-    background: #f9fafb;
-    color: #020617;
-    border-color: #d1d5db;
-    box-shadow: inset 0 0 0 1px #e5e7eb;
-  }
-
   textarea {
     border-radius: 10px;
     resize: vertical;
@@ -158,12 +137,6 @@
     box-shadow: 0 14px 32px rgba(0,0,0,0.55);
   }
 
-  body.theme-light .card {
-    background: #ffffff;
-    border-color: #e5e7eb;
-    box-shadow: 0 8px 20px rgba(148,163,184,0.35);
-  }
-
   /* Input spaces bevel in */
   .panel-inset {
     border-radius: var(--radius);
@@ -171,12 +144,6 @@
     border: 1px solid #020617;
     box-shadow: inset 0 0 0 1px #111827, inset 0 8px 16px rgba(0,0,0,0.7);
     padding: 10px;
-  }
-
-  body.theme-light .panel-inset {
-    background: #f9fafb;
-    border-color: #e5e7eb;
-    box-shadow: inset 0 0 0 1px #e5e7eb;
   }
 
   /* Output spaces bevel out */
@@ -189,17 +156,11 @@
     padding: 10px;
   }
 
-  body.theme-light .panel-raised {
-    background: #ffffff;
-    border-color: #e5e7eb;
-    box-shadow: 0 8px 20px rgba(148,163,184,0.35);
-  }
-
   .start-screen {
     display: flex;
     flex-direction: column;
     gap: 16px;
-    align-items: flex-start;
+    align-items: center;
     margin-top: 18px;
   }
 
@@ -280,11 +241,6 @@
     padding: 6px;
   }
 
-  body.theme-light .deck-container {
-    background: #f3f4f6;
-    border-color: #e5e7eb;
-  }
-
   .deck-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
@@ -302,11 +258,6 @@
     font-size: 0.8rem;
     cursor: pointer;
     overflow: hidden;
-  }
-
-  body.theme-light .deck-card {
-    background: #ffffff;
-    border-color: #e5e7eb;
   }
 
   .deck-card img {
@@ -384,9 +335,6 @@
   .deck-list-row:nth-child(odd) {
     background: rgba(15,23,42,0.9);
   }
-  body.theme-light .deck-list-row:nth-child(odd) {
-    background: #e5e7eb;
-  }
 
   .summary-panel {
     background: rgba(15,23,42,0.95);
@@ -396,11 +344,6 @@
     max-height: 260px;
     overflow: auto;
     font-size: 0.8rem;
-  }
-
-  body.theme-light .summary-panel {
-    background: #f3f4f6;
-    border-color: #e5e7eb;
   }
 
   .summary-section {
@@ -424,11 +367,6 @@
     border: 1px solid var(--border);
     background: rgba(15,23,42,0.9);
     font-size: 0.75rem;
-  }
-
-  body.theme-light .summary-chip {
-    background: #ffffff;
-    border-color: #e5e7eb;
   }
 
   .summary-table {
@@ -504,11 +442,6 @@
     max-height: 90vh;
     overflow-y: auto;
     box-shadow: 0 18px 40px rgba(0,0,0,0.8);
-  }
-
-  body.theme-light .modal {
-    background: #ffffff;
-    border-color: #e5e7eb;
   }
 
   .modal-header {
@@ -615,11 +548,6 @@
     font-size: 0.72rem;
   }
 
-  body.theme-light .plan-hand-card {
-    background: #ffffff;
-    border-color: #e5e7eb;
-  }
-
   .tiny-label {
     font-size: 0.7rem;
     color: var(--muted);
@@ -636,11 +564,6 @@
     border-radius: 8px;
     border: 1px solid #111827;
     padding: 6px;
-  }
-
-  body.theme-light .mini-summary {
-    background: #f3f4f6;
-    border-color: #e5e7eb;
   }
 
   /* Toast */
@@ -684,10 +607,6 @@
     background: #020617;
     border: 1px solid #111827;
     overflow: hidden;
-  }
-  body.theme-light .curve-bar-track {
-    background: #e5e7eb;
-    border-color: #d1d5db;
   }
   .curve-bar-inner-deck {
     height: 100%;
@@ -791,6 +710,90 @@
     .deck-container {
       max-height: 360px;
     }
+  }
+
+  /* === Theme-specific overrides added === */
+  body.theme-light {
+    background:
+      radial-gradient(circle at top left, #e5e7eb 0, #f9fafb 40%, #e5e7eb 100%);
+    color: var(--text);
+  }
+
+  body.theme-neon {
+    background:
+      radial-gradient(circle at top left, var(--accent) 0, #020617 45%, #000 100%);
+  }
+
+  body.theme-light input[type="text"],
+  body.theme-light input[type="number"],
+  body.theme-light select,
+  body.theme-light textarea {
+    background: #f9fafb;
+    color: #020617;
+    border-color: #d1d5db;
+    box-shadow: inset 0 0 0 1px #e5e7eb;
+  }
+
+  body.theme-light .card {
+    background: #ffffff;
+    border-color: #e5e7eb;
+    box-shadow: 0 8px 20px rgba(148,163,184,0.35);
+  }
+
+  body.theme-light .panel-inset {
+    background: #f9fafb;
+    border-color: #e5e7eb;
+    box-shadow: inset 0 0 0 1px #e5e7eb;
+  }
+
+  body.theme-light .panel-raised {
+    background: #ffffff;
+    border-color: #e5e7eb;
+    box-shadow: 0 8px 20px rgba(148,163,184,0.35);
+  }
+
+  body.theme-light .deck-container {
+    background: #f3f4f6;
+    border-color: #e5e7eb;
+  }
+
+  body.theme-light .deck-card {
+    background: #ffffff;
+    border-color: #e5e7eb;
+  }
+
+  body.theme-light .deck-list-row:nth-child(odd) {
+    background: #e5e7eb;
+  }
+
+  body.theme-light .summary-panel {
+    background: #f3f4f6;
+    border-color: #e5e7eb;
+  }
+
+  body.theme-light .summary-chip {
+    background: #ffffff;
+    border-color: #e5e7eb;
+  }
+
+  body.theme-light .mini-summary {
+    background: #f3f4f6;
+    border-color: #e5e7eb;
+  }
+
+  body.theme-light .curve-bar-track {
+    background: #e5e7eb;
+    border-color: #d1d5db;
+  }
+
+  body.theme-light .plan-hand-card {
+    background: #ffffff;
+    border-color: #e5e7eb;
+  }
+
+  body.theme-light .modal {
+    background: #ffffff;
+    border-color: #e5e7eb;
   }
 </style>
 </head>
@@ -1326,7 +1329,7 @@ function show(id){ document.getElementById(id).style.display = ''; }
 function hide(id){ document.getElementById(id).style.display = 'none'; }
 
 function deckEntriesFromText(text) {
-  const LINE_RE = /^\s*(\d+)[xX]?\s+(.+?)(?:\s+\([^)]+\)\s+\d+)?\s*$/;
+  const LINE_RE = /^\s*(\d+)[xX]?\s+(.+?)(?:\s+[^)]+\s+\d+)?\s*$/;
   const lines = text.split(/\r?\n/);
   const entries = {};
   for (const raw of lines) {
@@ -2728,12 +2731,4 @@ document.getElementById('toggleAboutBtn').addEventListener('click', () => {
 
 // Diagnostics
 const runTestsBtn = document.getElementById('runTestsBtn');
-if (runTestsBtn) runTestsBtn.addEventListener('click', runSelfTests);
-
-// init
-refreshSavedSelect();
-setSummaryTab('overview');
-applyTheme('dark');
-</script>
-</body>
-</html>
+if (runTestsBtn) runTestsBtn.addEventListener('click', run
