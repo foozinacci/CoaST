@@ -2731,4 +2731,27 @@ document.getElementById('toggleAboutBtn').addEventListener('click', () => {
 
 // Diagnostics
 const runTestsBtn = document.getElementById('runTestsBtn');
-if (runTestsBtn) runTestsBtn.addEventListener('click', run
+if (runTestsBtn) runTestsBtn.addEventListener('click', runSelfTests);
+
+// ===== initial boot =====
+(function boot() {
+  // Apply initial theme (dark / light / neon from the select)
+  const themeSelect = document.getElementById('themeSelect');
+  if (themeSelect) {
+    const initial = themeSelect.value || 'dark';
+    applyTheme(initial);
+  } else {
+    applyTheme('dark');
+  }
+
+  // Populate saved decks dropdown (if anything is in localStorage)
+  refreshSavedSelect();
+
+  // Draw empty UI states so things look “alive” on load
+  renderDeckView();
+  renderSummary(null);
+  renderPlanPanel();
+})();
+</script>
+</body>
+</html>
