@@ -1,2041 +1,2739 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <title>CoAST – Calculator of All Structural Tuning</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <style>
-      :root {
-        --bg: #020617;
-        --bg-panel: #020617;
-        --bg-panel-soft: #020617;
-        --accent: #38bdf8;
-        --accent-soft: rgba(56, 189, 248, 0.18);
-        --accent2: #22c55e;
-        --border: #1f2937;
-        --text: #e5e7ff;
-        --muted: #9ca3c7;
-        --danger: #f97373;
-        --radius: 12px;
-
-        --curve-mv0: #64748b;
-        --curve-mv1: #f97316;
-        --curve-mv2: #fb7185;
-        --curve-mv3: #a855f7;
-        --curve-mv4: #22c55e;
-        --curve-mv5: #0ea5e9;
-        --curve-mv6: #facc15;
-        --curve-mv7: #f97316;
-        --curve-mv8: #fb7185;
-        --curve-mv9: #a855f7;
-        --curve-mv10: #22c55e;
-      }
-
-      .theme-light {
-        --bg: #f3f4f6;
-        --bg-panel: #ffffff;
-        --bg-panel-soft: #f9fafb;
-        --accent: #2563eb;
-        --accent-soft: rgba(37, 99, 235, 0.1);
-        --accent2: #16a34a;
-        --border: #d1d5db;
-        --text: #020617;
-        --muted: #6b7280;
-      }
-
-      .theme-neon {
-        --bg: #020617;
-        --bg-panel: #020617;
-        --bg-panel-soft: #020617;
-        --border: #1e293b;
-        --text: #e5e7ff;
-        --muted: #9ca3c7;
-      }
-
-      * {
-        box-sizing: border-box;
-      }
-
-      body {
-        margin: 0;
-        font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
-          sans-serif;
-        background: radial-gradient(
-          circle at top left,
-          #0f172a 0,
-          #020617 40%,
-          #000 100%
-        );
-        color: var(--text);
-      }
-
-      .app-root {
-        max-width: 1280px;
-        margin: 0 auto;
-        padding: 12px;
-      }
-
-      h1,
-      h2,
-      h3 {
-        margin: 0 0 0.3em;
-      }
-
-      h1 {
-        font-size: 1.65rem;
-        display: flex;
-        flex-wrap: wrap;
-        gap: 8px;
-        align-items: baseline;
-      }
-
-      .logo-coast {
-        font-weight: 800;
-        letter-spacing: 0.18em;
-      }
-
-      .pill {
-        font-size: 0.7rem;
-        padding: 3px 8px;
-        border-radius: 999px;
-        border: 1px solid var(--accent-soft);
-        color: var(--accent);
-        background: rgba(15, 23, 42, 0.9);
-      }
-
-      .muted {
-        font-size: 0.85rem;
-        color: var(--muted);
-      }
-
-      button {
-        border-radius: 999px;
-        border: none;
-        padding: 7px 16px;
-        font-size: 0.85rem;
-        font-weight: 600;
-        cursor: pointer;
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-        background: linear-gradient(135deg, var(--accent2), var(--accent));
-        color: white;
-        box-shadow: 0 10px 22px rgba(15, 23, 42, 0.7);
-        transition: transform 0.06s ease, box-shadow 0.06s ease;
-      }
-
-      button:hover:not(:disabled) {
-        transform: translateY(-1px);
-        box-shadow: 0 12px 26px rgba(15, 23, 42, 0.9);
-      }
-
-      button:active:not(:disabled) {
-        transform: translateY(0);
-        box-shadow: 0 8px 18px rgba(15, 23, 42, 0.8);
-      }
-
-      button.secondary {
-        background: radial-gradient(circle at top left, #020617 0, #020617 55%);
-        color: var(--muted);
-        border-radius: 999px;
-        border: 1px solid var(--border);
-        box-shadow: inset 0 0 0 1px #000, 0 10px 22px rgba(0, 0, 0, 0.6);
-      }
-
-      button.secondary:hover:not(:disabled) {
-        color: var(--text);
-        border-color: var(--accent-soft);
-      }
-
-      button:disabled {
-        opacity: 0.5;
-        cursor: default;
-        box-shadow: none;
-        transform: none;
-      }
-
-      input[type="text"],
-      input[type="number"],
-      select,
-      textarea {
-        background: var(--bg);
-        color: var(--text);
-        border-radius: 999px;
-        border: 1px solid var(--border);
-        padding: 6px 10px;
-        font-size: 0.85rem;
-        font-family: inherit;
-        box-shadow: inset 0 0 0 1px #000,
-          inset 0 6px 12px rgba(0, 0, 0, 0.7);
-      }
-
-      textarea {
-        border-radius: 10px;
-        resize: vertical;
-      }
-
-      label {
-        font-size: 0.8rem;
-        color: var(--muted);
-      }
-
-      .card {
-        border-radius: var(--radius);
-        background: radial-gradient(
-          circle at top left,
-          #0b1220 0,
-          var(--bg-panel) 55%
-        );
-        border: 1px solid var(--border);
-        padding: 12px;
-        box-shadow: 0 14px 32px rgba(0, 0, 0, 0.55);
-      }
-
-      .panel-inset {
-        border-radius: var(--radius);
-        background: var(--bg-panel-soft);
-        border: 1px solid #020617;
-        box-shadow: inset 0 0 0 1px #111827,
-          inset 0 8px 16px rgba(0, 0, 0, 0.7);
-        padding: 10px;
-      }
-
-      .panel-raised {
-        border-radius: var(--radius);
-        background: radial-gradient(
-          circle at top left,
-          var(--bg-panel) 0,
-          var(--bg-panel) 55%
-        );
-        border: 1px solid #111827;
-        box-shadow: 0 12px 26px rgba(15, 23, 42, 0.9);
-        padding: 10px;
-      }
-
-      .topbar {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 8px;
-        align-items: center;
-        margin-bottom: 8px;
-      }
-
-      .topbar-right {
-        margin-left: auto;
-        display: flex;
-        flex-wrap: wrap;
-        gap: 6px;
-      }
-
-      .deck-layout {
-        display: grid;
-        grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr);
-        gap: 12px;
-        margin-top: 10px;
-      }
-
-      .chip {
-        font-size: 0.75rem;
-        padding: 3px 8px;
-        border-radius: 999px;
-        border: 1px solid var(--border);
-        background: radial-gradient(
-          circle at top left,
-          #020617 0,
-          rgba(15, 23, 42, 0.9) 60%
-        );
-        color: var(--muted);
-        box-shadow: 0 5px 11px rgba(0, 0, 0, 0.6);
-      }
-
-      .chip-ok {
-        border-color: var(--accent2);
-        color: var(--accent2);
-      }
-      .chip-warn {
-        border-color: #facc15;
-        color: #facc15;
-      }
-      .chip-bad {
-        border-color: #ef4444;
-        color: #ef4444;
-      }
-
-      .deck-toolbar {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 8px;
-        align-items: center;
-        justify-content: space-between;
-        margin: 8px 0 4px;
-      }
-
-      .deck-container {
-        background: rgba(15, 23, 42, 0.9);
-        border-radius: 10px;
-        border: 1px solid var(--border);
-        max-height: 360px;
-        overflow: auto;
-        padding: 6px;
-      }
-
-      .deck-list-row {
-        display: grid;
-        grid-template-columns: 52px minmax(0, 1.6fr) minmax(0, 1.1fr) 60px;
-        gap: 6px;
-        padding: 4px 4px;
-        font-size: 0.8rem;
-        align-items: center;
-        border-radius: 6px;
-      }
-
-      .deck-list-row:nth-child(odd) {
-        background: rgba(15, 23, 42, 0.9);
-      }
-
-      .qty-pill {
-        font-size: 0.75rem;
-        padding: 2px 7px;
-        border-radius: 999px;
-        border: 1px solid #1f2937;
-        background: rgba(15, 23, 42, 0.9);
-        box-shadow: inset 0 0 0 1px #000;
-      }
-
-      .pip {
-        width: 14px;
-        height: 14px;
-        border-radius: 999px;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 0.7rem;
-        border: 1px solid #020617;
-      }
-
-      .pip-W {
-        background: #f9fafb;
-        color: #0f172a;
-      }
-      .pip-U {
-        background: #0ea5e9;
-        color: #020617;
-      }
-      .pip-B {
-        background: #020617;
-        color: #e5e7eb;
-      }
-      .pip-R {
-        background: #ef4444;
-        color: #111827;
-      }
-      .pip-G {
-        background: #16a34a;
-        color: #022c22;
-      }
-      .pip-C {
-        background: #9ca3af;
-        color: #111827;
-      }
-
-      .summary-panel {
-        background: rgba(15, 23, 42, 0.95);
-        border-radius: 10px;
-        border: 1px solid var(--border);
-        padding: 8px;
-        max-height: 260px;
-        overflow: auto;
-        font-size: 0.8rem;
-      }
-
-      .summary-tabs,
-      .plan-tabs {
-        display: flex;
-        flex-wrap: nowrap;
-        gap: 6px;
-        margin: 4px 0 6px;
-        overflow-x: auto;
-      }
-
-      .summary-tab-btn,
-      .plan-tab-btn {
-        border-radius: 999px;
-        border: 1px solid var(--border);
-        background: radial-gradient(
-          circle at top left,
-          #020617 0,
-          rgba(15, 23, 42, 0.9) 60%
-        );
-        color: var(--muted);
-        font-size: 0.75rem;
-        padding: 3px 9px;
-        flex-shrink: 0;
-        cursor: pointer;
-        box-shadow: 0 6px 14px rgba(0, 0, 0, 0.8);
-      }
-
-      .summary-tab-btn.active,
-      .plan-tab-btn.active {
-        border-color: var(--accent);
-        color: var(--accent);
-        box-shadow: 0 0 0 1px rgba(56, 189, 248, 0.6),
-          0 10px 22px rgba(0, 0, 0, 0.9);
-      }
-
-      .summary-grid {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 6px;
-      }
-
-      .summary-chip {
-        padding: 4px 8px;
-        border-radius: 999px;
-        border: 1px solid var(--border);
-        background: rgba(15, 23, 42, 0.9);
-        font-size: 0.75rem;
-      }
-
-      .summary-table {
-        width: 100%;
-        border-collapse: collapse;
-        font-size: 0.75rem;
-      }
-
-      .summary-table th,
-      .summary-table td {
-        border-bottom: 1px solid rgba(15, 23, 42, 0.8);
-        padding: 3px 4px;
-        text-align: right;
-        white-space: nowrap;
-      }
-
-      .summary-table th:first-child,
-      .summary-table td:first-child {
-        text-align: left;
-      }
-
-      .summary-table tr:last-child th,
-      .summary-table tr:last-child td {
-        border-bottom: none;
-      }
-
-      .curve-bar-row {
-        display: flex;
-        align-items: center;
-        gap: 6px;
-        margin-bottom: 3px;
-      }
-
-      .curve-bar-label {
-        width: 26px;
-        font-size: 0.75rem;
-      }
-
-      .curve-bar-track {
-        flex: 1;
-        height: 10px;
-        border-radius: 999px;
-        background: rgba(15, 23, 42, 0.9);
-        overflow: hidden;
-        position: relative;
-      }
-
-      .curve-bar-actual,
-      .curve-bar-anchor {
-        position: absolute;
-        top: 0;
-        bottom: 0;
-      }
-
-      .curve-bar-actual {
-        left: 0;
-        background: linear-gradient(
-          90deg,
-          var(--curve-mv1),
-          var(--curve-mv3),
-          var(--curve-mv5)
-        );
-      }
-
-      .curve-bar-anchor {
-        right: 0;
-        background: rgba(148, 163, 184, 0.55);
-      }
-
-      .curve-bar-counts {
-        width: 100px;
-        text-align: right;
-        font-size: 0.7rem;
-      }
-
-      .side-by-side {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 8px;
-      }
-
-      .side-panel {
-        flex: 1 1 200px;
-      }
-
-      .row {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 8px;
-        align-items: center;
-        margin-bottom: 6px;
-      }
-
-      .toast {
-        position: fixed;
-        bottom: 10px;
-        left: 50%;
-        transform: translateX(-50%);
-        background: rgba(15, 23, 42, 0.98);
-        color: var(--text);
-        border-radius: 999px;
-        border: 1px solid var(--border);
-        padding: 7px 14px;
-        font-size: 0.8rem;
-        box-shadow: 0 10px 26px rgba(0, 0, 0, 0.8);
-        z-index: 50;
-      }
-
-      .diagnostics {
-        margin-top: 6px;
-        padding: 6px 10px;
-        border-radius: 999px;
-        border: 1px solid rgba(248, 250, 252, 0.1);
-        background: radial-gradient(
-          circle at top left,
-          rgba(148, 163, 184, 0.35) 0,
-          rgba(15, 23, 42, 0.95) 45%
-        );
-        font-size: 0.7rem;
-        color: #fbbf24;
-        display: inline-flex;
-        gap: 10px;
-        align-items: center;
-      }
-
-      .diagnostics.ok {
-        color: #22c55e;
-      }
-
-      .diagnostics span {
-        white-space: nowrap;
-      }
-
-      .handlab-container {
-        margin-top: 10px;
-        display: grid;
-        grid-template-columns: minmax(0, 1.4fr) minmax(0, 1.1fr);
-        gap: 10px;
-      }
-
-      .hand-card-pill {
-        border-radius: 8px;
-        border: 1px solid var(--border);
-        padding: 3px 6px;
-        font-size: 0.75rem;
-        background: rgba(15, 23, 42, 0.95);
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        gap: 4px;
-      }
-
-      .tag-chip {
-        font-size: 0.65rem;
-        border-radius: 999px;
-        padding: 1px 5px;
-        border: 1px solid var(--border);
-        background: rgba(15, 23, 42, 0.95);
-      }
-
-      .life-counter {
-        display: inline-flex;
-        align-items: center;
-        gap: 4px;
-        padding: 3px 8px;
-        border-radius: 999px;
-        border: 1px solid var(--border);
-        background: radial-gradient(
-          circle at top left,
-          #020617 0,
-          rgba(15, 23, 42, 0.95) 60%
-        );
-        font-size: 0.75rem;
-      }
-
-      .life-counter button {
-        padding: 2px 7px;
-        font-size: 0.75rem;
-        box-shadow: inset 0 0 0 1px #000,
-          0 4px 10px rgba(0, 0, 0, 0.8);
-      }
-
-      .life-counter span {
-        min-width: 20px;
-        text-align: center;
-      }
-
-      @media (max-width: 900px) {
-        .deck-layout {
-          grid-template-columns: 1fr;
-        }
-        .deck-container {
-          max-height: none;
-        }
-        .summary-panel {
-          max-height: none;
-        }
-        h1 {
-          flex-direction: column;
-          align-items: flex-start;
-        }
-        .handlab-container {
-          grid-template-columns: 1fr;
-        }
-      }
-    </style>
-  </head>
-  <body>
-    <div id="root"></div>
-
-    <!-- React + ReactDOM + Babel from CDN -->
-    <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
-    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
-    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-
-    <!-- CoAST app -->
-    <script type="text/babel">
-      const { useState, useEffect, useMemo } = React;
-
-      /* ---------------------- math helpers / hypergeometric ---------------------- */
-
-      function comb(n, k) {
-        if (k < 0 || k > n) return 0;
-        if (k === 0 || k === n) return 1;
-        k = Math.min(k, n - k);
-        let res = 1;
-        for (let i = 1; i <= k; i++) {
-          res = (res * (n - k + i)) / i;
-        }
-        return res;
-      }
-
-      function hyperPMF(k, K, N, n) {
-        if (n > N) return 0;
-        const num = comb(K, k) * comb(N - K, n - k);
-        const den = comb(N, n);
-        return den === 0 ? 0 : num / den;
-      }
-
-      function probAtLeast(k, K, N, n) {
-        let p = 0;
-        const maxK = Math.min(K, n);
-        for (let i = k; i <= maxK; i++) p += hyperPMF(i, K, N, n);
-        return p;
-      }
-
-      function pct(p) {
-        if (!Number.isFinite(p)) return "0.0%";
-        return (p * 100).toFixed(1) + "%";
-      }
-
-      /* ----------------------------- anchor curves ----------------------------- */
-
-      const ANCHOR_CURVES = {
-        40: { 16: { 1: 6, 2: 12, 3: 6 } },
-        60: { 24: { 1: 10, 2: 14, 3: 7, 4: 5, 5: 3, 6: 1 } },
-        99: { 35: { 1: 5, 2: 12, 3: 13, 4: 10, 5: 7, 6: 5, 7: 3, 8: 1 } }
-      };
-
-      function getAnchor(sizeBucket, landCount) {
-        const entry = ANCHOR_CURVES[sizeBucket];
-        if (!entry) return null;
-        if (entry[landCount]) return entry[landCount];
-        const keys = Object.keys(entry).map((x) => parseInt(x, 10));
-        if (!keys.length) return null;
-        let nearest = keys[0];
-        for (const k of keys) {
-          if (Math.abs(k - landCount) < Math.abs(nearest - landCount)) nearest = k;
-        }
-        return entry[nearest];
-      }
-
-      /* ------------------------------- Scryfall ------------------------------- */
-
-      const scryfallCache = new Map();
-
-      async function fetchCardData(name) {
-        const key = name.toLowerCase();
-        if (scryfallCache.has(key)) return scryfallCache.get(key);
-        try {
-          const resp = await fetch(
-            "https://api.scryfall.com/cards/named?fuzzy=" +
-              encodeURIComponent(name)
-          );
-          if (!resp.ok) throw new Error("Scryfall error");
-          const data = await resp.json();
-          let image = null;
-          if (data.image_uris?.normal) image = data.image_uris.normal;
-          else if (
-            Array.isArray(data.card_faces) &&
-            data.card_faces[0]?.image_uris?.normal
-          ) {
-            image = data.card_faces[0].image_uris.normal;
-          }
-          const info = {
-            name: data.name || name,
-            cmc: data.cmc || 0,
-            type_line: data.type_line || "Unknown",
-            mana_cost: data.mana_cost || "",
-            color_identity: data.color_identity || [],
-            image_url: image
-          };
-          scryfallCache.set(key, info);
-          return info;
-        } catch (e) {
-          const info = {
-            name,
-            cmc: 0,
-            type_line: "Unknown",
-            mana_cost: "",
-            color_identity: [],
-            image_url: null
-          };
-          scryfallCache.set(key, info);
-          return info;
-        }
-      }
-
-      /* --------------------------- localStorage keys -------------------------- */
-
-      const STORAGE_KEY = "coast_decks_v2";
-
-      function loadAllDecks() {
-        try {
-          const raw = localStorage.getItem(STORAGE_KEY);
-          if (!raw) return {};
-          const obj = JSON.parse(raw);
-          return typeof obj === "object" && obj ? obj : {};
-        } catch {
-          return {};
-        }
-      }
-
-      function saveAllDecks(obj) {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(obj));
-      }
-
-      /* ------------------------------ small utils ----------------------------- */
-
-      function detectFormat(deckSize) {
-        if (deckSize >= 35 && deckSize <= 50) return 40;
-        if (deckSize >= 51 && deckSize <= 75) return 60;
-        if (deckSize >= 90 && deckSize <= 110) return 99;
-        return null;
-      }
-
-      function pipColorCounts(cardInfos) {
-        const pipTotals = {};
-        const pipRegex = /\{([WUBRG])\}/g;
-        for (const c of cardInfos) {
-          const cost = c.mana_cost || "";
-          let m;
-          while ((m = pipRegex.exec(cost)) !== null) {
-            pipTotals[m[1]] = (pipTotals[m[1]] || 0) + c.qtyMain;
-          }
-        }
-        return pipTotals;
-      }
-
-      function manaSourcesFromLands(cardInfos) {
-        const landSources = {};
-        for (const c of cardInfos) {
-          const isLand = (c.type_line || "").toLowerCase().includes("land");
-          if (!isLand) continue;
-          for (const col of c.color_identity || []) {
-            landSources[col] = (landSources[col] || 0) + c.qtyMain;
-          }
-        }
-        return landSources;
-      }
-
-      function buildMainDeckInstances(cardInfos) {
-        const inst = [];
-        let id = 1;
-        for (const c of cardInfos) {
-          for (let i = 0; i < c.qtyMain; i++) {
-            inst.push({ id: id++, name: c.name, ref: c });
-          }
-        }
-        return inst;
-      }
-
-      function shuffleInPlace(arr) {
-        for (let i = arr.length - 1; i > 0; i--) {
-          const j = Math.floor(Math.random() * (i + 1));
-          [arr[i], arr[j]] = [arr[j], arr[i]];
-        }
-      }
-
-      function parseDeckText(text) {
-        const LINE_RE = /^\s*(\d+)[xX]?\s+(.+?)\s*$/;
-        const entries = {};
-        let currentZone = "main";
-        text
-          .split(/\r?\n/)
-          .map((l) => l.trim())
-          .forEach((line) => {
-            if (!line) return;
-            if (line.toLowerCase() === "sideboard") {
-              currentZone = "side";
-              return;
-            }
-            if (line.startsWith("//") || line.startsWith("#")) return;
-            const m = line.match(LINE_RE);
-            if (!m) return;
-            const qty = parseInt(m[1], 10);
-            const name = m[2];
-            if (!Number.isFinite(qty) || !name) return;
-            if (!entries[name]) entries[name] = { qtyMain: 0, qtySide: 0 };
-            if (currentZone === "side") entries[name].qtySide += qty;
-            else entries[name].qtyMain += qty;
-          });
-        return entries;
-      }
-
-      function entriesToText(entries) {
-        const mainLines = [];
-        const sideLines = [];
-        for (const [name, z] of Object.entries(entries)) {
-          if (z.qtyMain) mainLines.push(`${z.qtyMain} ${name}`);
-          if (z.qtySide) sideLines.push(`${z.qtySide} ${name}`);
-        }
-        mainLines.sort();
-        sideLines.sort();
-        if (sideLines.length) {
-          return mainLines.join("\n") + "\n\nSideboard\n" + sideLines.join("\n");
-        }
-        return mainLines.join("\n");
-      }
-
-      /* ----------------------------- React app ----------------------------- */
-
-      const DEFAULT_DECK_TEXT = `4 Llanowar Elves
-4 Heaped Harvest
-3 Toph, the First Metalbender
-3 Mossborn Hydra
-3 Twinmaw Stormbrood
-3 Famished Worldsire
-3 Glacier Godmaw
-4 Cycle of Renewal
-4 Smuggler's Surprise
-8 Forest
-4 Stomping Ground
-4 Hushwood Verge
-3 Multiversal Passage
-1 Mountain
-1 Plains
-
-Sideboard
-2 Ghalta, Stampede Tyrant`;
-
-      function App() {
-        const [allDecks, setAllDecks] = useState(() => {
-          const loaded = loadAllDecks();
-          if (Object.keys(loaded).length) return loaded;
-          // seed with one default deck
-          return {
-            "Earthbend Harvest": {
-              name: "Earthbend Harvest",
-              rawText: DEFAULT_DECK_TEXT
-            }
-          };
-        });
-
-        const deckIds = Object.keys(allDecks);
-        const [currentDeckId, setCurrentDeckId] = useState(
-          deckIds[0] || "Earthbend Harvest"
-        );
-
-        const [editorText, setEditorText] = useState(() => {
-          const d = allDecks[currentDeckId];
-          return d?.rawText || DEFAULT_DECK_TEXT;
-        });
-
-        const [cards, setCards] = useState([]);
-        const [activeSummaryTab, setActiveSummaryTab] = useState("overview");
-        const [activePlan, setActivePlan] = useState("Game 1");
-        const [planNames, setPlanNames] = useState(["Game 1", "Postboard"]);
-        const [mulliganStyle, setMulliganStyle] = useState("london");
-        const [life, setLife] = useState(20);
-        const [toast, setToast] = useState(null);
-        const [handState, setHandState] = useState({
-          library: [],
-          hand: [],
-          bottom: [],
-          exile: [],
-          graveyard: [],
-          mulligans: 0,
-          keeps: 0,
-          samples: 0
-        });
-        const [diagnostics, setDiagnostics] = useState({
-          ok: true,
-          messages: ["Idle"]
-        });
-
-        /* ----------------------------- persistence ----------------------------- */
-
-        useEffect(() => {
-          setAllDecks((prev) => {
-            const copy = { ...prev };
-            const current =
-              copy[currentDeckId] || { name: currentDeckId, rawText: "" };
-            current.rawText = editorText;
-            copy[currentDeckId] = current;
-            saveAllDecks(copy);
-            return copy;
-          });
-        }, [editorText, currentDeckId]);
-
-        /* ------------------------------ deck parse ------------------------------ */
-
-        async function syncFromText() {
-          const parsed = parseDeckText(editorText || "");
-          const names = Object.keys(parsed);
-          if (!names.length) {
-            setCards([]);
-            setToast("Deck cleared (no parseable lines).");
-            return;
-          }
-
-          const existingByName = {};
-          for (const c of cards) existingByName[c.name.toLowerCase()] = c;
-
-          const promises = names.map(async (name) => {
-            const z = parsed[name];
-            const lower = name.toLowerCase();
-            let base = existingByName[lower];
-            if (!base) {
-              const info = await fetchCardData(name);
-              base = {
-                name: info.name,
-                cmc: info.cmc || 0,
-                type_line: info.type_line || "Unknown",
-                mana_cost: info.mana_cost || "",
-                color_identity: info.color_identity || [],
-                image_url: info.image_url || null,
-                qtyMain: 0,
-                qtySide: 0,
-                tags: { rampVirtual: 0 },
-                weights: {}
-              };
-            }
-            return {
-              ...base,
-              qtyMain: z.qtyMain || 0,
-              qtySide: z.qtySide || 0
-            };
-          });
-
-          const newCards = await Promise.all(promises);
-          newCards.sort((a, b) => a.name.localeCompare(b.name));
-          setCards(newCards);
-          setToast("Deck synced & analysed.");
-        }
-
-        function copyDeckToClipboard() {
-          try {
-            const entries = {};
-            for (const c of cards) {
-              if (!entries[c.name]) entries[c.name] = { qtyMain: 0, qtySide: 0 };
-              entries[c.name].qtyMain += c.qtyMain;
-              entries[c.name].qtySide += c.qtySide;
-            }
-            const txt = entriesToText(entries);
-            navigator.clipboard.writeText(txt);
-            setToast("Decklist copied to clipboard.");
-          } catch (e) {
-            setToast("Clipboard unavailable – select & copy manually.");
-          }
-        }
-
-        function updateVirtualSources(name, value) {
-          const v = Math.max(0, Number(value) || 0);
-          setCards((prev) =>
-            prev.map((c) =>
-              c.name === name
-                ? { ...c, tags: { ...c.tags, rampVirtual: v } }
-                : c
-            )
-          );
-        }
-
-        function updatePlanWeight(name, plan, value) {
-          const v = Math.max(0, Number(value) || 0);
-          setCards((prev) =>
-            prev.map((c) => {
-              if (c.name !== name) return c;
-              const weights = { ...(c.weights || {}) };
-              weights[plan] = v;
-              return { ...c, weights };
-            })
-          );
-        }
-
-        function addPlan() {
-          const base = "Plan ";
-          let i = 1;
-          while (planNames.includes(base + i)) i++;
-          const newName = base + i;
-          const next = [...planNames, newName];
-          setPlanNames(next);
-          setActivePlan(newName);
-        }
-
-        function renameCurrentDeck(newName) {
-          const trimmed = newName.trim();
-          if (!trimmed) return;
-          setAllDecks((prev) => {
-            const copy = { ...prev };
-            const current = copy[currentDeckId] || {
-              name: trimmed,
-              rawText: editorText
-            };
-            delete copy[currentDeckId];
-            copy[trimmed] = { ...current, name: trimmed };
-            saveAllDecks(copy);
-            return copy;
-          });
-          setCurrentDeckId(trimmed);
-        }
-
-        function newBlankDeck() {
-          const base = "New Deck ";
-          let i = 1;
-          const ids = Object.keys(allDecks);
-          while (ids.includes(base + i)) i++;
-          const id = base + i;
-          const updated = {
-            ...allDecks,
-            [id]: { name: id, rawText: "" }
-          };
-          setAllDecks(updated);
-          saveAllDecks(updated);
-          setCurrentDeckId(id);
-          setEditorText("");
-          setCards([]);
-        }
-
-        function deleteDeck(id) {
-          const ids = Object.keys(allDecks);
-          if (ids.length <= 1) return;
-          const copy = { ...allDecks };
-          delete copy[id];
-          const nextId = Object.keys(copy)[0];
-          setAllDecks(copy);
-          saveAllDecks(copy);
-          setCurrentDeckId(nextId);
-          setEditorText(copy[nextId].rawText || "");
-          setCards([]);
-        }
-
-        /* ------------------------------ stats / memo ----------------------------- */
-
-        const stats = useMemo(() => {
-          let totalMain = 0;
-          let totalSide = 0;
-          let landCount = 0;
-          let nonLandCount = 0;
-          const cmcCounts = {};
-          const cmcWeights = {};
-          const colors = { W: 0, U: 0, B: 0, R: 0, G: 0, C: 0 };
-
-          for (const c of cards) {
-            totalMain += c.qtyMain;
-            totalSide += c.qtySide;
-            const isLand = (c.type_line || "").toLowerCase().includes("land");
-            if (isLand) landCount += c.qtyMain;
-            else nonLandCount += c.qtyMain;
-
-            const baseCmc = Number(c.cmc || 0);
-            const weightCmc =
-              (c.weights && c.weights[activePlan]) ?? baseCmc;
-            const bucket = Math.min(10, Math.max(0, Math.round(baseCmc)));
-            const bucketW = Math.min(10, Math.max(0, Math.round(weightCmc)));
-            cmcCounts[bucket] = (cmcCounts[bucket] || 0) + c.qtyMain;
-            cmcWeights[bucketW] = (cmcWeights[bucketW] || 0) + c.qtyMain;
-
-            const pipRegex = /\{([WUBRG])\}/g;
-            let m;
-            while ((m = pipRegex.exec(c.mana_cost || "")) !== null) {
-              const col = m[1];
-              colors[col] += c.qtyMain;
-            }
-            if ((c.mana_cost || "").includes("{C}")) colors.C += c.qtyMain;
-          }
-
-          const formatBucket = detectFormat(totalMain);
-          const anchor =
-            formatBucket && landCount
-              ? getAnchor(formatBucket, landCount)
-              : null;
-
-          const pipTotals = pipColorCounts(cards);
-          const landSources = manaSourcesFromLands(cards);
-          const virtualSources = cards.reduce(
-            (sum, c) => sum + (c.tags?.rampVirtual || 0) * c.qtyMain,
-            0
-          );
-
-          return {
-            totalMain,
-            totalSide,
-            landCount,
-            nonLandCount,
-            cmcCounts,
-            cmcWeights,
-            formatBucket,
-            anchor,
-            pipTotals,
-            landSources,
-            virtualSources
-          };
-        }, [cards, activePlan]);
-
-        /* ------------------------------ diagnostics ------------------------------ */
-
-        useEffect(() => {
-          const msgs = [];
-          let ok = true;
-          if (!cards.length) {
-            msgs.push("No cards loaded.");
-          } else {
-            if (stats.formatBucket === null) {
-              ok = false;
-              msgs.push("Deck size is off-format (expected ~40, 60 or 99).");
-            }
-            if (stats.landCount === 0) {
-              ok = false;
-              msgs.push("No lands detected.");
-            }
-            const bad = cards.filter((c) => c.cmc === 0 && !c.mana_cost);
-            if (bad.length) {
-              msgs.push(
-                `Metadata fallback used for ${bad.length} card(s).`
-              );
-            }
-            if (stats.totalSide > 15) {
-              msgs.push(
-                `Sideboard has ${stats.totalSide} cards (over 15).`
-              );
-            }
-            if (!msgs.length) {
-              msgs.push("Deck passes basic sanity checks.");
-            }
-          }
-          msgs.push(`Mulligan: ${mulliganStyle.toUpperCase()}`);
-          setDiagnostics({ ok, messages: msgs });
-        }, [cards, stats, mulliganStyle]);
-
-        /* ------------------------------ hand lab ------------------------------ */
-
-        function resetLibraryAndHand() {
-          const inst = buildMainDeckInstances(cards);
-          if (!inst.length) {
-            setToast("No main deck to draw from.");
-            return;
-          }
-          shuffleInPlace(inst);
-          const handSize = 7;
-          const hand = inst.splice(0, handSize);
-          setHandState({
-            library: inst,
-            hand,
-            bottom: [],
-            exile: [],
-            graveyard: [],
-            mulligans: 0,
-            keeps: 0,
-            samples: 1
-          });
-          setLife(20);
-        }
-
-        function drawCard() {
-          setHandState((prev) => {
-            if (!prev.library.length && !prev.bottom.length) return prev;
-            const lib = [...prev.library];
-            const bottom = [...prev.bottom];
-            let drawn;
-            if (lib.length) drawn = lib.shift();
-            else drawn = bottom.shift();
-            const hand = [...prev.hand, drawn];
-            return { ...prev, library: lib, bottom, hand };
-          });
-        }
-
-        function tagCardZone(cardId, zone) {
-          setHandState((prev) => {
-            let { hand, library, bottom, exile, graveyard } = prev;
-            const all = { hand, library, bottom, exile, graveyard };
-            let card = null;
-            for (const key of Object.keys(all)) {
-              const idx = all[key].findIndex((c) => c.id === cardId);
-              if (idx >= 0) {
-                card = all[key][idx];
-                all[key] = [
-                  ...all[key].slice(0, idx),
-                  ...all[key].slice(idx + 1)
-                ];
-                break;
-              }
-            }
-            if (!card) return prev;
-            if (zone === "hand") all.hand = [...all.hand, card];
-            else if (zone === "library-top")
-              all.library = [card, ...all.library];
-            else if (zone === "library-bottom")
-              all.bottom = [...all.bottom, card];
-            else if (zone === "exile") all.exile = [...all.exile, card];
-            else if (zone === "graveyard")
-              all.graveyard = [...all.graveyard, card];
-            return {
-              ...prev,
-              hand: all.hand,
-              library: all.library,
-              bottom: all.bottom,
-              exile: all.exile,
-              graveyard: all.graveyard
-            };
-          });
-        }
-
-        function mulliganHand() {
-          setHandState((prev) => {
-            const inst = buildMainDeckInstances(cards);
-            if (!inst.length) return prev;
-            shuffleInPlace(inst);
-            const nextMull = prev.mulligans + 1;
-            const baseHandSize = 7;
-            const handSize =
-              mulliganStyle === "none"
-                ? baseHandSize
-                : Math.max(0, baseHandSize - nextMull);
-            const hand = inst.splice(0, handSize);
-            return {
-              library: inst,
-              hand,
-              bottom: [],
-              exile: [],
-              graveyard: [],
-              mulligans: nextMull,
-              keeps: prev.keeps,
-              samples: prev.samples + 1
-            };
-          });
-          setLife(20);
-        }
-
-        function keepHand() {
-          setHandState((prev) => ({
-            ...prev,
-            keeps: prev.keeps + 1
-          }));
-        }
-
-        function resetHandLab() {
-          setHandState({
-            library: [],
-            hand: [],
-            bottom: [],
-            exile: [],
-            graveyard: [],
-            mulligans: 0,
-            keeps: 0,
-            samples: 0
-          });
-          setLife(20);
-        }
-
-        const handStats = useMemo(() => {
-          if (!handState.samples) return null;
-          const keepRate = handState.keeps / handState.samples;
-          return {
-            keepRate
-          };
-        }, [handState]);
-
-        function nextCopyProbFor(cardName) {
-          const totalInDeck = cards.find((c) => c.name === cardName)?.qtyMain;
-          if (!totalInDeck) return 0;
-          const inHand = handState.hand.filter(
-            (c) => c.name === cardName
-          ).length;
-          const remaining = totalInDeck - inHand;
-          if (remaining <= 0) return 0;
-          const deckRemaining =
-            handState.library.length + handState.bottom.length;
-          if (deckRemaining <= 0) return 0;
-          return remaining / deckRemaining;
-        }
-
-        /* ----------------------------- source odds ----------------------------- */
-
-        const sourceOddsRows = useMemo(() => {
-          if (!stats.totalMain) return [];
-          const N = stats.totalMain;
-          const K = stats.landCount + stats.virtualSources;
-          const rows = [];
-          for (let turn = 1; turn <= 5; turn++) {
-            const cardsSeen = 7 + (turn - 1);
-            const need = turn;
-            const p = probAtLeast(need, K, N, cardsSeen);
-            rows.push({ turn, cardsSeen, need, p });
-          }
-          return rows;
-        }, [stats]);
-
-        /* ------------------------------ toasts ------------------------------ */
-
-        useEffect(() => {
-          if (!toast) return;
-          const id = setTimeout(() => setToast(null), 2500);
-          return () => clearTimeout(id);
-        }, [toast]);
-
-        /* ------------------------------- render ------------------------------- */
-
-        const deckName = currentDeckId;
-
-        return (
-          <div className="app-root">
-            <div className="topbar">
-              <h1>
-                <span className="logo-coast">CoAST</span>
-                <span className="pill">
-                  Calculator of All Structural Tuning
-                </span>
-              </h1>
-              <div className="topbar-right">
-                <select
-                  value={currentDeckId}
-                  onChange={(e) => {
-                    const id = e.target.value;
-                    setCurrentDeckId(id);
-                    setEditorText(allDecks[id]?.rawText || "");
-                    setCards([]);
-                  }}
-                >
-                  {Object.keys(allDecks).map((id) => (
-                    <option key={id} value={id}>
-                      {allDecks[id].name || id}
-                    </option>
-                  ))}
-                </select>
-                <button
-                  className="secondary"
-                  onClick={newBlankDeck}
-                  title="New empty deck"
-                >
-                  + New deck
-                </button>
-                <button
-                  className="secondary"
-                  disabled={Object.keys(allDecks).length <= 1}
-                  onClick={() => deleteDeck(currentDeckId)}
-                  title="Delete current deck"
-                >
-                  Delete
-                </button>
-              </div>
-            </div>
-
-            <div className="muted" style={{ marginBottom: 6 }}>
-              Build and tag your list, then hit <strong>Sync &amp; Analyse</strong>.
-              The app runs internal sanity checks and updates probabilities,
-              curves, and source odds in real time. One saved file: this page.
-            </div>
-
-            <div className="deck-layout">
-              {/* LEFT: deck editor & list */}
-              <div className="card panel-raised">
-                <div className="deck-toolbar">
-                  <div className="row">
-                    <label>
-                      Deck name:&nbsp;
-                      <input
-                        type="text"
-                        value={deckName}
-                        onChange={(e) => renameCurrentDeck(e.target.value)}
-                        style={{ minWidth: 140 }}
-                      />
-                    </label>
-                  </div>
-                  <div className="row">
-                    <button onClick={syncFromText}>Sync &amp; Analyse</button>
-                    <button
-                      className="secondary"
-                      onClick={copyDeckToClipboard}
-                      title="Copy deck & sideboard as text"
-                    >
-                      Copy decklist
-                    </button>
-                  </div>
-                </div>
-
-                <div className="side-by-side">
-                  <div className="side-panel">
-                    <label>Deck text (main + “Sideboard” section):</label>
-                    <textarea
-                      value={editorText}
-                      onChange={(e) => setEditorText(e.target.value)}
-                      rows={14}
-                      style={{ width: "100%", marginTop: 4 }}
-                      spellCheck="false"
-                    />
-                    <div
-                      className="muted"
-                      style={{ marginTop: 4, fontSize: "0.75rem" }}
-                    >
-                      Example format:
-                      <br />
-                      <code>4 Card Name</code>
-                      <br />
-                      …
-                      <br />
-                      <code>Sideboard</code>
-                      <br />
-                      <code>3 Other Card</code>
-                    </div>
-                  </div>
-
-                  <div className="side-panel">
-                    <div className="deck-container">
-                      <div
-                        className="deck-list-row"
-                        style={{
-                          fontWeight: 600,
-                          borderBottom: "1px solid #111827"
-                        }}
-                      >
-                        <div>Qty</div>
-                        <div>Card</div>
-                        <div>Tags &amp; weights ({activePlan})</div>
-                        <div>CMC</div>
-                      </div>
-                      {cards.map((c) => (
-                        <div
-                          key={c.name}
-                          className="deck-list-row"
-                          title={c.type_line}
-                        >
-                          <div>
-                            <span className="qty-pill">
-                              {c.qtyMain}
-                              {c.qtySide ? ` +${c.qtySide}` : ""}
-                            </span>
-                          </div>
-                          <div>{c.name}</div>
-                          <div>
-                            <div className="row">
-                              <span className="tag-chip">
-                                {c.type_line.includes("Land") ? "Land" : "Spell"}
-                              </span>
-                              <span className="tag-chip">
-                                Virtual land:{" "}
-                                <input
-                                  type="number"
-                                  value={c.tags?.rampVirtual || 0}
-                                  min="0"
-                                  style={{
-                                    width: 40,
-                                    fontSize: "0.7rem"
-                                  }}
-                                  onChange={(e) =>
-                                    updateVirtualSources(c.name, e.target.value)
-                                  }
-                                />
-                              </span>
-                            </div>
-                            <div className="row">
-                              <span className="tag-chip">
-                                {activePlan} CMC:{" "}
-                                <input
-                                  type="number"
-                                  value={
-                                    (c.weights && c.weights[activePlan]) ??
-                                    c.cmc
-                                  }
-                                  min="0"
-                                  style={{
-                                    width: 46,
-                                    fontSize: "0.7rem"
-                                  }}
-                                  onChange={(e) =>
-                                    updatePlanWeight(
-                                      c.name,
-                                      activePlan,
-                                      e.target.value
-                                    )
-                                  }
-                                />
-                              </span>
-                            </div>
-                          </div>
-                          <div>{c.cmc}</div>
-                        </div>
-                      ))}
-                      {!cards.length && (
-                        <div
-                          style={{
-                            padding: 8,
-                            fontSize: "0.8rem",
-                            color: "#9ca3c7"
-                          }}
-                        >
-                          Paste a decklist on the left, then press{" "}
-                          <strong>Sync &amp; Analyse</strong>.
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </div>
-
-                <div className="row" style={{ marginTop: 8 }}>
-                  <div className="life-counter">
-                    <span>Life</span>
-                    <button onClick={() => setLife((v) => Math.max(0, v - 1))}>
-                      -
-                    </button>
-                    <span>{life}</span>
-                    <button onClick={() => setLife((v) => v + 1)}>+</button>
-                  </div>
-                  <span className="muted">
-                    Quick life total stub for painlands & self-testing. Resets
-                    when a new hand is generated.
-                  </span>
-                </div>
-
-                <div>
-                  <div
-                    className={
-                      "diagnostics " + (diagnostics.ok ? "ok" : "")
-                    }
-                  >
-                    {diagnostics.messages.map((m, i) => (
-                      <span key={i}>{m}</span>
-                    ))}
-                  </div>
-                </div>
-              </div>
-
-              {/* RIGHT: summary & plans */}
-              <div className="card panel-inset">
-                <div className="row" style={{ marginBottom: 4 }}>
-                  <h3 style={{ margin: 0 }}>Summary &amp; Plans</h3>
-                  <div style={{ marginLeft: "auto" }}>
-                    <span className="chip">
-                      Size: {stats.totalMain} main / {stats.totalSide} side
-                    </span>{" "}
-                    <span className="chip">
-                      Lands: {stats.landCount} • Non-lands: {stats.nonLandCount}
-                    </span>
-                  </div>
-                </div>
-
-                <div className="plan-tabs">
-                  {planNames.map((p) => (
-                    <button
-                      key={p}
-                      className={
-                        "plan-tab-btn " +
-                        (p === activePlan ? "active" : "")
-                      }
-                      onClick={() => setActivePlan(p)}
-                    >
-                      {p}
-                    </button>
-                  ))}
-                  <button
-                    className="plan-tab-btn"
-                    onClick={addPlan}
-                    title="Add another plan (e.g., post-board)"
-                  >
-                    +
-                  </button>
-                </div>
-
-                <div className="summary-tabs">
-                  {["overview", "sources", "colors", "curve", "hand"].map(
-                    (id) => (
-                      <button
-                        key={id}
-                        className={
-                          "summary-tab-btn " +
-                          (activeSummaryTab === id ? "active" : "")
-                        }
-                        onClick={() => setActiveSummaryTab(id)}
-                      >
-                        {id === "overview" && "Overview"}
-                        {id === "sources" && "Source odds"}
-                        {id === "colors" && "Color pips"}
-                        {id === "curve" && "Curve vs anchor"}
-                        {id === "hand" && "Hand lab"}
-                      </button>
-                    )
-                  )}
-                </div>
-
-                <div className="summary-panel">
-                  {activeSummaryTab === "overview" && (
-                    <OverviewTab stats={stats} cards={cards} />
-                  )}
-                  {activeSummaryTab === "sources" && (
-                    <SourcesTab stats={stats} rows={sourceOddsRows} />
-                  )}
-                  {activeSummaryTab === "colors" && (
-                    <ColorsTab stats={stats} />
-                  )}
-                  {activeSummaryTab === "curve" && (
-                    <CurveTab stats={stats} />
-                  )}
-                  {activeSummaryTab === "hand" && (
-                    <HandSummaryTab
-                      handState={handState}
-                      handStats={handStats}
-                      mulliganStyle={mulliganStyle}
-                      setMulliganStyle={setMulliganStyle}
-                      resetLibraryAndHand={resetLibraryAndHand}
-                      mulliganHand={mulliganHand}
-                      keepHand={keepHand}
-                      resetHandLab={resetHandLab}
-                      drawCard={drawCard}
-                      nextCopyProbFor={nextCopyProbFor}
-                      tagCardZone={tagCardZone}
-                    />
-                  )}
-                </div>
-              </div>
-            </div>
-
-            {toast && <div className="toast">{toast}</div>}
-          </div>
-        );
-      }
-
-      /* --------------------------- Summary sub-views --------------------------- */
-
-      function OverviewTab({ stats, cards }) {
-        if (!cards.length) {
-          return (
-            <div className="muted">
-              Overview will populate once a deck is synced.
-            </div>
-          );
-        }
-
-        const landRatio =
-          stats.totalMain > 0
-            ? (stats.landCount / stats.totalMain) * 100
-            : 0;
-
-        return (
+<head>
+<meta charset="UTF-8" />
+<title>CoAST – Calculator of All Structural Tuning</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<style>
+  :root {
+    --bg: #020617;
+    --panel: #020617;
+    --accent: #38bdf8;
+    --accent2: #22c55e;
+    --border: #1f2937;
+    --text: #e5e7ff;
+    --muted: #9ca3c7;
+    --danger: #f97373;
+    --radius: 12px;
+  }
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    padding: 0;
+    background:
+      radial-gradient(circle at top left, #0f172a 0, #020617 40%, #000814 100%);
+    color: var(--text);
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    font-size: 15px;
+    transition: background 0.35s ease, color 0.25s ease;
+  }
+
+  body.theme-light {
+    background:
+      radial-gradient(circle at top left, #e5e7eb 0, #f9fafb 40%, #e5e7eb 100%);
+    color: var(--text);
+  }
+
+  body.theme-neon {
+    background:
+      radial-gradient(circle at top left, var(--accent) 0, #020617 45%, #000 100%);
+  }
+
+  h1, h2, h3 {
+    margin: 0 0 0.4em;
+    letter-spacing: 0.04em;
+  }
+
+  h1 {
+    font-size: 1.7rem;
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+  }
+
+  .logo-coast {
+    font-weight: 800;
+    letter-spacing: 0.18em;
+  }
+
+  .pill {
+    font-size: 0.7rem;
+    padding: 3px 8px;
+    border-radius: 999px;
+    border: 1px solid rgba(56,189,248,0.35);
+    color: var(--accent);
+    background: rgba(15,23,42,0.9);
+  }
+
+  .shell {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 16px;
+  }
+
+  .muted {
+    color: var(--muted);
+    font-size: 0.85rem;
+  }
+
+  button {
+    border-radius: 999px;
+    border: none;
+    padding: 8px 18px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: linear-gradient(135deg, var(--accent2), var(--accent));
+    color: white;
+    box-shadow: 0 10px 22px rgba(56,189,248,0.4);
+    transition: transform 0.09s ease, box-shadow 0.12s ease, background 0.25s ease;
+  }
+  button:hover:not(:disabled) {
+    transform: translateY(-1px);
+    box-shadow: 0 14px 26px rgba(56,189,248,0.5);
+  }
+  button.secondary {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--muted);
+    box-shadow: none;
+  }
+  button.secondary:hover:not(:disabled) {
+    background: rgba(15,23,42,0.8);
+  }
+  button.danger {
+    background: linear-gradient(135deg, #f97373, #fb7185);
+    box-shadow: 0 10px 22px rgba(248,113,113,0.4);
+  }
+  button:disabled {
+    opacity: 0.5;
+    cursor: default;
+    box-shadow: none;
+  }
+
+  input[type="text"],
+  input[type="number"],
+  select,
+  textarea {
+    background: #020617;
+    color: var(--text);
+    border-radius: 999px;
+    border: 1px solid var(--border);
+    padding: 6px 10px;
+    font-size: 0.85rem;
+    font-family: inherit;
+    box-shadow: inset 0 0 0 1px #000, inset 0 6px 12px rgba(0,0,0,0.7);
+  }
+
+  body.theme-light input[type="text"],
+  body.theme-light input[type="number"],
+  body.theme-light select,
+  body.theme-light textarea {
+    background: #f9fafb;
+    color: #020617;
+    border-color: #d1d5db;
+    box-shadow: inset 0 0 0 1px #e5e7eb;
+  }
+
+  textarea {
+    border-radius: 10px;
+    resize: vertical;
+  }
+
+  label {
+    font-size: 0.8rem;
+    color: var(--muted);
+  }
+
+  .card {
+    background:
+      radial-gradient(circle at top left, #0b1220 0, #020617 55%);
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    padding: 14px;
+    box-shadow: 0 14px 32px rgba(0,0,0,0.55);
+  }
+
+  body.theme-light .card {
+    background: #ffffff;
+    border-color: #e5e7eb;
+    box-shadow: 0 8px 20px rgba(148,163,184,0.35);
+  }
+
+  /* Input spaces bevel in */
+  .panel-inset {
+    border-radius: var(--radius);
+    background: #020617;
+    border: 1px solid #020617;
+    box-shadow: inset 0 0 0 1px #111827, inset 0 8px 16px rgba(0,0,0,0.7);
+    padding: 10px;
+  }
+
+  body.theme-light .panel-inset {
+    background: #f9fafb;
+    border-color: #e5e7eb;
+    box-shadow: inset 0 0 0 1px #e5e7eb;
+  }
+
+  /* Output spaces bevel out */
+  .panel-raised {
+    border-radius: var(--radius);
+    background:
+      radial-gradient(circle at top left, #020617 0, #020617 55%);
+    border: 1px solid #111827;
+    box-shadow: 0 12px 26px rgba(15,23,42,0.9);
+    padding: 10px;
+  }
+
+  body.theme-light .panel-raised {
+    background: #ffffff;
+    border-color: #e5e7eb;
+    box-shadow: 0 8px 20px rgba(148,163,184,0.35);
+  }
+
+  .start-screen {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    align-items: flex-start;
+    margin-top: 18px;
+  }
+
+  .start-options {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  .deck-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr);
+    gap: 16px;
+    margin-top: 14px;
+  }
+
+  .topbar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+    margin-bottom: 10px;
+  }
+
+  .topbar-right {
+    margin-left: auto;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+  }
+
+  .chip {
+    font-size: 0.75rem;
+    padding: 3px 8px;
+    border-radius: 999px;
+    border: 1px solid var(--border);
+    color: var(--muted);
+    background: rgba(15,23,42,0.9);
+  }
+  .chip.bad {
+    border-color: var(--danger);
+    color: var(--danger);
+  }
+  .chip.warn {
+    border-color: #facc15;
+    color: #facc15;
+  }
+  .chip.ok {
+    border-color: var(--accent2);
+    color: var(--accent2);
+  }
+
+  .row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+    margin-bottom: 6px;
+  }
+  .row > div { min-width: 120px; }
+
+  .deck-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+    justify-content: space-between;
+    margin: 10px 0 6px;
+  }
+
+  .deck-container {
+    background: rgba(15,23,42,0.9);
+    border-radius: 9px;
+    border: 1px solid var(--border);
+    max-height: 340px;
+    overflow: auto;
+    padding: 6px;
+  }
+
+  body.theme-light .deck-container {
+    background: #f3f4f6;
+    border-color: #e5e7eb;
+  }
+
+  .deck-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 8px;
+  }
+
+  .deck-card {
+    background: #020617;
+    border-radius: 10px;
+    border: 1px solid #111827;
+    padding: 5px 5px 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    font-size: 0.8rem;
+    cursor: pointer;
+    overflow: hidden;
+  }
+
+  body.theme-light .deck-card {
+    background: #ffffff;
+    border-color: #e5e7eb;
+  }
+
+  .deck-card img {
+    width: 100%;
+    border-radius: 8px;
+    display: block;
+  }
+
+  .deck-card-header {
+    display: flex;
+    justify-content: space-between;
+    gap: 4px;
+    align-items: center;
+    margin-top: 4px;
+  }
+
+  .qty-pill {
+    font-size: 0.7rem;
+    padding: 3px 7px;
+    border-radius: 999px;
+    border: 1px solid #1f2937;
+    background: rgba(15,23,42,0.9);
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .qty-btn {
+    border-radius: 999px;
+    border: 1px solid #374151;
+    background: rgba(15,23,42,0.9);
+    font-size: 0.65rem;
+    width: 16px;
+    height: 16px;
+    padding: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--muted);
+  }
+
+  .pip-row {
+    display: flex;
+    gap: 3px;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+  .pip {
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.7rem;
+    border: 1px solid #0f172a;
+  }
+  .pip-W { background: #f9fafb; color: #111827; }
+  .pip-U { background: #0ea5e9; color: #0b1120; }
+  .pip-B { background: #111827; color: #e5e7eb; }
+  .pip-R { background: #ef4444; color: #111827; }
+  .pip-G { background: #16a34a; color: #022c22; }
+  .pip-C { background: #9ca3af; color: #111827; }
+
+  .deck-list-row {
+    display: grid;
+    grid-template-columns: 40px minmax(0, 1.4fr) minmax(0, 1.2fr) 90px;
+    gap: 6px;
+    padding: 4px 4px;
+    font-size: 0.8rem;
+    align-items: center;
+    border-radius: 6px;
+    cursor: pointer;
+  }
+  .deck-list-row:nth-child(odd) {
+    background: rgba(15,23,42,0.9);
+  }
+  body.theme-light .deck-list-row:nth-child(odd) {
+    background: #e5e7eb;
+  }
+
+  .summary-panel {
+    background: rgba(15,23,42,0.95);
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    padding: 10px;
+    max-height: 260px;
+    overflow: auto;
+    font-size: 0.8rem;
+  }
+
+  body.theme-light .summary-panel {
+    background: #f3f4f6;
+    border-color: #e5e7eb;
+  }
+
+  .summary-section {
+    margin-bottom: 10px;
+  }
+  .summary-title {
+    font-size: 0.9rem;
+    font-weight: 600;
+    margin-bottom: 4px;
+  }
+
+  .summary-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .summary-chip {
+    padding: 4px 8px;
+    border-radius: 999px;
+    border: 1px solid var(--border);
+    background: rgba(15,23,42,0.9);
+    font-size: 0.75rem;
+  }
+
+  body.theme-light .summary-chip {
+    background: #ffffff;
+    border-color: #e5e7eb;
+  }
+
+  .summary-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.75rem;
+  }
+  .summary-table th,
+  .summary-table td {
+    border-bottom: 1px solid rgba(15,23,42,0.8);
+    padding: 3px 4px;
+    text-align: right;
+    white-space: nowrap;
+  }
+  .summary-table th:first-child,
+  .summary-table td:first-child {
+    text-align: left;
+  }
+  .summary-table tr:last-child th,
+  .summary-table tr:last-child td {
+    border-bottom: none;
+  }
+
+  .summary-tabs {
+    display: flex;
+    gap: 6px;
+    margin: 4px 0 6px;
+    overflow-x: auto;
+  }
+  .summary-tab-btn {
+    border-radius: 999px;
+    border: 1px solid var(--border);
+    background: rgba(15,23,42,0.9);
+    color: var(--muted);
+    font-size: 0.75rem;
+    padding: 3px 10px;
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+  .summary-tab-btn.active {
+    border-color: var(--accent);
+    color: var(--accent);
+    box-shadow: 0 0 0 1px rgba(56,189,248,0.6);
+  }
+
+  .land-layout {
+    display: grid;
+    grid-template-columns: minmax(0,0.9fr) minmax(0,1.1fr);
+    gap: 16px;
+    margin-top: 14px;
+  }
+
+  .modal-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.65);
+    display: none;
+    align-items: flex-start;
+    justify-content: center;
+    z-index: 20;
+    overflow-y: auto;
+    padding: 24px 0;
+  }
+
+  .modal {
+    background:
+      radial-gradient(circle at top left, #0b1220 0, #020617 65%);
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    padding: 14px;
+    max-width: 460px;
+    width: calc(100% - 32px);
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: 0 18px 40px rgba(0,0,0,0.8);
+  }
+
+  body.theme-light .modal {
+    background: #ffffff;
+    border-color: #e5e7eb;
+  }
+
+  .modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 6px;
+  }
+
+  .modal-body {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 8px;
+  }
+
+  .modal-img-wrap {
+    width: 100%;
+    text-align: center;
+  }
+  .modal-img-wrap img {
+    max-width: 100%;
+    border-radius: 10px;
+    border: 1px solid #111827;
+  }
+
+  .field-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    align-items: center;
+  }
+  .field-group > * {
+    flex: 1 1 120px;
+  }
+
+  hr {
+    border: none;
+    border-top: 1px solid var(--border);
+    margin: 6px 0;
+  }
+
+  .error {
+    color: var(--danger);
+    font-size: 0.8rem;
+    margin-top: 4px;
+  }
+
+  .plan-card {
+    margin-top: 8px;
+  }
+
+  .plan-tabs {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 6px;
+    overflow-x: auto;
+  }
+  .plan-tab-btn {
+    border-radius: 999px;
+    border: 1px solid var(--border);
+    background: rgba(15,23,42,0.9);
+    color: var(--muted);
+    font-size: 0.75rem;
+    padding: 3px 10px;
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+  .plan-tab-btn.active {
+    border-color: var(--accent);
+    color: var(--accent);
+    box-shadow: 0 0 0 1px rgba(56,189,248,0.6);
+  }
+
+  .plan-section-title {
+    font-size: 0.8rem;
+    font-weight: 600;
+    margin: 4px 0;
+  }
+
+  .pill-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 2px 8px;
+    border-radius: 999px;
+    border: 1px solid var(--border);
+    font-size: 0.7rem;
+    background: rgba(15,23,42,0.9);
+  }
+
+  .plan-hand {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
+    gap: 4px;
+    margin-top: 4px;
+  }
+  .plan-hand-card {
+    min-width: 0;
+    border-radius: 8px;
+    border: 1px solid #111827;
+    background: #020617;
+    padding: 3px 5px;
+    font-size: 0.72rem;
+  }
+
+  body.theme-light .plan-hand-card {
+    background: #ffffff;
+    border-color: #e5e7eb;
+  }
+
+  .tiny-label {
+    font-size: 0.7rem;
+    color: var(--muted);
+  }
+
+  .plan-metric {
+    font-size: 0.75rem;
+    margin-bottom: 2px;
+  }
+
+  .mini-summary {
+    font-size: 0.75rem;
+    background: rgba(15,23,42,0.9);
+    border-radius: 8px;
+    border: 1px solid #111827;
+    padding: 6px;
+  }
+
+  body.theme-light .mini-summary {
+    background: #f3f4f6;
+    border-color: #e5e7eb;
+  }
+
+  /* Toast */
+  #toast {
+    position: fixed;
+    bottom: 12px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(15,23,42,0.98);
+    color: var(--text);
+    padding: 8px 14px;
+    border-radius: 999px;
+    border: 1px solid var(--border);
+    font-size: 0.8rem;
+    box-shadow: 0 10px 26px rgba(0,0,0,0.8);
+    z-index: 50;
+    display: none;
+  }
+
+  /* Curve hill bars */
+  .curve-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin: 2px 0;
+  }
+  .curve-label {
+    width: 28px;
+    font-size: 0.75rem;
+  }
+  .curve-bars {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .curve-bar-track {
+    flex: 1;
+    height: 8px;
+    border-radius: 999px;
+    background: #020617;
+    border: 1px solid #111827;
+    overflow: hidden;
+  }
+  body.theme-light .curve-bar-track {
+    background: #e5e7eb;
+    border-color: #d1d5db;
+  }
+  .curve-bar-inner-deck {
+    height: 100%;
+    background: linear-gradient(90deg, #fb923c, #f97316);
+  }
+  .curve-bar-inner-anchor {
+    height: 100%;
+    background: linear-gradient(90deg, #a855f7, #ec4899);
+    opacity: 0.9;
+  }
+  .curve-counts {
+    font-size: 0.7rem;
+    color: var(--muted);
+    white-space: nowrap;
+  }
+
+  @media (max-width: 1000px) {
+    .deck-layout {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  @media (max-width: 700px) {
+    .shell {
+      padding: 10px;
+    }
+    body {
+      font-size: 16px;
+    }
+    h1 {
+      font-size: 1.4rem;
+      flex-direction: column;
+      align-items: flex-start;
+    }
+    .topbar {
+      flex-direction: column;
+      align-items: stretch;
+      gap: 6px;
+    }
+    .topbar-right {
+      margin-left: 0;
+      justify-content: flex-start;
+    }
+    .deck-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+    .deck-container {
+      max-height: none;
+    }
+    .summary-panel {
+      max-height: none;
+    }
+    button {
+      font-size: 0.9rem;
+      padding: 8px 14px;
+    }
+    input[type="text"],
+    input[type="number"],
+    select,
+    textarea {
+      font-size: 0.9rem;
+      padding: 8px 12px;
+    }
+    .deck-list-row {
+      grid-template-columns: 36px minmax(0, 1.5fr) minmax(0, 1fr) 80px;
+      font-size: 0.78rem;
+    }
+    .modal {
+      margin-top: 12px;
+      padding: 12px;
+    }
+    .modal-img-wrap img {
+      max-height: 50vh;
+      object-fit: cover;
+    }
+  }
+
+  @media (min-width: 701px) and (max-width: 1024px) {
+    .deck-layout {
+      grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr);
+      gap: 12px;
+    }
+    .deck-container {
+      max-height: 320px;
+    }
+    .deck-grid {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 8px;
+    }
+    .deck-card img {
+      max-height: 150px;
+      object-fit: cover;
+    }
+  }
+
+  @media (min-width: 1025px) {
+    .deck-layout {
+      grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr);
+      gap: 16px;
+    }
+    .deck-container {
+      max-height: 360px;
+    }
+  }
+</style>
+</head>
+<body class="theme-dark">
+<div class="shell">
+
+  <h1>
+    <span class="logo-coast">CoAST</span>
+    <span class="pill">Calculator of All Structural Tuning</span>
+  </h1>
+  <p class="muted">
+    A deck-building sandbar: curve hills, land odds, colour sources, and plans tuned together so your mana feels as good as your spells.
+  </p>
+
+  <div id="toast"></div>
+
+  <!-- START SCREEN -->
+  <div id="startScreen" class="card start-screen panel-raised">
+    <h2>Where are we sailing?</h2>
+    <div class="start-options">
+      <button id="btnBuild">Build a deck</button>
+      <button id="btnImport">Import a deck</button>
+      <button class="secondary" id="btnLandCalc">Land odds only</button>
+    </div>
+    <p class="muted">
+      • <b>Build</b>: search cards, tweak quantities, tag ramp/cantrips/plans, &amp; see structure update live.<br/>
+      • <b>Import</b>: paste a list and let CoAST read its bones.<br/>
+      • <b>Land odds</b>: quick hypergeometric land calculator without a decklist.
+    </p>
+  </div>
+
+  <!-- DECK APP -->
+  <div id="deckApp" style="display:none; margin-top:10px;">
+    <div class="topbar">
+      <button class="secondary" id="backToHome">← Home</button>
+      <div>
+        <label>Deck name</label><br/>
+        <input type="text" id="deckName" placeholder="Untitled deck" />
+      </div>
+      <div>
+        <label>Format</label><br/>
+        <select id="deckFormat">
+          <option value="auto">Auto (from size)</option>
+          <option value="limited">Limited (40)</option>
+          <option value="constructed">Constructed (60)</option>
+          <option value="commander">Commander (99/100)</option>
+          <option value="custom">Custom</option>
+        </select>
+      </div>
+      <div>
+        <label>Target size</label><br/>
+        <input type="number" id="deckSizeInput" min="1" step="1" value="60" />
+      </div>
+      <div>
+        <label>Land count</label><br/>
+        <input type="number" id="landCountInput" min="0" step="1" value="24" />
+      </div>
+      <div>
+        <label>Theme</label><br/>
+        <select id="themeSelect">
+          <option value="dark">Dark</option>
+          <option value="light">Light</option>
+          <option value="neon">Neon</option>
+        </select>
+      </div>
+      <div class="topbar-right">
+        <span id="deckStatusChip" class="chip">No cards yet</span>
+        <button class="secondary" id="saveDeckBtn">Save locally</button>
+        <select id="savedDecksSelect">
+          <option value="">Saved decks…</option>
+        </select>
+        <button class="secondary" id="loadDeckBtn">Load</button>
+        <button class="danger" id="deleteDeckBtn">Delete</button>
+      </div>
+    </div>
+
+    <div class="deck-layout">
+      <!-- LEFT: Builder / Importer -->
+      <div class="card panel-inset">
+        <h2 id="builderTitle">Deck builder</h2>
+
+        <div class="row">
           <div>
-            <div className="summary-grid" style={{ marginBottom: 6 }}>
-              <div className="summary-chip">
-                <strong>{stats.totalMain}</strong> cards main &nbsp;•&nbsp;
-                <strong>{stats.landCount}</strong> lands (
-                {landRatio.toFixed(1)}%)
-              </div>
-              <div className="summary-chip">
-                <strong>{stats.totalSide}</strong> cards in sideboard
-              </div>
-              {stats.formatBucket && (
-                <div className="summary-chip">
-                  Format bucket: <strong>{stats.formatBucket}</strong>
-                  &nbsp;deck
-                </div>
-              )}
-              <div className="summary-chip">
-                Virtual land sources tagged:{" "}
-                <strong>{stats.virtualSources}</strong>
-              </div>
-            </div>
-            <div className="muted" style={{ fontSize: "0.75rem" }}>
-              This tab is intentionally compact. The real work is happening in
-              the other views – especially Source odds, Colors, Curve, and Hand
-              lab – which all update live off the same data.
-            </div>
-          </div>
-        );
-      }
-
-      function SourcesTab({ stats, rows }) {
-        if (!rows.length) {
-          return (
-            <div className="muted">
-              Source odds need a non-empty main deck with lands.
-            </div>
-          );
-        }
-
-        const totalSources = stats.landCount + stats.virtualSources;
-
-        return (
-          <div>
-            <div className="summary-grid" style={{ marginBottom: 6 }}>
-              <div className="summary-chip">
-                Real lands: <strong>{stats.landCount}</strong>
-              </div>
-              <div className="summary-chip">
-                Virtual sources (ramp etc.):{" "}
-                <strong>{stats.virtualSources}</strong>
-              </div>
-              <div className="summary-chip">
-                Total sources counted:{" "}
-                <strong>{totalSources}</strong>
-              </div>
-            </div>
-            <table className="summary-table">
-              <thead>
-                <tr>
-                  <th>Turn</th>
-                  <th>Cards seen</th>
-                  <th>Need ≥</th>
-                  <th>P(hit)</th>
-                </tr>
-              </thead>
-              <tbody>
-                {rows.map((r) => (
-                  <tr key={r.turn}>
-                    <td>{r.turn}</td>
-                    <td>{r.cardsSeen}</td>
-                    <td>{r.need}</td>
-                    <td>{pct(r.p)}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-            <div className="muted" style={{ marginTop: 4 }}>
-              Each ramp spell’s “Virtual land” field contributes to the total
-              sources. This doesn’t change when you draw them – they’re baked
-              directly into the odds you’re tuning against.
-            </div>
-          </div>
-        );
-      }
-
-      function ColorsTab({ stats }) {
-        const colors = ["W", "U", "B", "R", "G", "C"];
-        const labels = {
-          W: "White",
-          U: "Blue",
-          B: "Black",
-          R: "Red",
-          G: "Green",
-          C: "Colorless"
-        };
-        const totalPips = colors.reduce(
-          (sum, c) => sum + (stats.pipTotals[c] || 0),
-          0
-        );
-
-        if (!totalPips) {
-          return (
-            <div className="muted">
-              Color pips will appear once cards with mana costs are loaded.
-            </div>
-          );
-        }
-
-        return (
-          <div>
-            <table className="summary-table">
-              <thead>
-                <tr>
-                  <th>Color</th>
-                  <th>Pips in spells</th>
-                  <th>Sources on lands</th>
-                  <th>Spell %</th>
-                </tr>
-              </thead>
-              <tbody>
-                {colors.map((c) => {
-                  const pipCount = stats.pipTotals[c] || 0;
-                  const landSources = stats.landSources[c] || 0;
-                  if (!pipCount && !landSources) return null;
-                  const spellPct =
-                    totalPips > 0
-                      ? ((pipCount / totalPips) * 100).toFixed(1)
-                      : "0.0";
-                  return (
-                    <tr key={c}>
-                      <td>
-                        <span className={"pip pip-" + c}>{c}</span>&nbsp;
-                        {labels[c]}
-                      </td>
-                      <td>{pipCount}</td>
-                      <td>{landSources}</td>
-                      <td>{spellPct}%</td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-            <div className="muted" style={{ marginTop: 4 }}>
-              Rule of thumb: sources for each color should roughly track its
-              share of pips across the deck. Outliers are where you’ll usually
-              smooth first.
-            </div>
-          </div>
-        );
-      }
-
-      function CurveTab({ stats }) {
-        const buckets = [];
-        for (let mv = 0; mv <= 10; mv++) {
-          const count = stats.cmcCounts[mv] || 0;
-          const weighted = stats.cmcWeights[mv] || 0;
-          const anchor = stats.anchor ? stats.anchor[mv] || 0 : 0;
-          if (!count && !anchor && !weighted) continue;
-          buckets.push({ mv, count, weighted, anchor });
-        }
-
-        if (!buckets.length) {
-          return (
-            <div className="muted">
-              Curve view needs spells with non-zero counts.
-            </div>
-          );
-        }
-
-        const maxActual = Math.max(...buckets.map((b) => b.count));
-        const maxAnchor = Math.max(...buckets.map((b) => b.anchor));
-        const max = Math.max(maxActual, maxAnchor, 1);
-
-        return (
-          <div>
-            {stats.anchor ? (
-              <div className="muted" style={{ marginBottom: 4 }}>
-                Anchor curve is derived from deck size, land count and format
-                bucket. Bars show actual vs. plan-weighted counts.
-              </div>
-            ) : (
-              <div className="muted" style={{ marginBottom: 4 }}>
-                No anchor curve available – size isn’t close to 40, 60 or 99
-                with a recognised land count.
-              </div>
-            )}
-            {buckets.map((b) => {
-              const actualWidth = (b.count / max) * 100;
-              const anchorWidth = (b.anchor / max) * 100;
-              return (
-                <div key={b.mv} className="curve-bar-row">
-                  <div className="curve-bar-label">MV {b.mv}</div>
-                  <div className="curve-bar-track">
-                    <div
-                      className="curve-bar-actual"
-                      style={{ width: actualWidth + "%" }}
-                    />
-                    {anchorWidth > 0 && (
-                      <div
-                        className="curve-bar-anchor"
-                        style={{ width: anchorWidth + "%" }}
-                      />
-                    )}
-                  </div>
-                  <div className="curve-bar-counts">
-                    {b.count} / {b.anchor || "–"}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        );
-      }
-
-      function HandSummaryTab({
-        handState,
-        handStats,
-        mulliganStyle,
-        setMulliganStyle,
-        resetLibraryAndHand,
-        mulliganHand,
-        keepHand,
-        resetHandLab,
-        drawCard,
-        nextCopyProbFor,
-        tagCardZone
-      }) {
-        const hasDeck =
-          handState.library.length ||
-          handState.hand.length ||
-          handState.samples;
-
-        return (
-          <div>
-            <div className="row" style={{ marginBottom: 6 }}>
-              <button onClick={resetLibraryAndHand}>New 7</button>
-              <button
-                className="secondary"
-                onClick={mulliganHand}
-                disabled={!handState.library.length && !handState.hand.length}
-              >
-                Mulligan
-              </button>
-              <button
-                className="secondary"
-                onClick={keepHand}
-                disabled={!handState.hand.length}
-              >
-                Mark keep
-              </button>
-              <button
-                className="secondary"
-                onClick={drawCard}
-                disabled={!handState.library.length && !handState.bottom.length}
-              >
-                Draw
-              </button>
-              <button
-                className="secondary"
-                onClick={resetHandLab}
-                style={{ marginLeft: "auto" }}
-              >
-                Clear
-              </button>
-            </div>
-
-            <div className="row" style={{ marginBottom: 6 }}>
-              <label>
-                Mulligan style:&nbsp;
-                <select
-                  value={mulliganStyle}
-                  onChange={(e) => setMulliganStyle(e.target.value)}
-                >
-                  <option value="london">London (draw 7, bot N)</option>
-                  <option value="vancouver">Vancouver (approximate)</option>
-                  <option value="none">No mulligan math</option>
-                </select>
-              </label>
-              {handStats && (
-                <span className="chip">
-                  Keep rate: {pct(handStats.keepRate || 0)} (
-                  {handState.keeps}/{handState.samples})
-                </span>
-              )}
-            </div>
-
-            {!hasDeck && (
-              <div className="muted">
-                Hand Lab shuffles your list and lets you walk through draws
-                without trying to fully emulate a board state. Generate a new
-                hand to begin.
-              </div>
-            )}
-
-            {hasDeck && (
-              <div>
-                <div className="handlab-container">
-                  <div className="panel-inset">
-                    <div
-                      className="muted"
-                      style={{ marginBottom: 3, fontSize: "0.75rem" }}
-                    >
-                      Hand ({handState.hand.length}) – change the zone select to
-                      push a card to top, bottom, exile or graveyard. Hover a
-                      card to see the chance the next draw is another copy.
-                    </div>
-                    <div>
-                      {handState.hand.length === 0 && (
-                        <div className="muted">
-                          No cards in hand – draw or generate a new hand.
-                        </div>
-                      )}
-                      {handState.hand.map((c) => (
-                        <HandCardPill
-                          key={c.id}
-                          card={c}
-                          nextCopyProbFor={nextCopyProbFor}
-                          onZoneChange={tagCardZone}
-                        />
-                      ))}
-                    </div>
-                  </div>
-
-                  <div className="panel-inset">
-                    <div
-                      className="muted"
-                      style={{ marginBottom: 3, fontSize: "0.75rem" }}
-                    >
-                      Library: {handState.library.length} top /{" "}
-                      {handState.bottom.length} bottom • Exile:{" "}
-                      {handState.exile.length} • GY:{" "}
-                      {handState.graveyard.length}
-                    </div>
-                    <div style={{ fontSize: "0.72rem" }}>
-                      Cards placed on <strong>top</strong> will be drawn first;
-                      cards placed on <strong>bottom</strong> will only be seen
-                      after the rest of the library is exhausted. The “next copy
-                      on draw” odds respect how many copies you’ve already seen.
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
-        );
-      }
-
-      function HandCardPill({ card, onZoneChange, nextCopyProbFor }) {
-        const [hover, setHover] = useState(false);
-        const pNext = nextCopyProbFor(card.name);
-
-        return (
-          <div
-            className="hand-card-pill"
-            onMouseEnter={() => setHover(true)}
-            onMouseLeave={() => setHover(false)}
-          >
-            <span style={{ flex: 1 }}>{card.name}</span>
-            <select
-              style={{ fontSize: "0.65rem" }}
-              onChange={(e) => onZoneChange(card.id, e.target.value)}
-              defaultValue="hand"
-            >
-              <option value="hand">Hand</option>
-              <option value="library-top">Top</option>
-              <option value="library-bottom">Bottom</option>
-              <option value="exile">Exile</option>
-              <option value="graveyard">Graveyard</option>
+            <label>Mode</label><br/>
+            <select id="builderMode">
+              <option value="build">Build with search</option>
+              <option value="import">Paste &amp; edit list</option>
             </select>
-            {hover && (
-              <span
-                className="muted"
-                style={{
-                  marginLeft: 4,
-                  fontSize: "0.65rem",
-                  whiteSpace: "nowrap"
-                }}
-              >
-                Next copy on draw: {pct(pNext)}
-              </span>
-            )}
           </div>
-        );
+          <div id="cardCountSummary" class="muted"></div>
+        </div>
+
+        <div id="buildControls" class="panel-inset" style="margin-bottom:6px;">
+          <div class="row">
+            <div style="flex: 2;">
+              <label>Add card (Scryfall search)</label><br/>
+              <input type="text" id="cardSearchName" placeholder="Lightning Bolt" />
+            </div>
+            <div>
+              <label>Qty</label><br/>
+              <input type="number" id="cardSearchQty" min="1" step="1" value="1" />
+            </div>
+            <div>
+              <label>&nbsp;</label><br/>
+              <button class="secondary" id="addCardBtn">Add</button>
+            </div>
+          </div>
+          <p class="muted">
+            Type a card name &amp; hit Enter. Tap a card tile to open its full image &amp; tuning profile.
+          </p>
+        </div>
+
+        <div id="importControls" class="panel-inset" style="display:none; margin-top:4px;">
+          <label>Decklist text (live with builder)</label><br/>
+          <textarea id="deckText" rows="8" spellcheck="false"
+            placeholder="4 Lightning Bolt&#10;4 Monastery Swiftspear&#10;2 Searing Blaze&#10;20 Mountain"></textarea>
+          <p class="muted">
+            Formats like <code>4 Lightning Bolt</code> or <code>4 Lightning Bolt (2XM) 123</code>. Lines starting with
+            <code>//</code> or <code>#</code> are ignored. Edits here update the same deck used by the builder.
+          </p>
+        </div>
+
+        <div class="deck-toolbar">
+          <div>
+            <label>View</label>
+            <select id="viewMode">
+              <option value="grid">Grid (images)</option>
+              <option value="list">List</option>
+            </select>
+            &nbsp;&nbsp;
+            <label>Group</label>
+            <select id="groupMode">
+              <option value="none">None</option>
+              <option value="type">Type</option>
+              <option value="mv">Mana value</option>
+              <option value="color">Color</option>
+            </select>
+          </div>
+          <div>
+            <span id="summaryBadge" class="chip">Deck: 0 cards</span>
+          </div>
+        </div>
+
+        <div id="deckContainer" class="deck-container">
+          <div class="muted">No cards yet. Use the search above or paste a list.</div>
+        </div>
+
+        <div id="builderStatus" class="muted" style="margin-top:6px;"></div>
+      </div>
+
+      <!-- RIGHT: Summary + Plans -->
+      <div class="card panel-raised">
+        <h2>Summary &amp; Plans</h2>
+
+        <div class="summary-tabs">
+          <button class="summary-tab-btn active" data-summary-tab-btn="overview">Overview</button>
+          <button class="summary-tab-btn" data-summary-tab-btn="curve">Curve</button>
+          <button class="summary-tab-btn" data-summary-tab-btn="lands">Lands</button>
+          <button class="summary-tab-btn" data-summary-tab-btn="virtual">Virtual lands</button>
+          <button class="summary-tab-btn" data-summary-tab-btn="colors">Colours</button>
+        </div>
+
+        <div id="summaryPanel" class="summary-panel">
+          <div id="summaryOverview" data-summary-tab="overview">
+            <div class="muted">(No analysis yet. Add cards or paste a deck.)</div>
+          </div>
+          <div id="summaryCurve" data-summary-tab="curve" style="display:none;">
+            <div class="muted">(No analysis yet. Add cards or paste a deck.)</div>
+          </div>
+          <div id="summaryLands" data-summary-tab="lands" style="display:none;">
+            <div class="muted">(No analysis yet. Add cards or paste a deck.)</div>
+          </div>
+          <div id="summaryVirtual" data-summary-tab="virtual" style="display:none;">
+            <div class="muted">(No analysis yet. Add cards or paste a deck.)</div>
+          </div>
+          <div id="summaryColors" data-summary-tab="colors" style="display:none;">
+            <div class="muted">(No analysis yet. Add cards or paste a deck.)</div>
+          </div>
+        </div>
+        <div id="summaryError" class="error"></div>
+
+        <div class="plan-card panel-raised">
+          <div class="plan-tabs">
+            <button class="plan-tab-btn active" data-plan="A">Plan A</button>
+            <button class="plan-tab-btn" data-plan="B">Plan B</button>
+            <button class="plan-tab-btn" data-plan="C">Plan C</button>
+            <button class="plan-tab-btn" data-plan="D">Plan D</button>
+            <button class="plan-tab-btn" data-plan="E">Plan E</button>
+          </div>
+          <div class="row">
+            <div>
+              <label>Target turn</label><br/>
+              <input type="number" id="planTargetTurn" min="1" step="1" value="3" />
+            </div>
+            <div class="muted" id="planMeta"></div>
+          </div>
+          <div id="planContent" style="font-size:0.8rem;">
+            <div class="muted">(Tag cards with Plan A–E in their detail panel to see plan summaries.)</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- LAND CALC APP -->
+  <div id="landCalcApp" style="display:none; margin-top:10px;">
+    <div class="topbar">
+      <button class="secondary" id="backFromLand">← Home</button>
+      <h2>Land odds calculator</h2>
+    </div>
+    <div class="land-layout">
+      <div class="card panel-inset">
+        <h3>Inputs</h3>
+        <div class="row">
+          <div>
+            <label>Deck size</label><br/>
+            <input type="number" id="lcDeckSize" min="1" step="1" value="60" />
+          </div>
+          <div>
+            <label>Land count</label><br/>
+            <input type="number" id="lcLandCount" min="0" step="1" value="24" />
+          </div>
+        </div>
+        <div class="row">
+          <div>
+            <label>Turns (max)</label><br/>
+            <input type="number" id="lcMaxTurn" min="1" step="1" value="5" />
+          </div>
+          <div>
+            <label>Play / draw</label><br/>
+            <select id="lcPlayDraw">
+              <option value="play">On the play</option>
+              <option value="draw">On the draw (+1 card)</option>
+            </select>
+          </div>
+        </div>
+        <button id="lcCalcBtn">Calculate</button>
+      </div>
+      <div class="card panel-raised">
+        <h3>Results</h3>
+        <pre id="lcResults" style="white-space:pre-wrap; font-family:'Fira Code',monospace; font-size:11px;">
+(No calculation yet.)</pre>
+      </div>
+    </div>
+  </div>
+
+  <!-- CARD PROFILE MODAL -->
+  <div id="cardModalBackdrop" class="modal-backdrop">
+    <div class="modal">
+      <div class="modal-header">
+        <div>
+          <h3 id="modalCardName">Card</h3>
+          <div class="muted" id="modalCardType"></div>
+        </div>
+        <button class="secondary" id="closeModalBtn">✕</button>
+      </div>
+
+      <div class="modal-body">
+        <div class="modal-img-wrap">
+          <img id="modalCardImg" alt="Card image" />
+        </div>
+
+        <hr />
+
+        <div class="panel-inset">
+          <div class="field-group">
+            <div>
+              <label>Quantity in deck</label><br/>
+              <input type="number" id="modalQty" min="0" step="1" />
+              <p class="muted">
+                Set to 0 to remove this card from the deck.
+              </p>
+            </div>
+            <div>
+              <label>Effective mana value (optional override)</label><br/>
+              <input type="number" id="modalEffMV" min="0" step="1" placeholder="Use printed MV" />
+              <p class="muted">
+                For patterns like “7-drop we actually cast for 4”. Leave empty to use printed mana value.
+              </p>
+            </div>
+          </div>
+
+          <hr />
+
+          <div>
+            <label>Ramp profile (optional)</label>
+            <div class="field-group" style="margin-top:4px;">
+              <div>
+                <label>Ramp type</label><br/>
+                <select id="modalRampType">
+                  <option value="">None</option>
+                  <option value="dork">Dork (creature)</option>
+                  <option value="rock">Rock (artifact)</option>
+                  <option value="land">Land tutor / ramp</option>
+                  <option value="burst">Burst (ritual)</option>
+                  <option value="cheat">Cheat (reanimate / sneak)</option>
+                </select>
+              </div>
+              <div>
+                <label>Online turn</label><br/>
+                <input type="number" id="modalRampTurn" min="1" step="1" placeholder="2" />
+              </div>
+              <div>
+                <label>Net mana</label><br/>
+                <input type="number" id="modalRampNet" step="1" placeholder="+1" />
+              </div>
+            </div>
+          </div>
+
+          <hr />
+
+          <div>
+            <label>Cantrip / selection (optional)</label>
+            <div class="field-group" style="margin-top:4px;">
+              <div>
+                <label>Extra cards seen (avg)</label><br/>
+                <input type="number" id="modalCantrip" min="0" step="0.1" placeholder="0.6" />
+              </div>
+            </div>
+            <p class="muted">
+              Rough guidelines: scry / small peeks ~0.6, Impulse-style ~1.2–1.5. Used in plan odds buckets.
+            </p>
+          </div>
+
+          <hr />
+
+          <div>
+            <label>Plan tags</label>
+            <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:4px;">
+              <label class="pill-tag"><input type="checkbox" id="modalPlanA" /> Plan A</label>
+              <label class="pill-tag"><input type="checkbox" id="modalPlanB" /> Plan B</label>
+              <label class="pill-tag"><input type="checkbox" id="modalPlanC" /> Plan C</label>
+              <label class="pill-tag"><input type="checkbox" id="modalPlanD" /> Plan D</label>
+              <label class="pill-tag"><input type="checkbox" id="modalPlanE" /> Plan E</label>
+            </div>
+          </div>
+
+          <hr />
+
+          <div>
+            <label>Plan-specific MV overrides (optional)</label>
+            <div class="field-group" style="margin-top:4px;">
+              <div>
+                <span class="tiny-label">Plan A MV</span><br/>
+                <input type="number" id="planEffA" min="0" step="1" placeholder="-" />
+              </div>
+              <div>
+                <span class="tiny-label">Plan B MV</span><br/>
+                <input type="number" id="planEffB" min="0" step="1" placeholder="-" />
+              </div>
+              <div>
+                <span class="tiny-label">Plan C MV</span><br/>
+                <input type="number" id="planEffC" min="0" step="1" placeholder="-" />
+              </div>
+              <div>
+                <span class="tiny-label">Plan D MV</span><br/>
+                <input type="number" id="planEffD" min="0" step="1" placeholder="-" />
+              </div>
+              <div>
+                <span class="tiny-label">Plan E MV</span><br/>
+                <input type="number" id="planEffE" min="0" step="1" placeholder="-" />
+              </div>
+            </div>
+            <p class="muted">
+              Used when analysing the active plan’s “follow-up draw” buckets (cheap/mid/big). Global curve still uses the base effective MV above.
+            </p>
+          </div>
+        </div>
+
+        <div style="margin-top:6px;" id="modalSummary" class="mini-summary">
+          (Per-card summary will appear here.)
+        </div>
+
+        <button id="modalSaveBtn" style="margin-top:6px;">Save card profile</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ABOUT / README IN-APP -->
+  <div id="aboutCard" class="card panel-raised" style="margin-top:14px;">
+    <div class="row" style="justify-content:space-between;">
+      <h2 style="margin-bottom:0;">About CoAST</h2>
+      <button class="secondary" id="toggleAboutBtn">Show details</button>
+    </div>
+    <div id="aboutContent" class="muted" style="display:none; margin-top:8px; font-size:0.8rem;">
+      <p><b>CoAST</b> (Calculator of All Structural Tuning) is a client-side tool for Magic: the Gathering that treats your deck like a system: lands, spells, ramp, cantrips, colour pips, and game plans are all analysed together.</p>
+      <p>Core ideas:</p>
+      <ul style="padding-left:18px;">
+        <li>Use <b>curve hills</b> and <b>WPL (weight per land)</b> to understand how heavy your deck actually is.</li>
+        <li>Use hypergeometric math to estimate <b>land consistency</b> with and without ramp.</li>
+        <li>Use pip counts and colour sources to sanity check your mana base.</li>
+        <li>Tag cards into <b>Plans A–E</b> and see how often your core plans actually come together by a target turn.</li>
+      </ul>
+      <p>All calculations run in your browser. No accounts, no servers, no paywalls. Card data and art are fetched from the public Scryfall API.</p>
+    </div>
+  </div>
+
+  <!-- DIAGNOSTICS / TESTS (hidden by default) -->
+  <div id="testsCard" class="card panel-inset" style="margin-top:10px; display:none;">
+    <div class="row" style="justify-content:space-between;">
+      <h2 style="margin-bottom:0;">Diagnostics &amp; Tests</h2>
+      <button class="secondary" id="runTestsBtn">Run self-check</button>
+    </div>
+    <pre id="testsOutput" class="muted" style="white-space:pre-wrap; font-size:0.75rem; margin-top:8px; max-height:220px; overflow:auto;">
+(No tests run yet.)</pre>
+  </div>
+
+</div>
+
+<script>
+// ===== combinatorics / hypergeometric =====
+function comb(n, k) {
+  if (k < 0 || k > n) return 0;
+  if (k === 0 || k === n) return 1;
+  k = Math.min(k, n - k);
+  let res = 1;
+  for (let i = 1; i <= k; i++) {
+    res = res * (n - k + i) / i;
+  }
+  return res;
+}
+function hyperPMF(k, K, N, n) {
+  if (n > N) return 0;
+  const num = comb(K, k) * comb(N - K, n - k);
+  const den = comb(N, n);
+  return den === 0 ? 0 : num / den;
+}
+function probAtLeast(k, K, N, n) {
+  let p = 0;
+  const maxK = Math.min(K, n);
+  for (let i = k; i <= maxK; i++) p += hyperPMF(i, K, N, n);
+  return p;
+}
+function pct(p) {
+  if (!Number.isFinite(p)) return '0.0%';
+  return (p * 100).toFixed(1) + '%';
+}
+
+// ===== Toast =====
+let toastTimer = null;
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.style.display = 'block';
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => {
+    t.style.display = 'none';
+  }, 2600);
+}
+
+// ===== Scryfall fetch with image =====
+const scryfallCache = new Map();
+
+async function fetchCardData(name, mode = 'fuzzy') {
+  const key = (mode + ':' + name).toLowerCase();
+  if (scryfallCache.has(key)) return scryfallCache.get(key);
+
+  const param = mode === 'exact' ? 'exact' : 'fuzzy';
+  const url = `https://api.scryfall.com/cards/named?${param}=${encodeURIComponent(name)}`;
+  let data;
+  try {
+    const resp = await fetch(url);
+    if (!resp.ok) throw new Error('Scryfall error');
+    data = await resp.json();
+  } catch {
+    data = {
+      name,
+      cmc: 0,
+      type_line: 'Unknown',
+      color_identity: [],
+      mana_cost: ''
+    };
+  }
+
+  let image = null;
+  if (data.image_uris && data.image_uris.normal) {
+    image = data.image_uris.normal;
+  } else if (Array.isArray(data.card_faces) &&
+             data.card_faces[0] &&
+             data.card_faces[0].image_uris &&
+             data.card_faces[0].image_uris.normal) {
+    image = data.card_faces[0].image_uris.normal;
+  }
+  data._coast_image = image;
+
+  scryfallCache.set(key, data);
+  return data;
+}
+
+// ===== CoAST state =====
+const state = {
+  mode: 'build',
+  viewMode: 'grid',
+  groupMode: 'none',
+  deckEntries: {},
+  cardInfos: [],
+  tuning: {},
+  lastResult: null,
+  activePlan: 'A',
+  planSettings: {
+    A: { targetTurn: 3 },
+    B: { targetTurn: 3 },
+    C: { targetTurn: 3 },
+    D: { targetTurn: 3 },
+    E: { targetTurn: 3 }
+  },
+  summaryTab: 'overview',
+  theme: 'dark',
+  landsPerspective: 'play'
+};
+
+// Anchor hills (skeleton)
+const ANCHOR_CURVES = {
+  40: { 16: {1: 6, 2: 12, 3: 6} },
+  60: { 24: {1: 10, 2: 14, 3: 7, 4: 5, 5: 3, 6: 1} },
+  99: { 35: {1: 5, 2: 12, 3: 13, 4: 10, 5: 7, 6: 5, 7: 3, 8: 1} }
+};
+
+function getAnchor(sizeBucket, landCount) {
+  const entry = ANCHOR_CURVES[sizeBucket];
+  if (!entry) return null;
+  if (entry[landCount]) return entry[landCount];
+  const keys = Object.keys(entry).map(x => parseInt(x,10));
+  if (!keys.length) return null;
+  let nearest = keys[0];
+  for (const k of keys) {
+    if (Math.abs(k - landCount) < Math.abs(nearest - landCount)) nearest = k;
+  }
+  return entry[nearest];
+}
+
+function show(id){ document.getElementById(id).style.display = ''; }
+function hide(id){ document.getElementById(id).style.display = 'none'; }
+
+function deckEntriesFromText(text) {
+  const LINE_RE = /^\s*(\d+)[xX]?\s+(.+?)(?:\s+\([^)]+\)\s+\d+)?\s*$/;
+  const lines = text.split(/\r?\n/);
+  const entries = {};
+  for (const raw of lines) {
+    const line = raw.trim();
+    if (!line) continue;
+    if (line.startsWith('#') || line.startsWith('//')) continue;
+    const m = line.match(LINE_RE);
+    if (!m) continue;
+    const qty = parseInt(m[1], 10);
+    const name = m[2].trim();
+    if (!name || !Number.isFinite(qty)) continue;
+    entries[name] = (entries[name] || 0) + qty;
+  }
+  return entries;
+}
+function deckEntriesToText(entries) {
+  return Object.keys(entries)
+    .sort((a,b)=>a.localeCompare(b))
+    .map(name => `${entries[name]} ${name}`)
+    .join('\n');
+}
+function rebuildDeckTextFromState() {
+  const textarea = document.getElementById('deckText');
+  if (!textarea) return;
+  textarea.value = deckEntriesToText(state.deckEntries);
+}
+
+// ===== Theme handling =====
+function computeNeonPalette() {
+  const r = state.lastResult;
+  const root = document.documentElement.style;
+  if (!r) {
+    root.setProperty('--accent', '#f472b6');
+    root.setProperty('--accent2', '#a855f7');
+    return;
+  }
+
+  const src = Object.keys(r.landSources).length ? r.landSources : r.pipTotals;
+  const colours = ['W','U','B','R','G'];
+  const neonMap = {
+    W: '#f9fafb',
+    U: '#22d3ee',
+    B: '#a855f7',
+    R: '#fb7185',
+    G: '#4ade80'
+  };
+
+  const counts = colours.map(c => ({ c, n: src[c] || 0 }));
+  counts.sort((a,b)=>b.n - a.n);
+  const first = counts[0];
+  const second = counts[1] && counts[1].n > 0 ? counts[1] : counts[0];
+
+  const c1 = neonMap[first.c] || '#22d3ee';
+  const c2 = neonMap[second.c] || '#a855f7';
+
+  root.setProperty('--accent', c1);
+  root.setProperty('--accent2', c2);
+}
+
+function applyTheme(theme) {
+  state.theme = theme;
+  const root = document.documentElement.style;
+
+  if (theme === 'light') {
+    root.setProperty('--bg', '#f3f4f6');
+    root.setProperty('--panel', '#ffffff');
+    root.setProperty('--text', '#020617');
+    root.setProperty('--muted', '#4b5563');
+    root.setProperty('--border', '#e5e7eb');
+    root.setProperty('--accent', '#2563eb');
+    root.setProperty('--accent2', '#22c55e');
+  } else {
+    // Dark base
+    root.setProperty('--bg', '#020617');
+    root.setProperty('--panel', '#020617');
+    root.setProperty('--text', '#e5e7ff');
+    root.setProperty('--muted', '#9ca3c7');
+    root.setProperty('--border', '#1f2937');
+    root.setProperty('--accent', '#38bdf8');
+    root.setProperty('--accent2', '#22c55e');
+  }
+
+  if (theme === 'neon') {
+    computeNeonPalette();
+  }
+
+  document.body.classList.remove('theme-dark','theme-light','theme-neon');
+  document.body.classList.add('theme-' + theme);
+}
+
+// ===== analysis =====
+async function analyzeDeck() {
+  const summaryError = document.getElementById('summaryError');
+  summaryError.textContent = '';
+
+  const names = Object.keys(state.deckEntries);
+
+  if (!names.length) {
+    state.cardInfos = [];
+    state.lastResult = null;
+    renderDeckView();
+    updateDeckStatusChip();
+    renderSummary(null);
+    renderPlanPanel();
+    return;
+  }
+
+  const cardInfos = [];
+  for (const name of names) {
+    const info = await fetchCardData(name, 'exact');
+    const profile = state.tuning[info.name] || state.tuning[name] || {};
+    const printedMV = Math.round(info.cmc || 0);
+    const effMV = (profile.effMV !== undefined && profile.effMV !== null && !Number.isNaN(profile.effMV))
+      ? Number(profile.effMV)
+      : printedMV;
+
+    cardInfos.push({
+      name: info.name || name,
+      key: info.name || name,
+      qty: state.deckEntries[name],
+      mv: effMV,
+      printed_mv: printedMV,
+      type_line: info.type_line || 'Unknown',
+      colors: info.colors || [],
+      color_identity: info.color_identity || [],
+      mana_cost: info.mana_cost || '',
+      image_url: info._coast_image || null
+    });
+  }
+  state.cardInfos = cardInfos;
+
+  const deckSize = cardInfos.reduce((a,c)=>a + c.qty, 0);
+  const landInput = parseInt(document.getElementById('landCountInput').value,10);
+  let landCount = Number.isFinite(landInput) ? landInput : 0;
+
+  if (landCount === 0) {
+    landCount = cardInfos.reduce((a,c)=>{
+      if ((c.type_line || '').toLowerCase().includes('land')) return a + c.qty;
+      return a;
+    }, 0);
+  }
+
+  const nonlandCount = deckSize - landCount;
+  const curve = {};
+  for (let mv=0; mv<=10; mv++) curve[mv] = 0;
+  let deckWeight = 0;
+
+  for (const c of cardInfos) {
+    const isLand = (c.type_line || '').toLowerCase().includes('land');
+    if (!isLand) {
+      const mv = Math.max(0, Math.min(10, c.mv));
+      curve[mv] += c.qty;
+      deckWeight += mv * c.qty;
+    }
+  }
+
+  const wpl = landCount ? deckWeight / landCount : 0;
+
+  // Land tables: Play vs Draw
+  const landTablePlay = [];
+  const landTableDraw = [];
+  for (let turn=1; turn<=5; turn++) {
+    let seenPlay = 7 + (turn - 1);
+    let seenDraw = 8 + (turn - 1);
+    if (seenPlay > deckSize) seenPlay = deckSize;
+    if (seenDraw > deckSize) seenDraw = deckSize;
+    landTablePlay.push({
+      turn,
+      seen: seenPlay,
+      p1: probAtLeast(1, landCount, deckSize, seenPlay),
+      p2: probAtLeast(2, landCount, deckSize, seenPlay),
+      p3: probAtLeast(3, landCount, deckSize, seenPlay),
+      p4: probAtLeast(4, landCount, deckSize, seenPlay)
+    });
+    landTableDraw.push({
+      turn,
+      seen: seenDraw,
+      p1: probAtLeast(1, landCount, deckSize, seenDraw),
+      p2: probAtLeast(2, landCount, deckSize, seenDraw),
+      p3: probAtLeast(3, landCount, deckSize, seenDraw),
+      p4: probAtLeast(4, landCount, deckSize, seenDraw)
+    });
+  }
+
+  let totalRampCopies = 0;
+  let totalCantripExtra = 0;
+  for (const c of cardInfos) {
+    const profile = state.tuning[c.name] || {};
+    if (profile.rampType) totalRampCopies += c.qty;
+    if (profile.cantripExtra) totalCantripExtra += profile.cantripExtra * c.qty;
+  }
+
+  const virtualLandCount = landCount + totalRampCopies;
+  const landTableVirtualPlay = [];
+  const landTableVirtualDraw = [];
+  for (let turn=1; turn<=5; turn++) {
+    let seenPlay = 7 + (turn - 1);
+    let seenDraw = 8 + (turn - 1);
+    if (seenPlay > deckSize) seenPlay = deckSize;
+    if (seenDraw > deckSize) seenDraw = deckSize;
+    landTableVirtualPlay.push({
+      turn,
+      seen: seenPlay,
+      p1: probAtLeast(1, virtualLandCount, deckSize, seenPlay),
+      p2: probAtLeast(2, virtualLandCount, deckSize, seenPlay),
+      p3: probAtLeast(3, virtualLandCount, deckSize, seenPlay),
+      p4: probAtLeast(4, virtualLandCount, deckSize, seenPlay)
+    });
+    landTableVirtualDraw.push({
+      turn,
+      seen: seenDraw,
+      p1: probAtLeast(1, virtualLandCount, deckSize, seenDraw),
+      p2: probAtLeast(2, virtualLandCount, deckSize, seenDraw),
+      p3: probAtLeast(3, virtualLandCount, deckSize, seenDraw),
+      p4: probAtLeast(4, virtualLandCount, deckSize, seenDraw)
+    });
+  }
+
+  const pipTotals = {};
+  const pipRegex = /\{([WUBRG])\}/g;
+  for (const c of cardInfos) {
+    let m;
+    const cost = c.mana_cost || '';
+    while ((m = pipRegex.exec(cost)) !== null) {
+      pipTotals[m[1]] = (pipTotals[m[1]] || 0) + c.qty;
+    }
+  }
+
+  const landSources = {};
+  for (const c of cardInfos) {
+    const isLand = (c.type_line || '').toLowerCase().includes('land');
+    if (!isLand) continue;
+    for (const col of (c.color_identity || [])) {
+      landSources[col] = (landSources[col] || 0) + c.qty;
+    }
+  }
+
+  const neededSources = {};
+  const deltaSources = {};
+  const colSet = new Set([...Object.keys(pipTotals), ...Object.keys(landSources)]);
+  for (const col of colSet) {
+    const pips = pipTotals[col] || 0;
+    const need = Math.ceil(pips / 3);
+    neededSources[col] = need;
+    const have = landSources[col] || 0;
+    deltaSources[col] = have - need;
+  }
+
+  const formatSel = document.getElementById('deckFormat').value;
+  let sizeBucket;
+  if (formatSel === 'limited') sizeBucket = 40;
+  else if (formatSel === 'constructed') sizeBucket = 60;
+  else if (formatSel === 'commander') sizeBucket = 99;
+  else {
+    if (deckSize >= 35 && deckSize <= 50) sizeBucket = 40;
+    else if (deckSize >= 51 && deckSize <= 75) sizeBucket = 60;
+    else if (deckSize >= 90 && deckSize <= 110) sizeBucket = 99;
+    else sizeBucket = null;
+  }
+
+  const anchor = sizeBucket ? getAnchor(sizeBucket, landCount) : null;
+  let anchorInfo = null;
+  if (anchor) {
+    const anchorNonlands = Object.values(anchor).reduce((a,b)=>a+b,0);
+    const scale = anchorNonlands ? (nonlandCount / anchorNonlands) : 1;
+    const scaled = {};
+    for (const [mv, qty] of Object.entries(anchor)) {
+      scaled[mv] = Math.round(qty * scale);
+    }
+    anchorInfo = {raw: anchor, scaled};
+  }
+
+  const result = {
+    deckName: document.getElementById('deckName').value || 'Untitled deck',
+    deckSize,
+    landCount,
+    nonlandCount,
+    deckWeight,
+    wpl,
+    curve,
+    landTablePlay,
+    landTableDraw,
+    landTableVirtualPlay,
+    landTableVirtualDraw,
+    pipTotals,
+    landSources,
+    neededSources,
+    deltaSources,
+    anchorInfo,
+    totalRampCopies,
+    totalCantripExtra
+  };
+
+  state.lastResult = result;
+
+  if (state.theme === 'neon') {
+    computeNeonPalette();
+  }
+
+  renderDeckView();
+  updateDeckStatusChip(result);
+  renderSummary(result);
+  renderPlanPanel();
+}
+
+// ===== Summary UI =====
+function renderSummary(r) {
+  const elOverview = document.getElementById('summaryOverview');
+  const elCurve = document.getElementById('summaryCurve');
+  const elLands = document.getElementById('summaryLands');
+  const elVirtual = document.getElementById('summaryVirtual');
+  const elColors = document.getElementById('summaryColors');
+
+  if (!r) {
+    const msg = '<div class="muted">(No analysis yet. Add cards or paste a deck.)</div>';
+    elOverview.innerHTML = msg;
+    elCurve.innerHTML = msg;
+    elLands.innerHTML = msg;
+    elVirtual.innerHTML = msg;
+    elColors.innerHTML = msg;
+    setSummaryTab(state.summaryTab || 'overview');
+    return;
+  }
+
+  const wplClass =
+    r.wpl < 2.4 ? 'bad' :
+    r.wpl <= 3.6 ? 'good' : 'warn';
+
+  const landClass =
+    r.landCount <= 0 ? 'warn' :
+    'good';
+
+  // Overview
+  let htmlOverview = '';
+  htmlOverview += '<div class="summary-section">';
+  htmlOverview += '<div class="summary-title">Deck snapshot</div>';
+  htmlOverview += '<div class="summary-grid">';
+  htmlOverview += `<span class="summary-chip"><b>${r.deckName}</b></span>`;
+  htmlOverview += `<span class="summary-chip ${landClass}">Size: ${r.deckSize} (lands ${r.landCount}, nonlands ${r.nonlandCount})</span>`;
+  htmlOverview += `<span class="summary-chip ${wplClass}">Weight / land (WPL): ${r.wpl.toFixed(3)}</span>`;
+  htmlOverview += `<span class="summary-chip">Ramp copies tagged: ${r.totalRampCopies}</span>`;
+  htmlOverview += `<span class="summary-chip">Cantrip extra cards (sum): ${r.totalCantripExtra.toFixed(1)}</span>`;
+  htmlOverview += '</div>';
+  htmlOverview += '</div>';
+  elOverview.innerHTML = htmlOverview;
+
+  // Curve
+  let htmlCurve = '';
+  htmlCurve += '<div class="summary-section">';
+  htmlCurve += '<div class="summary-title">Curve vs anchor hill</div>';
+  htmlCurve += '<p class="muted">Anchor hill is a “default” curve for your deck size &amp; land count. Bars show your curve (orange) vs anchor (pink/purple).</p>';
+
+  // Table
+  htmlCurve += '<table class="summary-table"><thead><tr><th>MV</th><th>In deck</th><th>Anchor*</th><th>Δ</th></tr></thead><tbody>';
+  let maxCurveVal = 0;
+  if (r.anchorInfo) {
+    for (let mv=0; mv<=10; mv++) {
+      const dq = r.curve[mv] || 0;
+      const aq = r.anchorInfo.scaled[mv] || 0;
+      if (!dq && !aq) continue;
+      const diff = dq - aq;
+      if (dq > maxCurveVal) maxCurveVal = dq;
+      if (aq > maxCurveVal) maxCurveVal = aq;
+      htmlCurve += `<tr><td>${mv}</td><td>${dq}</td><td>${aq}</td><td>${diff >= 0 ? '+' : ''}${diff}</td></tr>`;
+    }
+  } else {
+    for (let mv=0; mv<=10; mv++) {
+      const dq = r.curve[mv] || 0;
+      if (!dq) continue;
+      if (dq > maxCurveVal) maxCurveVal = dq;
+      htmlCurve += `<tr><td>${mv}</td><td>${dq}</td><td>–</td><td>–</td></tr>`;
+    }
+  }
+  htmlCurve += '</tbody></table>';
+  if (r.anchorInfo) {
+    htmlCurve += '<p class="muted" style="margin-top:4px;">*Anchor scaled to match your total non-land card count.</p>';
+  }
+  htmlCurve += '</div>';
+
+  // Bar graph
+  maxCurveVal = maxCurveVal || 1;
+  htmlCurve += '<div class="summary-section">';
+  htmlCurve += '<div class="summary-title">Curve hill (bars)</div>';
+  for (let mv = 0; mv <= 10; mv++) {
+    const dq = r.curve[mv] || 0;
+    const aq = r.anchorInfo ? (r.anchorInfo.scaled[mv] || 0) : 0;
+    if (!dq && !aq) continue;
+    const deckPct = (dq / maxCurveVal) * 100;
+    const anchorPct = (aq / maxCurveVal) * 100;
+    htmlCurve += `<div class="curve-row">
+      <div class="curve-label">${mv}</div>
+      <div class="curve-bars">
+        <div class="curve-bar-track">
+          <div class="curve-bar-inner-deck" style="width:${deckPct}%;"></div>
+        </div>
+        <div class="curve-bar-track">
+          <div class="curve-bar-inner-anchor" style="width:${anchorPct}%;"></div>
+        </div>
+        <div class="curve-counts">${dq} / ${aq || '–'}</div>
+      </div>
+    </div>`;
+  }
+  htmlCurve += '</div>';
+
+  elCurve.innerHTML = htmlCurve;
+
+  // Lands (base) with Play/Draw toggle
+  const perspective = state.landsPerspective || 'play';
+  const landTableBase = perspective === 'play' ? r.landTablePlay : r.landTableDraw;
+  const landLabel = perspective === 'play' ? 'On the play' : 'On the draw';
+
+  let htmlLands = '';
+  htmlLands += '<div class="summary-section">';
+  htmlLands += '<div class="summary-title">Land availability</div>';
+  htmlLands += `<div class="row" style="margin-bottom:4px;">
+      <div class="tiny-label">Perspective</div>
+      <div style="display:flex;gap:4px;flex-wrap:wrap;">
+        <button class="summary-tab-btn ${perspective==='play'?'active':''}" data-lands-toggle="play">Play</button>
+        <button class="summary-tab-btn ${perspective==='draw'?'active':''}" data-lands-toggle="draw">Draw</button>
+      </div>
+      <div class="tiny-label" style="margin-left:auto;">${landLabel}</div>
+    </div>`;
+  htmlLands += '<table class="summary-table"><thead><tr><th>Turn</th><th>Cards seen</th><th>P(≥1 land)</th><th>P(≥2)</th><th>P(≥3)</th><th>P(≥4)</th></tr></thead><tbody>';
+  for (const row of landTableBase) {
+    htmlLands += `<tr><td>${row.turn}</td><td>${row.seen}</td><td>${pct(row.p1)}</td><td>${pct(row.p2)}</td><td>${pct(row.p3)}</td><td>${pct(row.p4)}</td></tr>`;
+  }
+  htmlLands += '</tbody></table>';
+  htmlLands += '</div>';
+  elLands.innerHTML = htmlLands;
+
+  // Virtual lands
+  const landTableVirtualBase = perspective === 'play' ? r.landTableVirtualPlay : r.landTableVirtualDraw;
+  let htmlVirtual = '';
+  htmlVirtual += '<div class="summary-section">';
+  htmlVirtual += '<div class="summary-title">Virtual lands (ramp included – rough)</div>';
+  htmlVirtual += `<div class="row" style="margin-bottom:4px;">
+      <div class="tiny-label">Perspective</div>
+      <div style="display:flex;gap:4px;flex-wrap:wrap;">
+        <button class="summary-tab-btn ${perspective==='play'?'active':''}" data-lands-toggle="play">Play</button>
+        <button class="summary-tab-btn ${perspective==='draw'?'active':''}" data-lands-toggle="draw">Draw</button>
+      </div>
+      <div class="tiny-label" style="margin-left:auto;">${landLabel}</div>
+    </div>`;
+  htmlVirtual += '<p class="muted">Each tagged ramp card is currently counted as +1 land source. This is deliberately conservative.</p>';
+  htmlVirtual += '<table class="summary-table"><thead><tr><th>Turn</th><th>Cards seen</th><th>P(≥1 land)</th><th>P(≥2)</th><th>P(≥3)</th><th>P(≥4)</th></tr></thead><tbody>';
+  for (const row of landTableVirtualBase) {
+    htmlVirtual += `<tr><td>${row.turn}</td><td>${row.seen}</td><td>${pct(row.p1)}</td><td>${pct(row.p2)}</td><td>${pct(row.p3)}</td><td>${pct(row.p4)}</td></tr>`;
+  }
+  htmlVirtual += '</tbody></table>';
+  htmlVirtual += '</div>';
+  elVirtual.innerHTML = htmlVirtual;
+
+  // Colours
+  const cols = new Set([...Object.keys(r.pipTotals), ...Object.keys(r.landSources)]);
+  let htmlColors = '';
+  htmlColors += '<div class="summary-section">';
+  htmlColors += '<div class="summary-title">Colour pips vs land sources</div>';
+  if (!cols.size) {
+    htmlColors += '<p class="muted">No coloured mana symbols were detected in mana costs yet.</p>';
+  } else {
+    htmlColors += '<p class="muted">Rule of thumb: every ~3 pips of a colour wants ~1 source of that colour.</p>';
+    htmlColors += '<table class="summary-table"><thead><tr><th>Colour</th><th>Pips</th><th>Needed</th><th>Sources</th><th>Δ</th></tr></thead><tbody>';
+    for (const col of Array.from(cols).sort()) {
+      const pips = r.pipTotals[col] || 0;
+      const need = r.neededSources[col] || 0;
+      const have = r.landSources[col] || 0;
+      const d = r.deltaSources[col] || 0;
+      htmlColors += `<tr><td>${col}</td><td>${pips}</td><td>${need}</td><td>${have}</td><td>${d >= 0 ? '+' : ''}${d}</td></tr>`;
+    }
+    htmlColors += '</tbody></table>';
+  }
+  htmlColors += '</div>';
+  elColors.innerHTML = htmlColors;
+
+  setSummaryTab(state.summaryTab || 'overview');
+}
+
+function setSummaryTab(tab) {
+  state.summaryTab = tab;
+  const panels = document.querySelectorAll('[data-summary-tab]');
+  panels.forEach(p => {
+    p.style.display = (p.getAttribute('data-summary-tab') === tab) ? '' : 'none';
+  });
+  const buttons = document.querySelectorAll('[data-summary-tab-btn]');
+  buttons.forEach(b => {
+    if (b.getAttribute('data-summary-tab-btn') === tab) b.classList.add('active');
+    else b.classList.remove('active');
+  });
+}
+
+// ===== Deck view =====
+function createPipRow(color_identity) {
+  const container = document.createElement('div');
+  container.className = 'pip-row';
+  if (!color_identity || !color_identity.length) {
+    const pip = document.createElement('span');
+    pip.className = 'pip pip-C';
+    pip.textContent = 'C';
+    container.appendChild(pip);
+    return container;
+  }
+  for (const col of color_identity) {
+    const pip = document.createElement('span');
+    pip.className = 'pip pip-' + col;
+    pip.textContent = col;
+    container.appendChild(pip);
+  }
+  return container;
+}
+
+function adjustCardQuantity(name, delta) {
+  if (!state.deckEntries[name]) return;
+  const newQty = state.deckEntries[name] + delta;
+  if (newQty <= 0) {
+    delete state.deckEntries[name];
+    delete state.tuning[name];
+  } else {
+    state.deckEntries[name] = newQty;
+  }
+  rebuildDeckTextFromState();
+  scheduleAnalyze();
+}
+
+function renderDeckView() {
+  const container = document.getElementById('deckContainer');
+  const badge = document.getElementById('summaryBadge');
+
+  if (!state.cardInfos.length) {
+    container.innerHTML = '<div class="muted">No cards yet. Use the search above or paste a list.</div>';
+    badge.textContent = 'Deck: 0 cards';
+    document.getElementById('cardCountSummary').textContent = '';
+    return;
+  }
+
+  const deckSize = state.cardInfos.reduce((a,c)=>a + c.qty, 0);
+  const landsAuto = state.cardInfos.reduce((a,c)=>{
+    if ((c.type_line || '').toLowerCase().includes('land')) return a + c.qty;
+    return a;
+  }, 0);
+
+  badge.textContent = `Deck: ${deckSize} cards (${landsAuto} land by type)`;
+  document.getElementById('cardCountSummary').textContent = `${deckSize} cards tracked (${landsAuto} lands detected by type).`;
+
+  const grouped = {};
+  const gm = state.groupMode;
+
+  function groupKey(c) {
+    if (gm === 'type') return (c.type_line || 'Other').split('—')[0].trim() || 'Other';
+    if (gm === 'mv') return 'MV ' + c.mv;
+    if (gm === 'color') {
+      if (!c.color_identity || !c.color_identity.length) return 'Colorless';
+      return c.color_identity.join('');
+    }
+    return 'Deck';
+  }
+
+  for (const c of state.cardInfos) {
+    const k = groupKey(c);
+    if (!grouped[k]) grouped[k] = [];
+    grouped[k].push(c);
+  }
+
+  const groups = Object.keys(grouped).sort((a,b)=>{
+    if (a === 'Deck') return -1;
+    if (b === 'Deck') return 1;
+    return a.localeCompare(b);
+  });
+
+  const viewMode = state.viewMode;
+  container.innerHTML = '';
+
+  for (const gKey of groups) {
+    const header = document.createElement('div');
+    header.className = 'muted';
+    header.style.margin = '4px 0 2px';
+    header.textContent = gKey;
+    container.appendChild(header);
+
+    const cards = grouped[gKey];
+
+    if (viewMode === 'grid') {
+      const grid = document.createElement('div');
+      grid.className = 'deck-grid';
+      for (const c of cards) {
+        const div = document.createElement('div');
+        div.className = 'deck-card';
+        div.dataset.cardName = c.name;
+
+        if (c.image_url) {
+          const img = document.createElement('img');
+          img.src = c.image_url;
+          img.alt = c.name;
+          div.appendChild(img);
+        }
+
+        const head = document.createElement('div');
+        head.className = 'deck-card-header';
+        const nameSpan = document.createElement('span');
+        nameSpan.textContent = c.name;
+
+        const qtySpan = document.createElement('span');
+        qtySpan.className = 'qty-pill';
+        const minusBtn = document.createElement('button');
+        minusBtn.className = 'qty-btn';
+        minusBtn.textContent = '−';
+        minusBtn.addEventListener('click', (ev) => {
+          ev.stopPropagation();
+          adjustCardQuantity(c.name, -1);
+        });
+        const qtyText = document.createElement('span');
+        qtyText.textContent = `x${c.qty}`;
+        const plusBtn = document.createElement('button');
+        plusBtn.className = 'qty-btn';
+        plusBtn.textContent = '+';
+        plusBtn.addEventListener('click', (ev) => {
+          ev.stopPropagation();
+          adjustCardQuantity(c.name, +1);
+        });
+        qtySpan.appendChild(minusBtn);
+        qtySpan.appendChild(qtyText);
+        qtySpan.appendChild(plusBtn);
+
+        head.appendChild(nameSpan);
+        head.appendChild(qtySpan);
+        div.appendChild(head);
+
+        const typeSpan = document.createElement('div');
+        typeSpan.className = 'muted';
+        typeSpan.style.fontSize = '0.75rem';
+        typeSpan.textContent = (c.type_line || '').split('—')[0].trim();
+        div.appendChild(typeSpan);
+
+        const mvSpan = document.createElement('div');
+        mvSpan.className = 'muted';
+        mvSpan.style.fontSize = '0.75rem';
+        mvSpan.textContent = `MV ${c.mv}`;
+        div.appendChild(mvSpan);
+
+        div.appendChild(createPipRow(c.color_identity));
+
+        div.addEventListener('click', ()=>openCardModal(c.name));
+        grid.appendChild(div);
       }
+      container.appendChild(grid);
+    } else {
+      for (const c of cards) {
+        const row = document.createElement('div');
+        row.className = 'deck-list-row';
+        row.dataset.cardName = c.name;
 
-      /* --------------------------- mount React root --------------------------- */
+        const qtyCell = document.createElement('div');
+        const minusBtn = document.createElement('button');
+        minusBtn.className = 'qty-btn';
+        minusBtn.textContent = '−';
+        minusBtn.addEventListener('click', (ev) => {
+          ev.stopPropagation();
+          adjustCardQuantity(c.name, -1);
+        });
+        const qtyText = document.createElement('span');
+        qtyText.textContent = `x${c.qty}`;
+        const plusBtn = document.createElement('button');
+        plusBtn.className = 'qty-btn';
+        plusBtn.textContent = '+';
+        plusBtn.addEventListener('click', (ev) => {
+          ev.stopPropagation();
+          adjustCardQuantity(c.name, +1);
+        });
+        qtyCell.appendChild(minusBtn);
+        qtyCell.appendChild(qtyText);
+        qtyCell.appendChild(plusBtn);
+        row.appendChild(qtyCell);
 
-      const root = ReactDOM.createRoot(document.getElementById("root"));
-      root.render(<App />);
-    </script>
-  </body>
+        const name = document.createElement('div');
+        name.textContent = c.name;
+        row.appendChild(name);
+
+        const type = document.createElement('div');
+        type.innerHTML = `<span class="chip">${(c.type_line || '').split('—')[0].trim()}</span>`;
+        row.appendChild(type);
+
+        const mv = document.createElement('div');
+        mv.textContent = `MV ${c.mv}`;
+        row.appendChild(mv);
+
+        row.addEventListener('click', ()=>openCardModal(c.name));
+        container.appendChild(row);
+      }
+    }
+  }
+}
+
+// ===== status chip =====
+function updateDeckStatusChip(result = null) {
+  const chip = document.getElementById('deckStatusChip');
+  const sizeTarget = parseInt(document.getElementById('deckSizeInput').value,10) || 60;
+  const formatSel = document.getElementById('deckFormat').value;
+  const deckSize = result ? result.deckSize : 0;
+
+  let status = '';
+  let cls = 'chip';
+
+  if (!deckSize) {
+    status = 'No cards yet';
+  } else {
+    const diff = deckSize - sizeTarget;
+    const abs = Math.abs(diff);
+    if (formatSel === 'constructed' && deckSize < 60) {
+      status = `Invalid: ${deckSize}/60 for constructed`;
+      cls += ' bad';
+    } else if (formatSel === 'limited' && deckSize < 40) {
+      status = `Invalid: ${deckSize}/40 for limited`;
+      cls += ' bad';
+    } else if (formatSel === 'commander' && deckSize !== 99 && deckSize !== 100) {
+      status = `Warn: ${deckSize} cards; EDH is usually 99+1`;
+      cls += ' warn';
+    } else if (abs <= 2) {
+      status = `${deckSize}/${sizeTarget} (within band)`;
+      cls += ' ok';
+    } else {
+      status = `${deckSize}/${sizeTarget} (±${diff})`;
+      cls += ' warn';
+    }
+  }
+
+  chip.className = cls;
+  chip.textContent = status;
+}
+
+// ===== modal =====
+let modalCurrentName = null;
+
+function buildCardMiniSummary(card, profile) {
+  const r = state.lastResult;
+  const lines = [];
+
+  const totalWeight = r ? r.deckWeight : null;
+  const weight = card.mv * card.qty;
+  if (totalWeight && totalWeight > 0) {
+    const pctWeight = (weight / totalWeight) * 100;
+    lines.push(`• Contributes ~${weight.toFixed(1)} MV of non-land weight (~${pctWeight.toFixed(1)}% of total).`);
+  } else {
+    lines.push(`• Effective MV ${card.mv} × ${card.qty} copies = ${weight.toFixed(1)} weight.`);
+  }
+
+  if (profile.effMV !== null && profile.effMV !== undefined && !Number.isNaN(profile.effMV)) {
+    lines.push(`• Using override MV ${profile.effMV} (printed MV ${card.printed_mv}).`);
+  } else {
+    lines.push(`• Using printed MV ${card.printed_mv} for curve analysis.`);
+  }
+
+  if (profile.rampType) {
+    lines.push(`• Tagged as ramp (${profile.rampType}) – counts as +1 virtual land in land odds.`);
+  }
+
+  if (profile.cantripExtra) {
+    const totalExtra = profile.cantripExtra * card.qty;
+    lines.push(`• Tagged as cantrip: ~${profile.cantripExtra.toFixed(2)} extra cards seen per cast (~${totalExtra.toFixed(2)} total if all copies are used).`);
+  }
+
+  const plans = profile.plans || [];
+  if (plans.length) {
+    lines.push(`• Included in plan(s): ${plans.join(', ')}.`);
+  }
+
+  const pe = profile.planEffMV || {};
+  const overrides = Object.entries(pe).filter(([k,v]) => Number.isFinite(v));
+  if (overrides.length) {
+    const parts = overrides.map(([k,v]) => `${k}: ${v}`);
+    lines.push(`• Plan-specific MV overrides: ${parts.join(', ')} (used for that plan's draw buckets).`);
+  }
+
+  return lines.join('\n');
+}
+
+function openCardModal(name) {
+  const card = state.cardInfos.find(c => c.name === name);
+  if (!card) return;
+  modalCurrentName = name;
+  const profile = state.tuning[name] || {};
+
+  document.getElementById('modalCardName').textContent = card.name;
+  document.getElementById('modalCardType').textContent = card.type_line || '';
+
+  const imgEl = document.getElementById('modalCardImg');
+  if (card.image_url) {
+    imgEl.src = card.image_url;
+    imgEl.style.display = '';
+  } else {
+    imgEl.style.display = 'none';
+  }
+
+  document.getElementById('modalQty').value = card.qty;
+
+  const effMVEl = document.getElementById('modalEffMV');
+  effMVEl.value = (profile.effMV !== undefined && profile.effMV !== null && !Number.isNaN(profile.effMV))
+    ? String(profile.effMV)
+    : '';
+
+  document.getElementById('modalRampType').value = profile.rampType || '';
+  document.getElementById('modalRampTurn').value = profile.rampTurn || '';
+  document.getElementById('modalRampNet').value =
+    (profile.rampNet !== undefined && profile.rampNet !== null) ? String(profile.rampNet) : '';
+  document.getElementById('modalCantrip').value =
+    (profile.cantripExtra !== undefined && profile.cantripExtra !== null) ? String(profile.cantripExtra) : '';
+
+  const plans = profile.plans || [];
+  document.getElementById('modalPlanA').checked = plans.includes('A');
+  document.getElementById('modalPlanB').checked = plans.includes('B');
+  document.getElementById('modalPlanC').checked = plans.includes('C');
+  document.getElementById('modalPlanD').checked = plans.includes('D');
+  document.getElementById('modalPlanE').checked = plans.includes('E');
+
+  const pe = profile.planEffMV || {};
+  document.getElementById('planEffA').value = Number.isFinite(pe.A) ? String(pe.A) : '';
+  document.getElementById('planEffB').value = Number.isFinite(pe.B) ? String(pe.B) : '';
+  document.getElementById('planEffC').value = Number.isFinite(pe.C) ? String(pe.C) : '';
+  document.getElementById('planEffD').value = Number.isFinite(pe.D) ? String(pe.D) : '';
+  document.getElementById('planEffE').value = Number.isFinite(pe.E) ? String(pe.E) : '';
+
+  document.getElementById('modalSummary').textContent = buildCardMiniSummary(card, profile);
+
+  document.getElementById('cardModalBackdrop').style.display = 'flex';
+}
+function closeCardModal() {
+  document.getElementById('cardModalBackdrop').style.display = 'none';
+  modalCurrentName = null;
+}
+function saveCardProfile() {
+  if (!modalCurrentName) return;
+  const name = modalCurrentName;
+  const qtyRaw = document.getElementById('modalQty').value.trim();
+  let qty = qtyRaw === '' ? null : Number(qtyRaw);
+
+  const effMVRaw = document.getElementById('modalEffMV').value.trim();
+  const effMV = effMVRaw === '' ? null : Number(effMVRaw);
+
+  const rampType = document.getElementById('modalRampType').value || null;
+  const rampTurnRaw = document.getElementById('modalRampTurn').value.trim();
+  const rampTurn = rampTurnRaw === '' ? null : Number(rampTurnRaw);
+  const rampNetRaw = document.getElementById('modalRampNet').value.trim();
+  const rampNet = rampNetRaw === '' ? null : Number(rampNetRaw);
+
+  const cantripRaw = document.getElementById('modalCantrip').value.trim();
+  const cantripExtra = cantripRaw === '' ? null : Number(cantripRaw);
+
+  const plans = [];
+  if (document.getElementById('modalPlanA').checked) plans.push('A');
+  if (document.getElementById('modalPlanB').checked) plans.push('B');
+  if (document.getElementById('modalPlanC').checked) plans.push('C');
+  if (document.getElementById('modalPlanD').checked) plans.push('D');
+  if (document.getElementById('modalPlanE').checked) plans.push('E');
+
+  const planEffMV = {};
+  const rawA = document.getElementById('planEffA').value.trim();
+  const rawB = document.getElementById('planEffB').value.trim();
+  const rawC = document.getElementById('planEffC').value.trim();
+  const rawD = document.getElementById('planEffD').value.trim();
+  const rawE = document.getElementById('planEffE').value.trim();
+  const parsePlan = (raw) => {
+    if (raw === '') return null;
+    const v = Number(raw);
+    return Number.isFinite(v) ? v : null;
+  };
+  const vA = parsePlan(rawA);
+  const vB = parsePlan(rawB);
+  const vC = parsePlan(rawC);
+  const vD = parsePlan(rawD);
+  const vE = parsePlan(rawE);
+  if (vA !== null) planEffMV.A = vA;
+  if (vB !== null) planEffMV.B = vB;
+  if (vC !== null) planEffMV.C = vC;
+  if (vD !== null) planEffMV.D = vD;
+  if (vE !== null) planEffMV.E = vE;
+
+  if (qty === null || !Number.isFinite(qty) || qty < 0) qty = 0;
+  if (qty === 0) {
+    delete state.deckEntries[name];
+    delete state.tuning[name];
+    rebuildDeckTextFromState();
+    closeCardModal();
+    scheduleAnalyze();
+    return;
+  } else {
+    state.deckEntries[name] = Math.round(qty);
+  }
+
+  const profile = {
+    effMV: Number.isFinite(effMV) ? effMV : null,
+    rampType,
+    rampTurn: Number.isFinite(rampTurn) ? rampTurn : null,
+    rampNet: Number.isFinite(rampNet) ? rampNet : null,
+    cantripExtra: Number.isFinite(cantripExtra) ? cantripExtra : null,
+    plans
+  };
+  if (Object.keys(planEffMV).length) profile.planEffMV = planEffMV;
+  state.tuning[name] = profile;
+
+  const card = state.cardInfos.find(c => c.name === name);
+  if (card) {
+    card.qty = state.deckEntries[name];
+    card.mv = (profile.effMV !== null && profile.effMV !== undefined && !Number.isNaN(profile.effMV))
+      ? profile.effMV
+      : card.printed_mv;
+    document.getElementById('modalSummary').textContent = buildCardMiniSummary(card, profile);
+  }
+
+  rebuildDeckTextFromState();
+  closeCardModal();
+  scheduleAnalyze();
+}
+
+// ===== auto analyze debounce =====
+let analyzeTimer = null;
+function scheduleAnalyze() {
+  clearTimeout(analyzeTimer);
+  analyzeTimer = setTimeout(()=> {
+    analyzeDeck().catch(err => {
+      console.error(err);
+      document.getElementById('summaryError').textContent = String(err);
+    });
+  }, 250);
+}
+
+// ===== local storage =====
+const STORAGE_KEY = 'coast_decks_v10';
+
+function getSavedDecks() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return {};
+    const obj = JSON.parse(raw);
+    return typeof obj === 'object' && obj ? obj : {};
+  } catch { return {}; }
+}
+function refreshSavedSelect() {
+  const decks = getSavedDecks();
+  const select = document.getElementById('savedDecksSelect');
+  const current = select.value;
+  select.innerHTML = '<option value="">Saved decks…</option>';
+  Object.keys(decks).sort().forEach(name => {
+    const opt = document.createElement('option');
+    opt.value = name;
+    opt.textContent = name;
+    select.appendChild(opt);
+  });
+  if (decks[current]) select.value = current;
+}
+function saveDeckLocally() {
+  const name = document.getElementById('deckName').value.trim() || 'Untitled deck';
+  const decks = getSavedDecks();
+  decks[name] = {
+    entries: state.deckEntries,
+    tuning: state.tuning,
+    format: document.getElementById('deckFormat').value,
+    targetSize: parseInt(document.getElementById('deckSizeInput').value,10) || 60,
+    landCount: parseInt(document.getElementById('landCountInput').value,10) || 0,
+    planSettings: state.planSettings
+  };
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(decks));
+  refreshSavedSelect();
+  const msg = `Saved deck "${name}" locally.`;
+  document.getElementById('builderStatus').textContent = msg;
+  showToast(msg);
+}
+function loadDeckLocally() {
+  const select = document.getElementById('savedDecksSelect');
+  const name = select.value;
+  if (!name) return;
+  const decks = getSavedDecks();
+  const data = decks[name];
+  if (!data) return;
+  document.getElementById('deckName').value = name;
+  document.getElementById('deckFormat').value = data.format || 'auto';
+  document.getElementById('deckSizeInput').value = data.targetSize || 60;
+  document.getElementById('landCountInput').value = data.landCount || 0;
+  state.deckEntries = data.entries || {};
+  state.tuning = data.tuning || {};
+  state.planSettings = data.planSettings || state.planSettings;
+  rebuildDeckTextFromState();
+  const msg = `Loaded deck "${name}".`;
+  document.getElementById('builderStatus').textContent = msg;
+  const active = state.activePlan;
+  const pt = state.planSettings[active] && state.planSettings[active].targetTurn || 3;
+  document.getElementById('planTargetTurn').value = pt;
+  showToast(msg);
+  scheduleAnalyze();
+}
+function deleteDeckLocally() {
+  const select = document.getElementById('savedDecksSelect');
+  const name = select.value;
+  if (!name) return;
+  const decks = getSavedDecks();
+  delete decks[name];
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(decks));
+  refreshSavedSelect();
+  const msg = `Deleted deck "${name}".`;
+  document.getElementById('builderStatus').textContent = msg;
+  showToast(msg);
+}
+
+// ===== Plan panel =====
+function shuffleInPlace(arr) {
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    const tmp = arr[i];
+    arr[i] = arr[j];
+    arr[j] = tmp;
+  }
+  return arr;
+}
+
+function renderPlanPanel() {
+  const content = document.getElementById('planContent');
+  const meta = document.getElementById('planMeta');
+  const plan = state.activePlan;
+  const settings = state.planSettings[plan] || { targetTurn: 3 };
+  const targetTurn = settings.targetTurn || 3;
+  document.getElementById('planTargetTurn').value = targetTurn;
+
+  const cards = state.cardInfos;
+  if (!cards.length) {
+    content.innerHTML = '<div class="muted">(No deck yet. Tag cards with Plan A–E in their detail panels.)</div>';
+    meta.textContent = '';
+    return;
+  }
+
+  const planCards = [];
+  let deckSize = 0;
+  for (const c of cards) {
+    deckSize += c.qty;
+    const profile = state.tuning[c.name] || {};
+    const plans = profile.plans || [];
+    if (plans.includes(plan)) {
+      planCards.push({ card: c, profile, qty: c.qty });
+    }
+  }
+
+  meta.textContent = `${planCards.length} different card(s) tagged for Plan ${plan}, deck size ${deckSize}.`;
+
+  if (!planCards.length) {
+    content.innerHTML = `<div class="muted">(No cards currently tagged for Plan ${plan}. Open a card and toggle the Plan tag.)</div>`;
+    return;
+  }
+
+  let seen = 7 + (targetTurn - 1);
+  if (seen > deckSize) seen = deckSize;
+
+  let planProbApprox = 1;
+  const cardLines = [];
+  for (const pc of planCards) {
+    const K = pc.qty;
+    const pSeen = probAtLeast(1, K, deckSize, seen);
+    planProbApprox *= pSeen;
+    cardLines.push({
+      name: pc.card.name,
+      qty: pc.qty,
+      pSeen
+    });
+  }
+  if (!Number.isFinite(planProbApprox)) planProbApprox = 0;
+
+  const expanded = [];
+  for (const pc of planCards) {
+    for (let i = 0; i < pc.qty; i++) expanded.push(pc.card.name);
+  }
+  shuffleInPlace(expanded);
+  const handNames = expanded.slice(0,7);
+  if (handNames.length < 7) {
+    const allNames = [];
+    for (const c of cards) {
+      for (let i = 0; i < c.qty; i++) allNames.push(c.name);
+    }
+    shuffleInPlace(allNames);
+    for (const n of allNames) {
+      if (handNames.length >= 7) break;
+      handNames.push(n);
+    }
+  }
+
+  let landCount = 0;
+  let cheapCount = 0;
+  let midCount = 0;
+  let bigCount = 0;
+  for (const c of cards) {
+    const isLand = (c.type_line || '').toLowerCase().includes('land');
+    if (isLand) {
+      landCount += c.qty;
+    } else {
+      const profile = state.tuning[c.name] || {};
+      const mvOverride = profile.planEffMV && profile.planEffMV[plan];
+      const mvForBuckets = Number.isFinite(mvOverride) ? mvOverride : c.mv;
+      if (mvForBuckets <= 2) cheapCount += c.qty;
+      else if (mvForBuckets <= 4) midCount += c.qty;
+      else bigCount += c.qty;
+    }
+  }
+  const totalCards = landCount + cheapCount + midCount + bigCount || 1;
+  const landPct = landCount / totalCards;
+  const cheapPct = cheapCount / totalCards;
+  const midPct = midCount / totalCards;
+  const bigPct = bigCount / totalCards;
+
+  const sortedBySeen = [...cardLines].sort((a,b)=>a.pSeen - b.pSeen);
+  const worst1 = sortedBySeen[0];
+  const worst2 = sortedBySeen[1];
+
+  let html = '';
+
+  html += '<div class="plan-section-title">Plan completion odds</div>';
+  html += `<div class="plan-metric">Target turn: <b>T${targetTurn}</b>, cards seen (no mulligan model): ~<b>${seen}</b>.</div>`;
+  html += `<div class="plan-metric">Approx P(all Plan ${plan} pieces seen by T${targetTurn}): <b>${pct(planProbApprox)}</b></div>`;
+
+  html += '<div class="plan-section-title">Per-card appearance</div>';
+  html += '<table class="summary-table"><thead><tr><th>Card</th><th>Copies</th><th>P(seen ≥1 by T)</th></tr></thead><tbody>';
+  for (const cl of cardLines) {
+    html += `<tr><td>${cl.name}</td><td>${cl.qty}</td><td>${pct(cl.pSeen)}</td></tr>`;
+  }
+  html += '</tbody></table>';
+
+  html += '<div class="plan-section-title">Wishlist hand (example)</div>';
+  html += '<div class="tiny-label">Sample 7-card opener including Plan cards (not a guarantee, just one roll).</div>';
+  html += '<div class="plan-hand">';
+  for (const n of handNames) {
+    html += `<div class="plan-hand-card">${n}</div>`;
+  }
+  html += '</div>';
+
+  html += '<div class="plan-section-title">Likely follow-up draws (whole deck)</div>';
+  html += `<div class="plan-metric">Land: <b>${pct(landPct)}</b></div>`;
+  html += `<div class="plan-metric">1–2 MV spells: <b>${pct(cheapPct)}</b></div>`;
+  html += `<div class="plan-metric">3–4 MV spells: <b>${pct(midPct)}</b></div>`;
+  html += `<div class="plan-metric">5+ MV spells: <b>${pct(bigPct)}</b></div>`;
+
+  html += '<div class="plan-section-title">Bottlenecks</div>';
+  html += '<div class="tiny-label">Cards that most often fail to show up by the target turn.</div>';
+  html += '<ul style="padding-left:18px;margin-top:2px;">';
+  if (worst1) {
+    html += `<li>${worst1.name}: seen by T${targetTurn} only ~${pct(worst1.pSeen)}</li>`;
+  }
+  if (worst2) {
+    html += `<li>${worst2.name}: seen by T${targetTurn} ~${pct(worst2.pSeen)}</li>`;
+  }
+  html += '</ul>';
+
+  content.innerHTML = html;
+}
+
+// ===== land calc standalone =====
+function runLandCalc() {
+  const N = parseInt(document.getElementById('lcDeckSize').value,10) || 60;
+  const K = parseInt(document.getElementById('lcLandCount').value,10) || 24;
+  const maxTurn = parseInt(document.getElementById('lcMaxTurn').value,10) || 5;
+  const pd = document.getElementById('lcPlayDraw').value;
+  const resultsEl = document.getElementById('lcResults');
+
+  let txt = '';
+  txt += `Deck size: ${N}, lands: ${K}, on the ${pd === 'play' ? 'play' : 'draw'}\n\n`;
+  txt += `Turn  Seen  P(≥1)   P(≥2)   P(≥3)   P(≥4)\n`;
+
+  for (let t=1; t<=maxTurn; t++) {
+    let seen = 7 + (t - 1);
+    if (pd === 'draw') seen += 1;
+    if (seen > N) seen = N;
+    const p1 = probAtLeast(1, K, N, seen);
+    const p2 = probAtLeast(2, K, N, seen);
+    const p3 = probAtLeast(3, K, N, seen);
+    const p4 = probAtLeast(4, K, N, seen);
+    txt += `${String(t).padStart(4)}  ${String(seen).padStart(4)}  ${pct(p1).padStart(6)}  ${pct(p2).padStart(6)}  ${pct(p3).padStart(6)}  ${pct(p4).padStart(6)}\n`;
+  }
+
+  resultsEl.textContent = txt;
+}
+
+// ===== Diagnostics / tests =====
+function runSelfTests() {
+  const out = [];
+  out.push('CoAST self-check\n------------------');
+
+  out.push('\n[1] Hypergeometric P(≥1 land) monotonicity:');
+  let ok1 = true;
+  const N = 60, K = 24;
+  let last = 0;
+  for (let n = 7; n <= 14; n++) {
+    const p = probAtLeast(1, K, N, n);
+    out.push(`  Seen ${n} -> P(≥1 land) = ${pct(p)}`);
+    if (p + 1e-9 < last) ok1 = false;
+    last = p;
+  }
+  out.push(`  Result: ${ok1 ? 'PASS' : 'FAIL (P decreased when more cards were seen)'}`);
+
+  out.push('\n[2] Synthetic deck weight sanity:');
+  const testNonlands = 20;
+  const testMV = 1;
+  const testLands = 20;
+  const totalWeight = testNonlands * testMV;
+  const wpl = totalWeight / testLands;
+  out.push(`  20 nonlands at MV1, 20 lands => weight=${totalWeight}, WPL=${wpl.toFixed(3)}`);
+  out.push(`  Expected WPL = 1.000 -> ${Math.abs(wpl - 1) < 1e-9 ? 'PASS' : 'FAIL'}`);
+
+  out.push('\n[3] Anchor hill scaling:');
+  const anchor = getAnchor(60, 24);
+  if (!anchor) {
+    out.push('  No anchor found for (60,24).');
+  } else {
+    const rawTotal = Object.values(anchor).reduce((a,b)=>a+b,0);
+    const targetNonlands = 36;
+    const scale = rawTotal ? targetNonlands / rawTotal : 1;
+    const scaledTotal = Object.values(anchor).reduce((a,b)=>a + Math.round(b*scale),0);
+    out.push(`  Raw anchor nonlands = ${rawTotal}, target = ${targetNonlands}, scaled sum = ${scaledTotal}`);
+    out.push(`  Result: ${Math.abs(scaledTotal - targetNonlands) <= 2 ? 'PASS (within 2 cards tolerance)' : 'WARN (off by more than 2)'}`);
+  }
+
+  out.push('\n[4] Probability bounds check:');
+  const pEx = probAtLeast(2, 24, 60, 10);
+  out.push(`  Example P(≥2 lands | N=60, K=24, seen=10) = ${pct(pEx)}`);
+  out.push(`  Result: ${(pEx >= -1e-9 && pEx <= 1+1e-9) ? 'PASS' : 'FAIL (outside [0,1])'}`);
+
+  document.getElementById('testsOutput').textContent = out.join('\n');
+}
+
+// ===== wiring =====
+document.getElementById('btnBuild').addEventListener('click', () => {
+  hide('startScreen'); show('deckApp');
+  state.mode = 'build';
+  document.getElementById('builderMode').value = 'build';
+  document.getElementById('builderTitle').textContent = 'Deck builder';
+});
+
+document.getElementById('btnImport').addEventListener('click', () => {
+  hide('startScreen'); show('deckApp');
+  state.mode = 'import';
+  document.getElementById('builderMode').value = 'import';
+  document.getElementById('builderTitle').textContent = 'Deck importer';
+  rebuildDeckTextFromState();
+  show('importControls'); hide('buildControls');
+});
+
+document.getElementById('btnLandCalc').addEventListener('click', () => {
+  hide('startScreen'); show('landCalcApp');
+});
+
+document.getElementById('backToHome').addEventListener('click', () => {
+  hide('deckApp'); show('startScreen');
+});
+document.getElementById('backFromLand').addEventListener('click', () => {
+  hide('landCalcApp'); show('startScreen');
+});
+
+document.getElementById('builderMode').addEventListener('change', e => {
+  const mode = e.target.value;
+  state.mode = mode;
+  if (mode === 'build') {
+    show('buildControls'); hide('importControls');
+    document.getElementById('builderTitle').textContent = 'Deck builder';
+  } else {
+    hide('buildControls'); show('importControls');
+    document.getElementById('builderTitle').textContent = 'Deck importer';
+    rebuildDeckTextFromState();
+  }
+});
+
+document.getElementById('cardSearchName').addEventListener('keydown', e => {
+  if (e.key === 'Enter') document.getElementById('addCardBtn').click();
+});
+document.getElementById('addCardBtn').addEventListener('click', async () => {
+  const name = document.getElementById('cardSearchName').value.trim();
+  const qty = parseInt(document.getElementById('cardSearchQty').value,10) || 1;
+  const status = document.getElementById('builderStatus');
+  if (!name) { status.textContent = 'Enter a card name.';
+    return; }
+  status.textContent = 'Searching Scryfall…';
+  try {
+    const info = await fetchCardData(name, 'fuzzy');
+    const actual = info.name || name;
+    state.deckEntries[actual] = (state.deckEntries[actual] || 0) + qty;
+    document.getElementById('cardSearchName').value = '';
+    document.getElementById('cardSearchQty').value = '1';
+    status.textContent = `Added ${qty}× ${actual}.`;
+    rebuildDeckTextFromState();
+    scheduleAnalyze();
+  } catch (err) {
+    console.error(err);
+    status.textContent = 'Failed to add card.';
+  }
+});
+
+document.getElementById('deckText').addEventListener('input', e => {
+  const text = e.target.value;
+  const entries = deckEntriesFromText(text);
+  state.deckEntries = entries;
+  const count = Object.values(entries).reduce((a,b)=>a+b,0);
+  if (count > 0) {
+    document.getElementById('builderStatus').textContent = `Deck from text: ${count} cards.`;
+  } else {
+    document.getElementById('builderStatus').textContent = 'No cards parsed from text.';
+  }
+  scheduleAnalyze();
+});
+document.getElementById('deckText').addEventListener('blur', e => {
+  const entries = deckEntriesFromText(e.target.value);
+  const count = Object.values(entries).reduce((a,b)=>a+b,0);
+  if (count > 0) {
+    showToast(`Imported deck from text (${count} cards).`);
+  }
+});
+
+document.getElementById('viewMode').addEventListener('change', e => {
+  state.viewMode = e.target.value;
+  renderDeckView();
+});
+document.getElementById('groupMode').addEventListener('change', e => {
+  state.groupMode = e.target.value;
+  renderDeckView();
+});
+
+document.getElementById('deckSizeInput').addEventListener('input', () => {
+  updateDeckStatusChip(state.lastResult);
+});
+document.getElementById('landCountInput').addEventListener('input', () => {
+  scheduleAnalyze();
+});
+document.getElementById('deckFormat').addEventListener('change', () => {
+  scheduleAnalyze();
+});
+
+// Theme select
+document.getElementById('themeSelect').addEventListener('change', e => {
+  applyTheme(e.target.value);
+  if (state.theme === 'neon' && state.lastResult) {
+    computeNeonPalette();
+  }
+});
+
+document.getElementById('modalSaveBtn').addEventListener('click', saveCardProfile);
+// Close button saves
+document.getElementById('closeModalBtn').addEventListener('click', saveCardProfile);
+// Clicking backdrop saves & closes
+document.getElementById('cardModalBackdrop').addEventListener('click', e => {
+  if (e.target.id === 'cardModalBackdrop') {
+    saveCardProfile();
+  }
+});
+
+document.getElementById('saveDeckBtn').addEventListener('click', saveDeckLocally);
+document.getElementById('loadDeckBtn').addEventListener('click', loadDeckLocally);
+document.getElementById('deleteDeckBtn').addEventListener('click', deleteDeckLocally);
+
+document.getElementById('lcCalcBtn').addEventListener('click', runLandCalc);
+
+// Summary tabs
+document.querySelectorAll('[data-summary-tab-btn]').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const tab = btn.getAttribute('data-summary-tab-btn');
+    setSummaryTab(tab);
+  });
+});
+
+// Play/Draw toggle inside summary (lands + virtual)
+document.getElementById('summaryPanel').addEventListener('click', e => {
+  const btn = e.target.closest('[data-lands-toggle]');
+  if (!btn) return;
+  const mode = btn.getAttribute('data-lands-toggle');
+  if (mode !== 'play' && mode !== 'draw') return;
+  state.landsPerspective = mode;
+  if (state.lastResult) renderSummary(state.lastResult);
+});
+
+// Plan tab switching
+document.querySelectorAll('.plan-tab-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const plan = btn.dataset.plan;
+    state.activePlan = plan;
+    document.querySelectorAll('.plan-tab-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    const settings = state.planSettings[plan] || { targetTurn: 3 };
+    document.getElementById('planTargetTurn').value = settings.targetTurn || 3;
+    renderPlanPanel();
+  });
+});
+
+document.getElementById('planTargetTurn').addEventListener('input', e => {
+  const v = parseInt(e.target.value,10);
+  const plan = state.activePlan;
+  if (!state.planSettings[plan]) state.planSettings[plan] = { targetTurn: 3 };
+  if (Number.isFinite(v) && v >= 1) {
+    state.planSettings[plan].targetTurn = v;
+    renderPlanPanel();
+  }
+});
+
+// About toggle
+document.getElementById('toggleAboutBtn').addEventListener('click', () => {
+  const content = document.getElementById('aboutContent');
+  const btn = document.getElementById('toggleAboutBtn');
+  const isHidden = content.style.display === 'none' || !content.style.display;
+  content.style.display = isHidden ? 'block' : 'none';
+  btn.textContent = isHidden ? 'Hide details' : 'Show details';
+});
+
+// Diagnostics
+const runTestsBtn = document.getElementById('runTestsBtn');
+if (runTestsBtn) runTestsBtn.addEventListener('click', runSelfTests);
+
+// init
+refreshSavedSelect();
+setSummaryTab('overview');
+applyTheme('dark');
+</script>
+</body>
 </html>
