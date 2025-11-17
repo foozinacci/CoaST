@@ -1,1644 +1,2496 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <title>CoAST – Calculator of all Structural Tuning</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <style>
-    :root {
-      --bg: #020617;
-      --bg-panel: #0b1220;
-      --bg-panel-alt: #020617;
-      --text: #e5e7eb;
-      --muted: #9ca3af;
-      --accent: #38bdf8;
-      --accent-soft: rgba(56, 189, 248, 0.2);
-      --danger: #f97373;
-      --success: #22c55e;
-      --border: #1f2937;
-      --tab-bg: #020617;
-      --tab-active-bg: #0f172a;
-      --tab-text: #e5e7eb;
-      --tab-active-text: #f9fafb;
-      --shadow-soft: 0 18px 40px rgba(15, 23, 42, 0.6);
-      --radius-lg: 16px;
-      --radius-pill: 999px;
-      --curve-bar: #38bdf8;
-      --curve-anchor: rgba(248, 250, 252, 0.1);
-      --grid-border: #1f2937;
-    }
+<meta charset="UTF-8" />
+<title>CoAST – Calculator of All Structural Tuning</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<style>
+  :root {
+    --bg: #020617;
+    --panel: #020617;
+    --accent: #38bdf8;
+    --accent2: #22c55e;
+    --border: #1f2937;
+    --text: #e5e7ff;
+    --muted: #9ca3c7;
+    --danger: #f97373;
+    --radius: 12px;
+  }
+  * { box-sizing: border-box; }
 
-    /* Light mode */
-    [data-theme="light"] {
-      --bg: #f3f4f6;
-      --bg-panel: #ffffff;
-      --bg-panel-alt: #f9fafb;
-      --text: #111827;
-      --muted: #6b7280;
-      --accent: #2563eb;
-      --accent-soft: rgba(37, 99, 235, 0.08);
-      --border: #e5e7eb;
-      --tab-bg: #e5e7eb;
-      --tab-active-bg: #ffffff;
-      --tab-text: #374151;
-      --tab-active-text: #111827;
-      --curve-bar: #2563eb;
-      --curve-anchor: rgba(55, 65, 81, 0.06);
-      --grid-border: #e5e7eb;
-      --shadow-soft: 0 12px 30px rgba(15, 23, 42, 0.18);
-    }
+  body {
+    margin: 0;
+    padding: 0;
+    background:
+      radial-gradient(circle at top left, #0f172a 0, #020617 40%, #000814 100%);
+    color: var(--text);
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    font-size: 15px;
+  }
 
-    /* Neon mode */
-    [data-theme="neon"] {
-      --bg: #020617;
-      --bg-panel: #020617;
-      --bg-panel-alt: #020617;
-      --text: #e5e7eb;
-      --muted: #9ca3af;
-      --accent: #a855f7;
-      --accent-soft: rgba(168, 85, 247, 0.18);
-      --border: #4b5563;
-      --tab-bg: rgba(15, 23, 42, 0.8);
-      --tab-active-bg: rgba(24, 35, 75, 0.9);
-      --tab-text: #e5e7eb;
-      --tab-active-text: #fdf2ff;
-      --curve-bar: #22c55e;
-      --curve-anchor: rgba(148, 163, 184, 0.12);
-      --grid-border: rgba(148, 163, 184, 0.3);
-      --shadow-soft: 0 0 40px rgba(168, 85, 247, 0.45);
-    }
+  h1, h2, h3 {
+    margin: 0 0 0.4em;
+    letter-spacing: 0.04em;
+  }
 
-    * {
-      box-sizing: border-box;
-    }
+  h1 {
+    font-size: 1.7rem;
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+  }
 
-    body {
-      margin: 0;
-      background: radial-gradient(circle at top, #0f172a 0, var(--bg) 50%, #020617 100%);
-      color: var(--text);
-      font-family: system-ui, -apple-system, BlinkMacSystemFont, "SF Pro Text",
-        "Inter", "Segoe UI", sans-serif;
-      min-height: 100vh;
-      display: flex;
+  .logo-coast {
+    font-weight: 800;
+    letter-spacing: 0.18em;
+  }
+
+  .pill {
+    font-size: 0.7rem;
+    padding: 3px 8px;
+    border-radius: 999px;
+    border: 1px solid rgba(56,189,248,0.35);
+    color: var(--accent);
+    background: rgba(15,23,42,0.9);
+  }
+
+  .shell {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 16px;
+  }
+
+  .muted {
+    color: var(--muted);
+    font-size: 0.85rem;
+  }
+
+  button {
+    border-radius: 999px;
+    border: none;
+    padding: 8px 18px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: linear-gradient(135deg, #22c55e, #38bdf8);
+    color: white;
+    box-shadow: 0 10px 22px rgba(56,189,248,0.4);
+  }
+  button.secondary {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--muted);
+    box-shadow: none;
+  }
+  button.danger {
+    background: linear-gradient(135deg, #f97373, #fb7185);
+    box-shadow: 0 10px 22px rgba(248,113,113,0.4);
+  }
+  button:disabled {
+    opacity: 0.5;
+    cursor: default;
+    box-shadow: none;
+  }
+
+  input[type="text"],
+  input[type="number"],
+  select,
+  textarea {
+    background: #020617;
+    color: var(--text);
+    border-radius: 999px;
+    border: 1px solid var(--border);
+    padding: 6px 10px;
+    font-size: 0.85rem;
+    font-family: inherit;
+    box-shadow: inset 0 0 0 1px #000, inset 0 6px 12px rgba(0,0,0,0.7);
+  }
+
+  textarea {
+    border-radius: 10px;
+    resize: vertical;
+  }
+
+  label {
+    font-size: 0.8rem;
+    color: var(--muted);
+  }
+
+  .card {
+    background:
+      radial-gradient(circle at top left, #0b1220 0, #020617 55%);
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    padding: 14px;
+    box-shadow: 0 14px 32px rgba(0,0,0,0.55);
+  }
+
+  /* Input spaces bevel in */
+  .panel-inset {
+    border-radius: var(--radius);
+    background: #020617;
+    border: 1px solid #020617;
+    box-shadow: inset 0 0 0 1px #111827, inset 0 8px 16px rgba(0,0,0,0.7);
+    padding: 10px;
+  }
+
+  /* Output spaces bevel out */
+  .panel-raised {
+    border-radius: var(--radius);
+    background:
+      radial-gradient(circle at top left, #020617 0, #020617 55%);
+    border: 1px solid #111827;
+    box-shadow: 0 12px 26px rgba(15,23,42,0.9);
+    padding: 10px;
+  }
+
+  .start-screen {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    align-items: flex-start;
+    margin-top: 18px;
+  }
+
+  .start-options {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  .deck-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr);
+    gap: 16px;
+    margin-top: 14px;
+  }
+
+  .topbar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+    margin-bottom: 10px;
+  }
+
+  .topbar-right {
+    margin-left: auto;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+  }
+
+  .chip {
+    font-size: 0.75rem;
+    padding: 3px 8px;
+    border-radius: 999px;
+    border: 1px solid var(--border);
+    color: var(--muted);
+    background: rgba(15,23,42,0.9);
+  }
+  .chip.bad {
+    border-color: var(--danger);
+    color: var(--danger);
+  }
+  .chip.warn {
+    border-color: #facc15;
+    color: #facc15;
+  }
+  .chip.ok {
+    border-color: var(--accent2);
+    color: var(--accent2);
+  }
+
+  .row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+    margin-bottom: 6px;
+  }
+  .row > div { min-width: 120px; }
+
+  .deck-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+    justify-content: space-between;
+    margin: 10px 0 6px;
+  }
+
+  .deck-container {
+    background: rgba(15,23,42,0.9);
+    border-radius: 9px;
+    border: 1px solid var(--border);
+    max-height: 340px;
+    overflow: auto;
+    padding: 6px;
+  }
+
+  .deck-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 8px;
+  }
+
+  .deck-card {
+    background: #020617;
+    border-radius: 10px;
+    border: 1px solid #111827;
+    padding: 5px 5px 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    font-size: 0.8rem;
+    cursor: pointer;
+    overflow: hidden;
+  }
+
+  .deck-card img {
+    width: 100%;
+    border-radius: 8px;
+    display: block;
+  }
+
+  .deck-card-header {
+    display: flex;
+    justify-content: space-between;
+    gap: 4px;
+    align-items: center;
+    margin-top: 4px;
+  }
+
+  .qty-pill {
+    font-size: 0.7rem;
+    padding: 3px 7px;
+    border-radius: 999px;
+    border: 1px solid #1f2937;
+    background: rgba(15,23,42,0.9);
+  }
+
+  /* +/- controls */
+  .qty-controls {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .qty-btn {
+    border-radius: 999px;
+    border: 1px solid #1f2937;
+    padding: 0 6px;
+    line-height: 1.2;
+    font-size: 0.7rem;
+    background: #020617;
+    color: var(--muted);
+    cursor: pointer;
+  }
+  .qty-btn:hover {
+    background: #0b1120;
+  }
+
+  .pip-row {
+    display: flex;
+    gap: 3px;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+  .pip {
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.7rem;
+    border: 1px solid #0f172a;
+  }
+  .pip-W { background: #f9fafb; color: #111827; }
+  .pip-U { background: #0ea5e9; color: #0b1120; }
+  .pip-B { background: #111827; color: #e5e7eb; }
+  .pip-R { background: #ef4444; color: #111827; }
+  .pip-G { background: #16a34a; color: #022c22; }
+  .pip-C { background: #9ca3af; color: #111827; }
+
+  .deck-list-row {
+    display: grid;
+    grid-template-columns: 40px minmax(0, 1.2fr) minmax(0, 1fr) 110px;
+    gap: 6px;
+    padding: 4px 4px;
+    font-size: 0.8rem;
+    align-items: center;
+    border-radius: 6px;
+    cursor: pointer;
+  }
+  .deck-list-row:nth-child(odd) {
+    background: rgba(15,23,42,0.9);
+  }
+
+  .summary-panel {
+    background: rgba(15,23,42,0.95);
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    padding: 10px;
+    max-height: 260px;
+    overflow: auto;
+    font-size: 0.8rem;
+  }
+
+  .summary-section {
+    margin-bottom: 10px;
+  }
+  .summary-title {
+    font-size: 0.9rem;
+    font-weight: 600;
+    margin-bottom: 4px;
+  }
+
+  .summary-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .summary-chip {
+    padding: 4px 8px;
+    border-radius: 999px;
+    border: 1px solid var(--border);
+    background: rgba(15,23,42,0.9);
+    font-size: 0.75rem;
+  }
+
+  .summary-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.75rem;
+  }
+  .summary-table th,
+  .summary-table td {
+    border-bottom: 1px solid rgba(15,23,42,0.8);
+    padding: 3px 4px;
+    text-align: right;
+    white-space: nowrap;
+  }
+  .summary-table th:first-child,
+  .summary-table td:first-child {
+    text-align: left;
+  }
+  .summary-table tr:last-child th,
+  .summary-table tr:last-child td {
+    border-bottom: none;
+  }
+
+  .summary-tabs {
+    display: flex;
+    gap: 8px;
+    margin: 4px 0 6px;
+    overflow-x: auto;
+  }
+  .summary-tab-btn {
+    border-radius: 999px;
+    border: 1px solid var(--border);
+    background: rgba(15,23,42,0.9);
+    color: var(--muted);
+    font-size: 0.8rem;
+    padding: 5px 14px;
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+  .summary-tab-btn.active {
+    border-color: var(--accent);
+    color: var(--accent);
+    box-shadow: 0 0 0 1px rgba(56,189,248,0.6);
+  }
+
+  /* Curve hill mini-graph */
+  .curve-graph {
+    display: flex;
+    align-items: flex-end;
+    gap: 4px;
+    margin-top: 6px;
+  }
+  .curve-bar {
+    flex: 1;
+    min-width: 14px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+  }
+  .curve-bar-stack {
+    width: 100%;
+    height: 60px;
+    position: relative;
+    border-radius: 4px;
+    background: #020617;
+    overflow: hidden;
+    border: 1px solid #111827;
+  }
+  .curve-bar-deck {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: rgba(34,197,94,0.9);
+  }
+  .curve-bar-anchor {
+    position: absolute;
+    bottom: 0;
+    left: 20%;
+    right: 20%;
+    background: rgba(56,189,248,0.6);
+  }
+  .curve-mv {
+    font-size: 0.65rem;
+    color: var(--muted);
+  }
+
+  .land-layout {
+    display: grid;
+    grid-template-columns: minmax(0,0.9fr) minmax(0,1.1fr);
+    gap: 16px;
+    margin-top: 14px;
+  }
+
+  .modal-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.65);
+    display: none;
+    align-items: flex-start;
+    justify-content: center;
+    z-index: 20;
+    overflow-y: auto;
+    padding: 24px 0;
+  }
+
+  .modal {
+    background:
+      radial-gradient(circle at top left, #0b1220 0, #020617 65%);
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    padding: 14px;
+    max-width: 460px;
+    width: calc(100% - 32px);
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: 0 18px 40px rgba(0,0,0,0.8);
+  }
+
+  .modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 6px;
+  }
+
+  .modal-body {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 8px;
+  }
+
+  .modal-img-wrap {
+    width: 100%;
+    text-align: center;
+  }
+  .modal-img-wrap img {
+    max-width: 100%;
+    border-radius: 10px;
+    border: 1px solid #111827;
+  }
+
+  .field-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    align-items: center;
+  }
+  .field-group > * {
+    flex: 1 1 120px;
+  }
+
+  hr {
+    border: none;
+    border-top: 1px solid var(--border);
+    margin: 6px 0;
+  }
+
+  .error {
+    color: var(--danger);
+    font-size: 0.8rem;
+    margin-top: 4px;
+  }
+
+  .plan-card {
+    margin-top: 8px;
+  }
+
+  .plan-tabs {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 6px;
+    overflow-x: auto;
+  }
+  .plan-tab-btn {
+    border-radius: 999px;
+    border: 1px solid var(--border);
+    background: rgba(15,23,42,0.9);
+    color: var(--muted);
+    font-size: 0.75rem;
+    padding: 4px 11px;
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+  .plan-tab-btn.active {
+    border-color: var(--accent);
+    color: var(--accent);
+    box-shadow: 0 0 0 1px rgba(56,189,248,0.6);
+  }
+
+  .plan-section-title {
+    font-size: 0.8rem;
+    font-weight: 600;
+    margin: 4px 0;
+  }
+
+  .pill-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 2px 8px;
+    border-radius: 999px;
+    border: 1px solid var(--border);
+    font-size: 0.7rem;
+    background: rgba(15,23,42,0.9);
+  }
+
+  .plan-hand {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
+    gap: 4px;
+    margin-top: 4px;
+  }
+  .plan-hand-card {
+    min-width: 0;
+    border-radius: 8px;
+    border: 1px solid #111827;
+    background: #020617;
+    padding: 3px 5px;
+    font-size: 0.72rem;
+  }
+
+  .tiny-label {
+    font-size: 0.7rem;
+    color: var(--muted);
+  }
+
+  .plan-metric {
+    font-size: 0.75rem;
+    margin-bottom: 2px;
+  }
+
+  .mini-summary {
+    font-size: 0.75rem;
+    background: rgba(15,23,42,0.9);
+    border-radius: 8px;
+    border: 1px solid #111827;
+    padding: 6px;
+  }
+
+  /* Toast */
+  #toast {
+    position: fixed;
+    bottom: 12px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(15,23,42,0.98);
+    color: var(--text);
+    padding: 8px 14px;
+    border-radius: 999px;
+    border: 1px solid var(--border);
+    font-size: 0.8rem;
+    box-shadow: 0 10px 26px rgba(0,0,0,0.8);
+    z-index: 50;
+    display: none;
+  }
+
+  @media (max-width: 1000px) {
+    .deck-layout {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  @media (max-width: 700px) {
+    .shell { padding: 10px; }
+    body { font-size: 16px; }
+    h1 {
+      font-size: 1.4rem;
       flex-direction: column;
+      align-items: flex-start;
     }
-
-    .app-shell {
-      max-width: 1200px;
-      margin: 0 auto;
-      padding: 16px 12px 40px;
+    .topbar {
+      flex-direction: column;
+      align-items: stretch;
+      gap: 6px;
     }
+    .topbar-right {
+      margin-left: 0;
+      justify-content: flex-start;
+    }
+    .deck-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+    .deck-container { max-height: none; }
+    .summary-panel { max-height: none; }
+    button {
+      font-size: 0.9rem;
+      padding: 8px 14px;
+    }
+    input[type="text"],
+    input[type="number"],
+    select,
+    textarea {
+      font-size: 0.9rem;
+      padding: 8px 12px;
+    }
+    .deck-list-row {
+      grid-template-columns: 36px minmax(0, 1.1fr) minmax(0, 0.9fr) 110px;
+      font-size: 0.78rem;
+    }
+    .modal {
+      margin-top: 12px;
+      padding: 12px;
+    }
+    .modal-img-wrap img {
+      max-height: 50vh;
+      object-fit: cover;
+    }
+  }
 
-    header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
+  @media (min-width: 701px) and (max-width: 1024px) {
+    .deck-layout {
+      grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr);
       gap: 12px;
-      margin-bottom: 16px;
     }
-
-    .title-block {
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-    }
-
-    .title-block h1 {
-      margin: 0;
-      font-size: 1.6rem;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-    }
-
-    .title-block h1 span.coast-a {
-      text-transform: uppercase;
-    }
-
-    .title-block h1 span.coast-o {
-      text-transform: lowercase;
-    }
-
-    .title-block h1 span.coast-c,
-    .title-block h1 span.coast-s,
-    .title-block h1 span.coast-t {
-      text-transform: uppercase;
-    }
-
-    .title-block small {
-      font-size: 0.8rem;
-      color: var(--muted);
-    }
-
-    .theme-toggle-group {
-      display: flex;
+    .deck-container { max-height: 320px; }
+    .deck-grid {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
       gap: 8px;
     }
-
-    .theme-pill {
-      border-radius: var(--radius-pill);
-      border: 1px solid var(--border);
-      background: var(--tab-bg);
-      color: var(--tab-text);
-      padding: 6px 14px;
-      font-size: 0.8rem;
-      cursor: pointer;
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      transition: all 0.18s ease;
+    .deck-card img {
+      max-height: 150px;
+      object-fit: cover;
     }
+  }
 
-    .theme-pill.active {
-      background: var(--tab-active-bg);
-      color: var(--tab-active-text);
-      box-shadow: 0 0 0 1px var(--accent), var(--shadow-soft);
-    }
-
-    .theme-dot {
-      width: 8px;
-      height: 8px;
-      border-radius: 999px;
-      background: var(--accent);
-    }
-
-    .main-grid {
-      display: grid;
-      grid-template-columns: minmax(0, 1.1fr) minmax(0, 1.3fr);
+  @media (min-width: 1025px) {
+    .deck-layout {
+      grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr);
       gap: 16px;
     }
-
-    @media (max-width: 900px) {
-      .main-grid {
-        grid-template-columns: minmax(0, 1fr);
-      }
-    }
-
-    .panel {
-      background: linear-gradient(145deg, var(--bg-panel), var(--bg-panel-alt));
-      border-radius: 22px;
-      border: 1px solid var(--border);
-      box-shadow: var(--shadow-soft);
-      padding: 16px;
-      position: relative;
-      overflow: hidden;
-    }
-
-    .panel-heading {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-bottom: 12px;
-    }
-
-    .panel-heading h2 {
-      margin: 0;
-      font-size: 0.9rem;
-      text-transform: uppercase;
-      letter-spacing: 0.18em;
-      color: var(--muted);
-    }
-
-    .tab-row {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-      margin-bottom: 12px;
-    }
-
-    .tab-pill {
-      border-radius: var(--radius-pill);
-      padding: 10px 18px;
-      border: 1px solid var(--border);
-      background: var(--tab-bg);
-      color: var(--tab-text);
-      font-size: 0.85rem;
-      text-transform: uppercase;
-      letter-spacing: 0.12em;
-      cursor: pointer;
-      display: inline-flex;
-      gap: 6px;
-      align-items: center;
-      transition: all 0.18s ease;
-      min-width: 120px;
-      justify-content: center;
-    }
-
-    .tab-pill span.small {
-      font-size: 0.7rem;
-      opacity: 0.7;
-      text-transform: none;
-      letter-spacing: normal;
-    }
-
-    .tab-pill.active {
-      background: var(--tab-active-bg);
-      color: var(--tab-active-text);
-      border-color: var(--accent);
-      box-shadow: 0 0 0 1px var(--accent-soft), var(--shadow-soft);
-      transform: translateY(-1px);
-    }
-
-    .tab-pill:hover {
-      border-color: var(--accent);
-      box-shadow: 0 0 0 1px var(--accent-soft);
-    }
-
-    .builder-body {
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-    }
-
-    textarea {
-      width: 100%;
-      min-height: 140px;
-      border-radius: 14px;
-      border: 1px solid var(--border);
-      background: rgba(15, 23, 42, 0.6);
-      color: var(--text);
-      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
-        "Liberation Mono", "Courier New", monospace;
-      font-size: 0.85rem;
-      padding: 10px 12px;
-      resize: vertical;
-    }
-
-    [data-theme="light"] textarea {
-      background: #f9fafb;
-      color: var(--text);
-    }
-
-    [data-theme="neon"] textarea {
-      background: radial-gradient(circle at top left, #111827, #020617 70%);
-      border-color: rgba(148, 163, 184, 0.5);
-    }
-
-    .input-row {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-      align-items: center;
-    }
-
-    .button-primary {
-      border-radius: var(--radius-pill);
-      border: none;
-      background: radial-gradient(circle at top left, var(--accent), #0ea5e9);
-      color: white;
-      padding: 10px 18px;
-      font-size: 0.85rem;
-      text-transform: uppercase;
-      letter-spacing: 0.14em;
-      cursor: pointer;
-      display: inline-flex;
-      gap: 6px;
-      align-items: center;
-      box-shadow: 0 12px 30px rgba(15, 23, 42, 0.6);
-      transition: transform 0.14s ease, box-shadow 0.14s ease;
-    }
-
-    .button-primary:hover {
-      transform: translateY(-1px);
-      box-shadow: 0 18px 40px rgba(15, 23, 42, 0.8);
-    }
-
-    .button-secondary {
-      border-radius: var(--radius-pill);
-      border: 1px solid var(--border);
-      background: transparent;
-      color: var(--muted);
-      padding: 8px 14px;
-      font-size: 0.8rem;
-      cursor: pointer;
-      display: inline-flex;
-      gap: 6px;
-      align-items: center;
-      transition: all 0.14s ease;
-    }
-
-    .button-secondary:hover {
-      border-color: var(--accent);
-      color: var(--accent);
-    }
-
-    .status-line {
-      font-size: 0.8rem;
-      color: var(--muted);
-      min-height: 1.2em;
-    }
-
-    .status-line.success {
-      color: var(--success);
-    }
-
-    .status-line.error {
-      color: var(--danger);
-    }
-
-    /* Deck view */
-
-    .deck-tabs {
-      margin-bottom: 12px;
-    }
-
-    .deck-view {
-      border-radius: 18px;
-      border: 1px solid var(--grid-border);
-      padding: 10px;
-      max-height: 460px;
-      overflow: auto;
-      background: rgba(15, 23, 42, 0.6);
-    }
-
-    [data-theme="light"] .deck-view {
-      background: #f9fafb;
-    }
-
-    [data-theme="neon"] .deck-view {
-      background: radial-gradient(circle at top, #020617, #020617 60%);
-      box-shadow: 0 0 24px rgba(56, 189, 248, 0.14);
-    }
-
-    .deck-table {
-      width: 100%;
-      border-collapse: collapse;
-      font-size: 0.8rem;
-    }
-
-    .deck-table th,
-    .deck-table td {
-      border-bottom: 1px solid rgba(148, 163, 184, 0.24);
-      padding: 4px 6px;
-      text-align: left;
-      vertical-align: middle;
-    }
-
-    .deck-table th {
-      font-weight: 600;
-      font-size: 0.75rem;
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
-      color: var(--muted);
-      position: sticky;
-      top: 0;
-      backdrop-filter: blur(6px);
-      background: linear-gradient(
-        to bottom,
-        rgba(15, 23, 42, 0.96),
-        rgba(15, 23, 42, 0.7)
-      );
-      z-index: 1;
-    }
-
-    [data-theme="light"] .deck-table th {
-      background: linear-gradient(
-        to bottom,
-        rgba(249, 250, 251, 0.98),
-        rgba(249, 250, 251, 0.8)
-      );
-    }
-
-    [data-theme="neon"] .deck-table th {
-      background: linear-gradient(
-        to bottom,
-        rgba(15, 23, 42, 0.98),
-        rgba(15, 23, 42, 0.8)
-      );
-    }
-
-    .qty-control {
-      display: inline-flex;
-      align-items: center;
-      gap: 4px;
-    }
-
-    .qty-button {
-      width: 18px;
-      height: 18px;
-      border-radius: 999px;
-      border: 1px solid var(--border);
-      background: transparent;
-      color: var(--muted);
-      font-size: 0.75rem;
-      line-height: 1;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-      transition: all 0.12s ease;
-    }
-
-    .qty-button:hover {
-      border-color: var(--accent);
-      color: var(--accent);
-    }
-
-    .qty-value {
-      min-width: 1.2em;
-      text-align: center;
-    }
-
-    .card-name-cell {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      cursor: pointer;
-    }
-
-    .card-name {
-      font-weight: 500;
-    }
-
-    .card-type-pill {
-      padding: 2px 6px;
-      border-radius: 999px;
-      border: 1px solid var(--border);
-      font-size: 0.65rem;
-      text-transform: uppercase;
-      letter-spacing: 0.04em;
-      color: var(--muted);
-      white-space: nowrap;
-    }
-
-    .land-pill {
-      border-color: #22c55e;
-      color: #22c55e;
-    }
-
-    .mv-chip {
-      padding: 2px 6px;
-      border-radius: 999px;
-      background: rgba(15, 23, 42, 0.7);
-      font-size: 0.7rem;
-      display: inline-flex;
-      gap: 4px;
-      align-items: center;
-    }
-
-    [data-theme="light"] .mv-chip {
-      background: #e5e7eb;
-    }
-
-    .mv-chip span.label {
-      color: var(--muted);
-      font-size: 0.65rem;
-    }
-
-    .color-dots {
-      display: inline-flex;
-      gap: 2px;
-      align-items: center;
-    }
-
-    .color-dot {
-      width: 8px;
-      height: 8px;
-      border-radius: 999px;
-      border: 1px solid rgba(15, 23, 42, 0.6);
-    }
-
-    .cW { background: #f9fafb; }
-    .cU { background: #60a5fa; }
-    .cB { background: #4b5563; }
-    .cR { background: #f97373; }
-    .cG { background: #22c55e; }
-    .cC { background: #e5e7eb; }
-
-    /* Curve graph */
-
-    .summary-tabs {
-      margin-top: 12px;
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-    }
-
-    .summary-pane {
-      margin-top: 10px;
-      border-radius: 14px;
-      border: 1px solid var(--border);
-      padding: 10px;
-      background: rgba(15, 23, 42, 0.6);
-      font-size: 0.8rem;
-    }
-
-    [data-theme="light"] .summary-pane {
-      background: #f9fafb;
-    }
-
-    [data-theme="neon"] .summary-pane {
-      background: radial-gradient(circle at top, #020617, #020617 70%);
-    }
-
-    .curve-row {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      margin-bottom: 4px;
-    }
-
-    .curve-label {
-      width: 28px;
-      font-size: 0.7rem;
-      color: var(--muted);
-      text-align: right;
-    }
-
-    .curve-bar-wrap {
-      flex: 1;
-      position: relative;
-      height: 14px;
-      border-radius: 999px;
-      background: var(--curve-anchor);
-      overflow: hidden;
-    }
-
-    .curve-bar {
-      position: absolute;
-      left: 0;
-      top: 0;
-      bottom: 0;
-      border-radius: 999px;
-      background: linear-gradient(90deg, var(--curve-bar), #0ea5e9);
-      width: 0%;
-      transition: width 0.2s ease;
-    }
-
-    .curve-count {
-      width: 30px;
-      font-size: 0.7rem;
-      text-align: right;
-    }
-
-    .summary-line {
-      display: flex;
-      justify-content: space-between;
-      font-size: 0.75rem;
-      margin-top: 4px;
-      color: var(--muted);
-    }
-
-    .summary-line strong {
-      color: var(--text);
-      font-weight: 500;
-    }
-
-    /* Card modal */
-
-    .modal-backdrop {
-      position: fixed;
-      inset: 0;
-      background: rgba(15, 23, 42, 0.65);
-      display: none;
-      align-items: center;
-      justify-content: center;
-      z-index: 50;
-      padding: 10px;
-    }
-
-    .modal-backdrop.show {
-      display: flex;
-    }
-
-    .modal-card {
-      background: var(--bg-panel);
-      border-radius: 24px;
-      border: 1px solid var(--border);
-      max-width: 720px;
-      width: 100%;
-      max-height: 90vh;
-      overflow: auto;
-      box-shadow: var(--shadow-soft);
-      display: grid;
-      grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
-    }
-
-    @media (max-width: 700px) {
-      .modal-card {
-        grid-template-columns: minmax(0, 1fr);
-      }
-    }
-
-    .modal-art {
-      padding: 14px;
-      border-right: 1px solid var(--border);
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-      align-items: center;
-      justify-content: center;
-      background: radial-gradient(circle at top, #020617, #0b1120 60%);
-    }
-
-    .modal-art img {
-      max-width: 100%;
-      border-radius: 18px;
-      border: 1px solid var(--border);
-      box-shadow: 0 18px 40px rgba(15, 23, 42, 0.8);
-    }
-
-    .modal-body {
-      padding: 16px 16px 12px;
-      position: relative;
-    }
-
-    .modal-close {
-      position: absolute;
-      right: 12px;
-      top: 10px;
-      border-radius: 999px;
-      width: 24px;
-      height: 24px;
-      border: 1px solid var(--border);
-      background: rgba(15, 23, 42, 0.6);
-      color: var(--muted);
-      font-size: 0.9rem;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      transition: all 0.12s;
-    }
-
-    .modal-close:hover {
-      border-color: var(--accent);
-      color: var(--accent);
-    }
-
-    .modal-body h3 {
-      margin: 0 0 4px;
-      font-size: 1rem;
-    }
-
-    .modal-meta {
-      font-size: 0.75rem;
-      color: var(--muted);
-      margin-bottom: 10px;
-    }
-
-    .modal-section-title {
-      font-size: 0.75rem;
-      text-transform: uppercase;
-      letter-spacing: 0.12em;
-      color: var(--muted);
-      margin: 10px 0 4px;
-    }
-
-    .modal-row {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-      align-items: center;
-      font-size: 0.8rem;
-    }
-
-    .modal-row input {
-      border-radius: 999px;
-      border: 1px solid var(--border);
-      padding: 4px 10px;
-      background: transparent;
-      color: var(--text);
-      font-size: 0.8rem;
-      width: 80px;
-    }
-
-    .pill-label {
-      font-size: 0.75rem;
-      color: var(--muted);
-    }
-
-    .footer-note {
-      margin-top: 8px;
-      font-size: 0.75rem;
-      color: var(--muted);
-    }
-
-    .pill-tag {
-      border-radius: 999px;
-      border: 1px solid var(--border);
-      padding: 2px 8px;
-      font-size: 0.7rem;
-      color: var(--muted);
-    }
-
-    .deck-footer {
-      margin-top: 8px;
-      font-size: 0.75rem;
-      color: var(--muted);
-    }
-
-    .toast {
-      position: fixed;
-      bottom: 16px;
-      right: 16px;
-      background: rgba(15, 23, 42, 0.96);
-      border-radius: 999px;
-      padding: 8px 14px;
-      font-size: 0.75rem;
-      color: #e5e7eb;
-      box-shadow: 0 16px 32px rgba(15, 23, 42, 0.8);
-      display: none;
-      align-items: center;
-      gap: 6px;
-      z-index: 60;
-    }
-
-    [data-theme="light"] .toast {
-      background: rgba(17, 24, 39, 0.9);
-    }
-
-    [data-theme="neon"] .toast {
-      box-shadow: 0 0 30px rgba(56, 189, 248, 0.5);
-    }
-
-    .toast.show {
-      display: inline-flex;
-    }
-
-    .toast-icon {
-      width: 8px;
-      height: 8px;
-      border-radius: 999px;
-      background: var(--success);
-    }
-
-    .toast.error .toast-icon {
-      background: var(--danger);
-    }
-  </style>
+    .deck-container { max-height: 360px; }
+  }
+</style>
 </head>
-<body data-theme="dark">
-  <div class="app-shell">
-    <header>
-      <div class="title-block">
-        <h1>
-          <span class="coast-c">C</span><span class="coast-o">o</span
-          ><span class="coast-a">A</span><span class="coast-s">S</span
-          ><span class="coast-t">T</span>
-        </h1>
-        <small>Calculator of all Structural Tuning – CoaST v2 (HTML single-file)</small>
+<body>
+<div class="shell">
+
+  <h1>
+    <span class="logo-coast">CoAST</span>
+    <span class="pill">Calculator of All Structural Tuning</span>
+  </h1>
+  <p class="muted">
+    A deck-building sandbar: curve hills, land odds, colour sources, and plans tuned together so your mana feels as good as your spells.
+  </p>
+
+  <div id="toast"></div>
+
+  <!-- START SCREEN -->
+  <div id="startScreen" class="card start-screen panel-raised">
+    <h2>Where are we sailing?</h2>
+    <div class="start-options">
+      <button id="btnBuild">Build a deck</button>
+      <button id="btnImport">Import a deck</button>
+      <button class="secondary" id="btnLandCalc">Land odds only</button>
+    </div>
+    <p class="muted">
+      • <b>Build</b>: search cards, tweak quantities, tag ramp/cantrips/plans, &amp; see structure update live.<br/>
+      • <b>Import</b>: paste a list and let CoAST read its bones.<br/>
+      • <b>Land odds</b>: quick hypergeometric land calculator without a decklist.
+    </p>
+  </div>
+
+  <!-- DECK APP -->
+  <div id="deckApp" style="display:none; margin-top:10px;">
+    <div class="topbar">
+      <button class="secondary" id="backToHome">← Home</button>
+      <div>
+        <label>Deck name</label><br/>
+        <input type="text" id="deckName" placeholder="Untitled deck" />
       </div>
-      <div class="theme-toggle-group">
-        <button class="theme-pill active" data-theme-target="dark">
-          <span class="theme-dot"></span> Dark
-        </button>
-        <button class="theme-pill" data-theme-target="light">
-          <span class="theme-dot"></span> Light
-        </button>
-        <button class="theme-pill" data-theme-target="neon">
-          <span class="theme-dot"></span> Neon
-        </button>
+      <div>
+        <label>Format</label><br/>
+        <select id="deckFormat">
+          <option value="auto">Auto (from size)</option>
+          <option value="limited">Limited (40)</option>
+          <option value="constructed">Constructed (60)</option>
+          <option value="commander">Commander (99/100)</option>
+          <option value="custom">Custom</option>
+        </select>
       </div>
-    </header>
+      <div>
+        <label>Target size</label><br/>
+        <input type="number" id="deckSizeInput" min="1" step="1" value="60" />
+      </div>
+      <div>
+        <label>Land count</label><br/>
+        <input type="number" id="landCountInput" min="0" step="1" value="24" />
+      </div>
+      <div class="topbar-right">
+        <span id="deckStatusChip" class="chip">No cards yet</span>
+        <button class="secondary" id="saveDeckBtn">Save locally</button>
+        <select id="savedDecksSelect">
+          <option value="">Saved decks…</option>
+        </select>
+        <button class="secondary" id="loadDeckBtn">Load</button>
+        <button class="danger" id="deleteDeckBtn">Delete</button>
+      </div>
+    </div>
 
-    <div class="main-grid">
-      <!-- LEFT: Import / Builder -->
-      <section class="panel">
-        <div class="panel-heading">
-          <h2>Deck Input</h2>
-        </div>
+    <div class="deck-layout">
+      <!-- LEFT: Builder / Importer -->
+      <div class="card panel-inset">
+        <h2 id="builderTitle">Deck builder</h2>
 
-        <div class="tab-row" id="inputTabs">
-          <button class="tab-pill active" data-input-tab="import">
-            Import
-            <span class="small">Paste decklist</span>
-          </button>
-          <button class="tab-pill" data-input-tab="builder">
-            Builder
-            <span class="small">Manual (basic)</span>
-          </button>
-        </div>
-
-        <div class="builder-body" id="importTab">
+        <div class="row">
           <div>
-            <label class="pill-label">Paste decklist (e.g. “4 Lightning Bolt (M11) 146”):</label>
-            <textarea id="deckInput" placeholder="4 Solitude (MH2) 30
-3 Grief (MH2) 85
-24 Plains (MIR) 331"></textarea>
+            <label>Mode</label><br/>
+            <select id="builderMode">
+              <option value="build">Build with search</option>
+              <option value="import">Paste &amp; edit list</option>
+            </select>
           </div>
-          <div class="input-row">
-            <button class="button-primary" id="importButton">Import &amp; Analyze</button>
-            <button class="button-secondary" id="clearButton">Clear</button>
-          </div>
-          <div id="status" class="status-line"></div>
+          <div id="cardCountSummary" class="muted"></div>
+        </div>
 
-          <div class="footer-note">
-            What CoAST understands:
-            <br />
-            <code>QTY Card Name (SET) #</code> – set &amp; collector number optional.
-            Alternate arts resolve via Scryfall; if an exact print isn’t found,
-            CoAST falls back to a canonical printing so nothing is “unknown”.
+        <div id="buildControls" class="panel-inset" style="margin-bottom:6px;">
+          <div class="row">
+            <div style="flex: 2;">
+              <label>Add card (Scryfall search)</label><br/>
+              <input type="text" id="cardSearchName" placeholder="Lightning Bolt" />
+            </div>
+            <div>
+              <label>Qty</label><br/>
+              <input type="number" id="cardSearchQty" min="1" step="1" value="1" />
+            </div>
+            <div>
+              <label>&nbsp;</label><br/>
+              <button class="secondary" id="addCardBtn">Add</button>
+            </div>
+          </div>
+          <p class="muted">
+            Type a card name &amp; hit Enter. Tap a card tile to open its full image &amp; tuning profile.
+          </p>
+        </div>
+
+        <div id="importControls" class="panel-inset" style="display:none; margin-top:4px;">
+          <label>Decklist text (live with builder)</label><br/>
+          <textarea id="deckText" rows="8" spellcheck="false"
+            placeholder="4 Lightning Bolt&#10;4 Monastery Swiftspear&#10;2 Searing Blaze&#10;20 Mountain"></textarea>
+          <p class="muted">
+            Formats like <code>4 Lightning Bolt</code> or <code>4 Lightning Bolt (2XM) 123</code>. Lines starting with
+            <code>//</code> or <code>#</code> are ignored. Edits here update the same deck used by the builder.
+          </p>
+        </div>
+
+        <div class="deck-toolbar">
+          <div>
+            <label>View</label>
+            <select id="viewMode">
+              <option value="grid">Grid (images)</option>
+              <option value="list">List</option>
+            </select>
+            &nbsp;&nbsp;
+            <label>Group</label>
+            <select id="groupMode">
+              <option value="none">None</option>
+              <option value="type">Type</option>
+              <option value="mv">Mana value</option>
+              <option value="color">Color</option>
+            </select>
+          </div>
+          <div>
+            <span id="summaryBadge" class="chip">Deck: 0 cards</span>
           </div>
         </div>
 
-        <div class="builder-body" id="builderTab" style="display:none;">
-          <div class="input-row">
-            <input
-              type="text"
-              id="builderName"
-              placeholder="Card name"
-              style="flex:1; border-radius:999px; border:1px solid var(--border); padding:6px 10px; background:transparent; color:var(--text); font-size:0.8rem;"
-            />
-            <input
-              type="number"
-              id="builderQty"
-              value="1"
-              min="1"
-              style="width:80px; border-radius:999px; border:1px solid var(--border); padding:6px 10px; background:transparent; color:var(--text); font-size:0.8rem;"
-            />
-            <button class="button-primary" id="builderAdd">Add</button>
-          </div>
-          <div class="footer-note">
-            This is a minimal builder: type a card name and quantity.
-            CoAST will fetch mana value &amp; details from Scryfall for curve calculations.
-            (Full search UI can be layered on top later.)
-          </div>
-        </div>
-      </section>
-
-      <!-- RIGHT: Deck view and summary -->
-      <section class="panel">
-        <div class="panel-heading">
-          <h2>Deck View &amp; Curve</h2>
+        <div id="deckContainer" class="deck-container">
+          <div class="muted">No cards yet. Use the search above or paste a list.</div>
         </div>
 
-        <div class="deck-tabs">
-          <div class="tab-row">
-            <button class="tab-pill active" data-view-tab="list">
-              List
-              <span class="small">Sortable</span>
-            </button>
-            <button class="tab-pill" data-view-tab="summary">
-              Summary
-              <span class="small">Curve / counts</span>
-            </button>
-          </div>
+        <div id="builderStatus" class="muted" style="margin-top:6px;"></div>
+      </div>
+
+      <!-- RIGHT: Summary + Plans -->
+      <div class="card panel-raised">
+        <h2>Summary &amp; Plans</h2>
+
+        <div class="summary-tabs">
+          <button class="summary-tab-btn active" data-summary-tab-btn="overview">Overview</button>
+          <button class="summary-tab-btn" data-summary-tab-btn="curve">Curve</button>
+          <button class="summary-tab-btn" data-summary-tab-btn="lands">Lands</button>
+          <button class="summary-tab-btn" data-summary-tab-btn="virtual">Virtual lands</button>
+          <button class="summary-tab-btn" data-summary-tab-btn="colors">Colours</button>
         </div>
 
-        <div id="deckListView" class="deck-view">
-          <table class="deck-table" id="deckTable">
-            <thead>
-              <tr>
-                <th style="width:80px;">Qty</th>
-                <th>Card</th>
-                <th style="width:110px;">Type</th>
-                <th style="width:90px;">MV</th>
-                <th style="width:70px;">Colors</th>
-              </tr>
-            </thead>
-            <tbody id="deckTableBody">
-              <!-- rows injected -->
-            </tbody>
-          </table>
+        <div id="summaryPanel" class="summary-panel">
+          <div id="summaryOverview" data-summary-tab="overview">
+            <div class="muted">(No analysis yet. Add cards or paste a deck.)</div>
+          </div>
+          <div id="summaryCurve" data-summary-tab="curve" style="display:none;">
+            <div class="muted">(No analysis yet. Add cards or paste a deck.)</div>
+          </div>
+          <div id="summaryLands" data-summary-tab="lands" style="display:none;">
+            <div class="muted">(No analysis yet. Add cards or paste a deck.)</div>
+          </div>
+          <div id="summaryVirtual" data-summary-tab="virtual" style="display:none;">
+            <div class="muted">(No analysis yet. Add cards or paste a deck.)</div>
+          </div>
+          <div id="summaryColors" data-summary-tab="colors" style="display:none;">
+            <div class="muted">(No analysis yet. Add cards or paste a deck.)</div>
+          </div>
         </div>
+        <div id="summaryError" class="error"></div>
 
-        <div id="deckSummaryView" style="display:none;">
-          <div class="summary-tabs">
-            <button class="tab-pill active" data-summary-tab="curve">Curve</button>
-            <button class="tab-pill" data-summary-tab="counts">Counts</button>
+        <div class="plan-card panel-raised">
+          <div class="plan-tabs">
+            <button class="plan-tab-btn active" data-plan="A">Plan A</button>
+            <button class="plan-tab-btn" data-plan="B">Plan B</button>
+            <button class="plan-tab-btn" data-plan="C">Plan C</button>
+            <button class="plan-tab-btn" data-plan="D">Plan D</button>
+            <button class="plan-tab-btn" data-plan="E">Plan E</button>
           </div>
-          <div id="summaryCurve" class="summary-pane">
-            <!-- curve graph injected -->
+          <div class="row">
+            <div>
+              <label>Target turn</label><br/>
+              <input type="number" id="planTargetTurn" min="1" step="1" value="3" />
+            </div>
+            <div class="muted" id="planMeta"></div>
           </div>
-          <div id="summaryCounts" class="summary-pane" style="display:none;">
-            <!-- counts injected -->
+          <div id="planContent" style="font-size:0.8rem;">
+            <div class="muted">(Tag cards with Plan A–E in their detail panel to see plan summaries.)</div>
           </div>
         </div>
-
-        <div class="deck-footer" id="deckFooterInfo">
-          No deck loaded yet.
-        </div>
-      </section>
+      </div>
     </div>
   </div>
 
-  <!-- Card modal -->
-  <div class="modal-backdrop" id="cardModal">
-    <div class="modal-card">
-      <div class="modal-art">
-        <img id="modalArt" src="" alt="Card art" />
-        <div id="modalPrintInfo" class="pill-label"></div>
+  <!-- LAND CALC APP -->
+  <div id="landCalcApp" style="display:none; margin-top:10px;">
+    <div class="topbar">
+      <button class="secondary" id="backFromLand">← Home</button>
+      <h2>Land odds calculator</h2>
+    </div>
+    <div class="land-layout">
+      <div class="card panel-inset">
+        <h3>Inputs</h3>
+        <div class="row">
+          <div>
+            <label>Deck size</label><br/>
+            <input type="number" id="lcDeckSize" min="1" step="1" value="60" />
+          </div>
+          <div>
+            <label>Land count</label><br/>
+            <input type="number" id="lcLandCount" min="0" step="1" value="24" />
+          </div>
+        </div>
+        <div class="row">
+          <div>
+            <label>Turns (max)</label><br/>
+            <input type="number" id="lcMaxTurn" min="1" step="1" value="5" />
+          </div>
+          <div>
+            <label>Play / draw</label><br/>
+            <select id="lcPlayDraw">
+              <option value="play">On the play</option>
+              <option value="draw">On the draw (+1 card)</option>
+            </select>
+          </div>
+        </div>
+        <button id="lcCalcBtn">Calculate</button>
       </div>
+      <div class="card panel-raised">
+        <h3>Results</h3>
+        <pre id="lcResults" style="white-space:pre-wrap; font-family:'Fira Code',monospace; font-size:11px;">
+(No calculation yet.)</pre>
+      </div>
+    </div>
+  </div>
+
+  <!-- CARD PROFILE MODAL -->
+  <div id="cardModalBackdrop" class="modal-backdrop">
+    <div class="modal">
+      <div class="modal-header">
+        <div>
+          <h3 id="modalCardName">Card</h3>
+          <div class="muted" id="modalCardType"></div>
+        </div>
+        <button class="secondary" id="closeModalBtn">✕</button>
+      </div>
+
       <div class="modal-body">
-        <button class="modal-close" id="modalCloseBtn">&times;</button>
-        <h3 id="modalTitle">Card Name</h3>
-        <div id="modalType" class="modal-meta"></div>
-
-        <div class="modal-section-title">Mana Value</div>
-        <div class="modal-row">
-          <span class="pill-label">Rules MV:</span>
-          <span id="modalRulesMV" class="pill-tag">–</span>
-        </div>
-        <div class="modal-row" style="margin-top:4px;">
-          <span class="pill-label">Structural override:</span>
-          <input type="number" id="modalMVOverride" min="0" step="1" />
-          <span class="pill-label">Used for curve &amp; sorting.</span>
+        <div class="modal-img-wrap">
+          <img id="modalCardImg" alt="Card image" />
         </div>
 
-        <div class="modal-section-title">Deck</div>
-        <div class="modal-row">
-          <span class="pill-label">Quantity in deck:</span>
-          <span id="modalDeckQty" class="pill-tag">0</span>
+        <hr />
+
+        <div class="panel-inset">
+          <div class="field-group">
+            <div>
+              <label>Quantity in deck</label><br/>
+              <input type="number" id="modalQty" min="0" step="1" />
+              <p class="muted">
+                Set to 0 to remove this card from the deck.
+              </p>
+            </div>
+            <div>
+              <label>Effective mana value (optional override)</label><br/>
+              <input type="number" id="modalEffMV" min="0" step="1" placeholder="Use printed MV" />
+              <p class="muted">
+                For patterns like “7-drop we actually cast for 4”. Leave empty to use printed mana value.
+              </p>
+            </div>
+          </div>
+
+          <hr />
+
+          <div>
+            <label>Ramp profile (optional)</label>
+            <div class="field-group" style="margin-top:4px;">
+              <div>
+                <label>Ramp type</label><br/>
+                <select id="modalRampType">
+                  <option value="">None</option>
+                  <option value="dork">Dork (creature)</option>
+                  <option value="rock">Rock (artifact)</option>
+                  <option value="land">Land tutor / ramp</option>
+                  <option value="burst">Burst (ritual)</option>
+                  <option value="cheat">Cheat (reanimate / sneak)</option>
+                </select>
+              </div>
+              <div>
+                <label>Online turn</label><br/>
+                <input type="number" id="modalRampTurn" min="1" step="1" placeholder="2" />
+              </div>
+              <div>
+                <label>Net mana</label><br/>
+                <input type="number" id="modalRampNet" step="1" placeholder="+1" />
+              </div>
+            </div>
+          </div>
+
+          <hr />
+
+          <div>
+            <label>Cantrip / selection (optional)</label>
+            <div class="field-group" style="margin-top:4px;">
+              <div>
+                <label>Extra cards seen (avg)</label><br/>
+                <input type="number" id="modalCantrip" min="0" step="0.1" placeholder="0.6" />
+              </div>
+            </div>
+            <p class="muted">
+              Rough guidelines: scry / small peeks ~0.6, Impulse-style ~1.2–1.5. Used in plan odds buckets.
+            </p>
+          </div>
+
+          <hr />
+
+          <div>
+            <label>Plan tags</label>
+            <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:4px;">
+              <label class="pill-tag"><input type="checkbox" id="modalPlanA" /> Plan A</label>
+              <label class="pill-tag"><input type="checkbox" id="modalPlanB" /> Plan B</label>
+              <label class="pill-tag"><input type="checkbox" id="modalPlanC" /> Plan C</label>
+              <label class="pill-tag"><input type="checkbox" id="modalPlanD" /> Plan D</label>
+              <label class="pill-tag"><input type="checkbox" id="modalPlanE" /> Plan E</label>
+            </div>
+          </div>
+
+          <hr />
+
+          <div>
+            <label>Plan-specific MV overrides (optional)</label>
+            <div class="field-group" style="margin-top:4px;">
+              <div>
+                <span class="tiny-label">Plan A MV</span><br/>
+                <input type="number" id="planEffA" min="0" step="1" placeholder="-" />
+              </div>
+              <div>
+                <span class="tiny-label">Plan B MV</span><br/>
+                <input type="number" id="planEffB" min="0" step="1" placeholder="-" />
+              </div>
+              <div>
+                <span class="tiny-label">Plan C MV</span><br/>
+                <input type="number" id="planEffC" min="0" step="1" placeholder="-" />
+              </div>
+              <div>
+                <span class="tiny-label">Plan D MV</span><br/>
+                <input type="number" id="planEffD" min="0" step="1" placeholder="-" />
+              </div>
+              <div>
+                <span class="tiny-label">Plan E MV</span><br/>
+                <input type="number" id="planEffE" min="0" step="1" placeholder="-" />
+              </div>
+            </div>
+            <p class="muted">
+              Used when analysing the active plan’s “follow-up draw” buckets (cheap/mid/big). Global curve still uses the base effective MV above.
+            </p>
+          </div>
         </div>
 
-        <div class="footer-note">
-          Clicking outside this card will save your override and close the panel.
+        <div style="margin-top:6px;" id="modalSummary" class="mini-summary">
+          (Per-card summary will appear here.)
         </div>
+
+        <button id="modalSaveBtn" style="margin-top:6px;">Save card profile</button>
       </div>
     </div>
   </div>
 
-  <div class="toast" id="toast">
-    <span class="toast-icon"></span>
-    <span id="toastText"></span>
+  <!-- ABOUT / README IN-APP -->
+  <div id="aboutCard" class="card panel-raised" style="margin-top:14px;">
+    <div class="row" style="justify-content:space-between;">
+      <h2 style="margin-bottom:0;">About CoAST</h2>
+      <button class="secondary" id="toggleAboutBtn">Show details</button>
+    </div>
+    <div id="aboutContent" class="muted" style="display:none; margin-top:8px; font-size:0.8rem;">
+      <p><b>CoAST</b> (Calculator of All Structural Tuning) is a client-side tool for Magic: the Gathering that treats your deck like a system: lands, spells, ramp, cantrips, colour pips, and game plans are all analysed together.</p>
+      <p>Core ideas:</p>
+      <ul style="padding-left:18px;">
+        <li>Use <b>curve hills</b> and <b>WPL (weight per land)</b> to understand how heavy your deck actually is.</li>
+        <li>Use hypergeometric math to estimate <b>land consistency</b> with and without ramp.</li>
+        <li>Use pip counts and colour sources to sanity check your mana base.</li>
+        <li>Tag cards into <b>Plans A–E</b> and see how often your core plans actually come together by a target turn.</li>
+      </ul>
+      <p>All calculations run in your browser. No accounts, no servers, no paywalls. Card data and art are fetched from the public Scryfall API.</p>
+    </div>
   </div>
 
-  <script>
-    // -----------------------------
-    // CoAST state
-    // -----------------------------
-    const state = {
-      cards: [], // {id, name, qty, mv, rulesMV, typeLine, colors, isLand, image, set, number}
-      theme: 'dark'
+  <!-- DIAGNOSTICS / TESTS (hidden by default) -->
+  <div id="testsCard" class="card panel-inset" style="margin-top:10px; display:none;">
+    <div class="row" style="justify-content:space-between;">
+      <h2 style="margin-bottom:0;">Diagnostics &amp; Tests</h2>
+      <button class="secondary" id="runTestsBtn">Run self-check</button>
+    </div>
+    <pre id="testsOutput" class="muted" style="white-space:pre-wrap; font-size:0.75rem; margin-top:8px; max-height:220px; overflow:auto;">
+(No tests run yet.)</pre>
+  </div>
+
+</div>
+
+<script>
+// ===== combinatorics / hypergeometric =====
+function comb(n, k) {
+  if (k < 0 || k > n) return 0;
+  if (k === 0 || k === n) return 1;
+  k = Math.min(k, n - k);
+  let res = 1;
+  for (let i = 1; i <= k; i++) {
+    res = res * (n - k + i) / i;
+  }
+  return res;
+}
+function hyperPMF(k, K, N, n) {
+  if (n > N) return 0;
+  const num = comb(K, k) * comb(N - K, n - k);
+  const den = comb(N, n);
+  return den === 0 ? 0 : num / den;
+}
+function probAtLeast(k, K, N, n) {
+  let p = 0;
+  const maxK = Math.min(K, n);
+  for (let i = k; i <= maxK; i++) p += hyperPMF(i, K, N, n);
+  return p;
+}
+function pct(p) {
+  if (!Number.isFinite(p)) return '0.0%';
+  return (p * 100).toFixed(1) + '%';
+}
+
+// ===== Toast =====
+let toastTimer = null;
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.style.display = 'block';
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => {
+    t.style.display = 'none';
+  }, 2600);
+}
+
+// ===== Scryfall fetch with image =====
+const scryfallCache = new Map();
+
+async function fetchCardData(name, mode = 'fuzzy') {
+  const key = (mode + ':' + name).toLowerCase();
+  if (scryfallCache.has(key)) return scryfallCache.get(key);
+
+  const param = mode === 'exact' ? 'exact' : 'fuzzy';
+  const url = `https://api.scryfall.com/cards/named?${param}=${encodeURIComponent(name)}`;
+  let data;
+  try {
+    const resp = await fetch(url);
+    if (!resp.ok) throw new Error('Scryfall error');
+    data = await resp.json();
+  } catch {
+    data = {
+      name,
+      cmc: 0,
+      type_line: 'Unknown',
+      color_identity: [],
+      mana_cost: ''
     };
+  }
 
-    const deckInput = document.getElementById('deckInput');
-    const importButton = document.getElementById('importButton');
-    const clearButton = document.getElementById('clearButton');
-    const statusEl = document.getElementById('status');
-    const deckTableBody = document.getElementById('deckTableBody');
-    const deckFooterInfo = document.getElementById('deckFooterInfo');
+  let image = null;
+  if (data.image_uris && data.image_uris.normal) {
+    image = data.image_uris.normal;
+  } else if (Array.isArray(data.card_faces) &&
+             data.card_faces[0] &&
+             data.card_faces[0].image_uris &&
+             data.card_faces[0].image_uris.normal) {
+    image = data.card_faces[0].image_uris.normal;
+  }
+  data._coast_image = image;
 
-    const deckListView = document.getElementById('deckListView');
-    const deckSummaryView = document.getElementById('deckSummaryView');
-    const summaryCurve = document.getElementById('summaryCurve');
-    const summaryCounts = document.getElementById('summaryCounts');
+  scryfallCache.set(key, data);
+  return data;
+}
 
-    const cardModal = document.getElementById('cardModal');
-    const modalArt = document.getElementById('modalArt');
-    const modalPrintInfo = document.getElementById('modalPrintInfo');
-    const modalTitle = document.getElementById('modalTitle');
-    const modalType = document.getElementById('modalType');
-    const modalRulesMV = document.getElementById('modalRulesMV');
-    const modalMVOverride = document.getElementById('modalMVOverride');
-    const modalDeckQty = document.getElementById('modalDeckQty');
-    const modalCloseBtn = document.getElementById('modalCloseBtn');
+// ===== CoAST state =====
+const state = {
+  mode: 'build',
+  viewMode: 'grid',
+  groupMode: 'none',
+  deckEntries: {},
+  cardInfos: [],
+  tuning: {},
+  lastResult: null,
+  activePlan: 'A',
+  planSettings: {
+    A: { targetTurn: 3 },
+    B: { targetTurn: 3 },
+    C: { targetTurn: 3 },
+    D: { targetTurn: 3 },
+    E: { targetTurn: 3 }
+  },
+  summaryTab: 'overview'
+};
 
-    const toastEl = document.getElementById('toast');
-    const toastText = document.getElementById('toastText');
+// Anchor hills (skeleton)
+const ANCHOR_CURVES = {
+  40: { 16: {1: 6, 2: 12, 3: 6} },
+  60: { 24: {1: 10, 2: 14, 3: 7, 4: 5, 5: 3, 6: 1} },
+  99: { 35: {1: 5, 2: 12, 3: 13, 4: 10, 5: 7, 6: 5, 7: 3, 8: 1} }
+};
 
-    let modalCardId = null;
-    let toastTimeout = null;
+function getAnchor(sizeBucket, landCount) {
+  const entry = ANCHOR_CURVES[sizeBucket];
+  if (!entry) return null;
+  if (entry[landCount]) return entry[landCount];
+  const keys = Object.keys(entry).map(x => parseInt(x,10));
+  if (!keys.length) return null;
+  let nearest = keys[0];
+  for (const k of keys) {
+    if (Math.abs(k - landCount) < Math.abs(nearest - landCount)) nearest = k;
+  }
+  return entry[nearest];
+}
 
-    // -----------------------------
-    // Utility: toast
-    // -----------------------------
-    function showToast(message, isError = false) {
-      toastEl.classList.remove('error', 'show');
-      if (isError) toastEl.classList.add('error');
-      toastText.textContent = message;
-      toastEl.classList.add('show');
-      if (toastTimeout) clearTimeout(toastTimeout);
-      toastTimeout = setTimeout(() => {
-        toastEl.classList.remove('show');
-      }, 3000);
-    }
+function show(id){ document.getElementById(id).style.display = ''; }
+function hide(id){ document.getElementById(id).style.display = 'none'; }
 
-    // -----------------------------
-    // Theme switching
-    // -----------------------------
-    document.querySelectorAll('.theme-pill').forEach(btn => {
-      btn.addEventListener('click', () => {
-        const target = btn.getAttribute('data-theme-target');
-        document.body.setAttribute('data-theme', target);
-        state.theme = target;
-        document.querySelectorAll('.theme-pill').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-      });
+function deckEntriesFromText(text) {
+  const LINE_RE = /^\s*(\d+)[xX]?\s+(.+?)(?:\s+\([^)]+\)\s+\d+)?\s*$/;
+  const lines = text.split(/\r?\n/);
+  const entries = {};
+  for (const raw of lines) {
+    const line = raw.trim();
+    if (!line) continue;
+    if (line.startsWith('#') || line.startsWith('//')) continue;
+    const m = line.match(LINE_RE);
+    if (!m) continue;
+    const qty = parseInt(m[1], 10);
+    const name = m[2].trim();
+    if (!name || !Number.isFinite(qty)) continue;
+    entries[name] = (entries[name] || 0) + qty;
+  }
+  return entries;
+}
+function deckEntriesToText(entries) {
+  return Object.keys(entries)
+    .sort((a,b)=>a.localeCompare(b))
+    .map(name => `${entries[name]} ${name}`)
+    .join('\n');
+}
+function rebuildDeckTextFromState() {
+  const textarea = document.getElementById('deckText');
+  if (!textarea) return;
+  textarea.value = deckEntriesToText(state.deckEntries);
+}
+
+// ===== analysis =====
+async function analyzeDeck() {
+  const summaryError = document.getElementById('summaryError');
+  summaryError.textContent = '';
+
+  const names = Object.keys(state.deckEntries);
+
+  if (!names.length) {
+    state.cardInfos = [];
+    state.lastResult = null;
+    renderDeckView();
+    updateDeckStatusChip();
+    renderSummary(null);
+    renderPlanPanel();
+    return;
+  }
+
+  const cardInfos = [];
+  for (const name of names) {
+    const info = await fetchCardData(name, 'exact');
+    const profile = state.tuning[info.name] || state.tuning[name] || {};
+    const printedMV = Math.round(info.cmc || 0);
+    const effMV = (profile.effMV !== undefined && profile.effMV !== null && !Number.isNaN(profile.effMV))
+      ? Number(profile.effMV)
+      : printedMV;
+
+    cardInfos.push({
+      name: info.name || name,
+      key: info.name || name,
+      qty: state.deckEntries[name],
+      mv: effMV,
+      printed_mv: printedMV,
+      type_line: info.type_line || 'Unknown',
+      colors: info.colors || [],
+      color_identity: info.color_identity || [],
+      mana_cost: info.mana_cost || '',
+      image_url: info._coast_image || null
     });
+  }
+  state.cardInfos = cardInfos;
 
-    // -----------------------------
-    // Input tab switching
-    // -----------------------------
-    document.querySelectorAll('[data-input-tab]').forEach(btn => {
-      btn.addEventListener('click', () => {
-        const tab = btn.getAttribute('data-input-tab');
-        document.querySelectorAll('[data-input-tab]').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-        document.getElementById('importTab').style.display = tab === 'import' ? 'flex' : 'none';
-        document.getElementById('builderTab').style.display = tab === 'builder' ? 'flex' : 'none';
-      });
+  const deckSize = cardInfos.reduce((a,c)=>a + c.qty, 0);
+  const landInput = parseInt(document.getElementById('landCountInput').value,10);
+  let landCount = Number.isFinite(landInput) ? landInput : 0;
+
+  if (landCount === 0) {
+    landCount = cardInfos.reduce((a,c)=>{
+      if ((c.type_line || '').toLowerCase().includes('land')) return a + c.qty;
+      return a;
+    }, 0);
+  }
+
+  const nonlandCount = deckSize - landCount;
+  const curve = {};
+  for (let mv=0; mv<=10; mv++) curve[mv] = 0;
+  let deckWeight = 0;
+
+  for (const c of cardInfos) {
+    const isLand = (c.type_line || '').toLowerCase().includes('land');
+    if (!isLand) {
+      const mv = Math.max(0, Math.min(10, c.mv));
+      curve[mv] += c.qty;
+      deckWeight += mv * c.qty;
+    }
+  }
+
+  const wpl = landCount ? deckWeight / landCount : 0;
+
+  const landTable = [];
+  for (let turn=1; turn<=5; turn++) {
+    let seen = 7 + (turn - 1);
+    if (seen > deckSize) seen = deckSize;
+    landTable.push({
+      turn,
+      seen,
+      p1: probAtLeast(1, landCount, deckSize, seen),
+      p2: probAtLeast(2, landCount, deckSize, seen),
+      p3: probAtLeast(3, landCount, deckSize, seen),
+      p4: probAtLeast(4, landCount, deckSize, seen)
     });
+  }
 
-    // -----------------------------
-    // View tab switching
-    // -----------------------------
-    document.querySelectorAll('[data-view-tab]').forEach(btn => {
-      btn.addEventListener('click', () => {
-        const tab = btn.getAttribute('data-view-tab');
-        document.querySelectorAll('[data-view-tab]').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-        deckListView.style.display = tab === 'list' ? 'block' : 'none';
-        deckSummaryView.style.display = tab === 'summary' ? 'block' : 'none';
-      });
+  let totalRampCopies = 0;
+  let totalCantripExtra = 0;
+  for (const c of cardInfos) {
+    const profile = state.tuning[c.name] || {};
+    if (profile.rampType) totalRampCopies += c.qty;
+    if (profile.cantripExtra) totalCantripExtra += profile.cantripExtra * c.qty;
+  }
+
+  const virtualLandCount = landCount + totalRampCopies;
+  const landTableVirtual = [];
+  for (let turn=1; turn<=5; turn++) {
+    let seen = 7 + (turn - 1);
+    if (seen > deckSize) seen = deckSize;
+    landTableVirtual.push({
+      turn,
+      seen,
+      p1: probAtLeast(1, virtualLandCount, deckSize, seen),
+      p2: probAtLeast(2, virtualLandCount, deckSize, seen),
+      p3: probAtLeast(3, virtualLandCount, deckSize, seen),
+      p4: probAtLeast(4, virtualLandCount, deckSize, seen)
     });
+  }
 
-    // -----------------------------
-    // Summary tab switching
-    // -----------------------------
-    document.querySelectorAll('[data-summary-tab]').forEach(btn => {
-      btn.addEventListener('click', () => {
-        const tab = btn.getAttribute('data-summary-tab');
-        document.querySelectorAll('[data-summary-tab]').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-        summaryCurve.style.display = tab === 'curve' ? 'block' : 'none';
-        summaryCounts.style.display = tab === 'counts' ? 'block' : 'none';
-      });
-    });
-
-    // -----------------------------
-    // Parsing
-    // -----------------------------
-    function parseDeckText(text) {
-      const lines = text
-        .split(/\r?\n/)
-        .map(l => l.trim())
-        .filter(l => l.length > 0 && !l.startsWith('//'));
-
-      const entries = [];
-
-      const regex = /^(\d+)\s+(.+?)(?:\s+\(([A-Za-z0-9]+)\)\s+([0-9A-Za-z]+))?$/;
-
-      for (const line of lines) {
-        const m = line.match(regex);
-        if (!m) {
-          // Try looser: qty + name
-          const simple = line.match(/^(\d+)\s+(.+)$/);
-          if (simple) {
-            entries.push({
-              qty: parseInt(simple[1], 10),
-              name: simple[2].trim(),
-              set: null,
-              number: null,
-              raw: line
-            });
-          } else {
-            console.warn('Unparsed line:', line);
-          }
-          continue;
-        }
-        const qty = parseInt(m[1], 10);
-        const name = m[2].trim();
-        const set = m[3] ? m[3].trim() : null;
-        const number = m[4] ? m[4].trim() : null;
-
-        entries.push({ qty, name, set, number, raw: line });
-      }
-
-      return entries;
+  const pipTotals = {};
+  const pipRegex = /\{([WUBRG])\}/g;
+  for (const c of cardInfos) {
+    let m;
+    const cost = c.mana_cost || '';
+    while ((m = pipRegex.exec(cost)) !== null) {
+      pipTotals[m[1]] = (pipTotals[m[1]] || 0) + c.qty;
     }
+  }
 
-    // -----------------------------
-    // Scryfall helpers
-    // -----------------------------
-    async function fetchJson(url) {
-      const res = await fetch(url);
-      if (!res.ok) throw new Error('HTTP ' + res.status);
-      return res.json();
+  const landSources = {};
+  for (const c of cardInfos) {
+    const isLand = (c.type_line || '').toLowerCase().includes('land');
+    if (!isLand) continue;
+    for (const col of (c.color_identity || [])) {
+      landSources[col] = (landSources[col] || 0) + c.qty;
     }
+  }
 
-    // Resolve a card via Scryfall in a way that tries hard not to fail.
-    async function resolveCardFromScryfall(entry) {
-      const name = entry.name;
-      const set = entry.set;
-      const number = entry.number;
+  const neededSources = {};
+  const deltaSources = {};
+  const colSet = new Set([...Object.keys(pipTotals), ...Object.keys(landSources)]);
+  for (const col of colSet) {
+    const pips = pipTotals[col] || 0;
+    const need = Math.ceil(pips / 3);
+    neededSources[col] = need;
+    const have = landSources[col] || 0;
+    deltaSources[col] = have - need;
+  }
 
-      // 1) If set and collector number given, try an exact search
-      if (set && number) {
-        try {
-          const q = encodeURIComponent(`!"${name}" set:${set.toLowerCase()} cn:${number}`);
-          const url = `https://api.scryfall.com/cards/search?q=${q}&unique=prints`;
-          const data = await fetchJson(url);
-          if (data.total_cards > 0) {
-            return data.data[0];
-          }
-        } catch (e) {
-          console.warn('Exact set+number search failed for', entry, e);
-        }
-      }
+  const formatSel = document.getElementById('deckFormat').value;
+  let sizeBucket;
+  if (formatSel === 'limited') sizeBucket = 40;
+  else if (formatSel === 'constructed') sizeBucket = 60;
+  else if (formatSel === 'commander') sizeBucket = 99;
+  else {
+    if (deckSize >= 35 && deckSize <= 50) sizeBucket = 40;
+    else if (deckSize >= 51 && deckSize <= 75) sizeBucket = 60;
+    else if (deckSize >= 90 && deckSize <= 110) sizeBucket = 99;
+    else sizeBucket = null;
+  }
 
-      // 2) If set given, search in that set
-      if (set && !number) {
-        try {
-          const q = encodeURIComponent(`!"${name}" set:${set.toLowerCase()}`);
-          const url = `https://api.scryfall.com/cards/search?q=${q}&unique=prints`;
-          const data = await fetchJson(url);
-          if (data.total_cards > 0) {
-            // Pick the first non-digital printing
-            const nonDigital = data.data.find(c => !c.digital) || data.data[0];
-            return nonDigital;
-          }
-        } catch (e) {
-          console.warn('Set search failed for', entry, e);
-        }
-      }
-
-      // 3) Named exact
-      try {
-        const url = `https://api.scryfall.com/cards/named?exact=${encodeURIComponent(name)}&version=png`;
-        const card = await fetchJson(url);
-        return card;
-      } catch (e) {
-        console.warn('Named search failed for', entry, e);
-      }
-
-      // 4) Last resort: fuzzy search
-      try {
-        const url = `https://api.scryfall.com/cards/named?fuzzy=${encodeURIComponent(name)}&version=png`;
-        const card = await fetchJson(url);
-        return card;
-      } catch (e) {
-        console.warn('Fuzzy search failed for', entry, e);
-      }
-
-      throw new Error('Unable to resolve card: ' + name);
+  const anchor = sizeBucket ? getAnchor(sizeBucket, landCount) : null;
+  let anchorInfo = null;
+  if (anchor) {
+    const anchorNonlands = Object.values(anchor).reduce((a,b)=>a+b,0);
+    const scale = anchorNonlands ? (nonlandCount / anchorNonlands) : 1;
+    const scaled = {};
+    for (const [mv, qty] of Object.entries(anchor)) {
+      scaled[mv] = Math.round(qty * scale);
     }
+    anchorInfo = {raw: anchor, scaled};
+  }
 
-    // -----------------------------
-    // Import deck
-    // -----------------------------
-    async function importDeck() {
-      const text = deckInput.value.trim();
-      if (!text) {
-        statusEl.textContent = 'Nothing to import.';
-        statusEl.className = 'status-line error';
-        return;
-      }
+  const result = {
+    deckName: document.getElementById('deckName').value || 'Untitled deck',
+    deckSize,
+    landCount,
+    nonlandCount,
+    deckWeight,
+    wpl,
+    curve,
+    landTable,
+    landTableVirtual,
+    pipTotals,
+    landSources,
+    neededSources,
+    deltaSources,
+    anchorInfo,
+    totalRampCopies,
+    totalCantripExtra
+  };
 
-      statusEl.textContent = 'Parsing deck…';
-      statusEl.className = 'status-line';
+  state.lastResult = result;
+  renderDeckView();
+  updateDeckStatusChip(result);
+  renderSummary(result);
+  renderPlanPanel();
+}
 
-      const entries = parseDeckText(text);
+// ===== Summary UI (tabbed) =====
+function renderSummary(r) {
+  const elOverview = document.getElementById('summaryOverview');
+  const elCurve = document.getElementById('summaryCurve');
+  const elLands = document.getElementById('summaryLands');
+  const elVirtual = document.getElementById('summaryVirtual');
+  const elColors = document.getElementById('summaryColors');
 
-      if (entries.length === 0) {
-        statusEl.textContent = 'No valid deck lines found.';
-        statusEl.className = 'status-line error';
-        return;
-      }
+  if (!r) {
+    const msg = '<div class="muted">(No analysis yet. Add cards or paste a deck.)</div>';
+    elOverview.innerHTML = msg;
+    elCurve.innerHTML = msg;
+    elLands.innerHTML = msg;
+    elVirtual.innerHTML = msg;
+    elColors.innerHTML = msg;
+    setSummaryTab(state.summaryTab || 'overview');
+    return;
+  }
 
-      // Group by (name|set|number) key to avoid duplicate Scryfall calls
-      const grouped = new Map();
-      for (const e of entries) {
-        const key = [e.name.toLowerCase(), e.set?.toLowerCase() || '', e.number || ''].join('|');
-        if (!grouped.has(key)) {
-          grouped.set(key, { ...e });
-        } else {
-          grouped.get(key).qty += e.qty;
-        }
-      }
+  const wplClass =
+    r.wpl < 2.4 ? 'bad' :
+    r.wpl <= 3.6 ? 'good' : 'warn';
 
-      state.cards = [];
+  const landClass =
+    r.landCount <= 0 ? 'warn' :
+    'good';
 
-      let resolvedCount = 0;
-      const totalToResolve = grouped.size;
+  // Overview
+  let htmlOverview = '';
+  htmlOverview += '<div class="summary-section">';
+  htmlOverview += '<div class="summary-title">Deck snapshot</div>';
+  htmlOverview += '<div class="summary-grid">';
+  htmlOverview += `<span class="summary-chip"><b>${r.deckName}</b></span>`;
+  htmlOverview += `<span class="summary-chip ${landClass}">Size: ${r.deckSize} (lands ${r.landCount}, nonlands ${r.nonlandCount})</span>`;
+  htmlOverview += `<span class="summary-chip ${wplClass}">Weight / land (WPL): ${r.wpl.toFixed(3)}</span>`;
+  htmlOverview += `<span class="summary-chip">Ramp copies tagged: ${r.totalRampCopies}</span>`;
+  htmlOverview += `<span class="summary-chip">Cantrip extra cards (sum): ${r.totalCantripExtra.toFixed(1)}</span>`;
+  htmlOverview += '</div>';
+  htmlOverview += '</div>';
+  elOverview.innerHTML = htmlOverview;
 
-      for (const [key, entry] of grouped.entries()) {
-        try {
-          statusEl.textContent = `Resolving card ${++resolvedCount} of ${totalToResolve}…`;
-          const card = await resolveCardFromScryfall(entry);
-          // Build internal card object
-          const isLand = (card.type_line || '').toLowerCase().includes('land');
-          const rulesMV = typeof card.cmc === 'number' ? card.cmc : 0;
-          const effectiveMV = isLand ? 0 : Math.round(rulesMV);
+  // Curve
+  let htmlCurve = '';
+  htmlCurve += '<div class="summary-section">';
+  htmlCurve += '<div class="summary-title">Curve vs anchor hill</div>';
+  htmlCurve += '<p class="muted">Anchor hill is a “default” curve for your deck size &amp; land count. Bars show deck (green) vs anchor (blue).</p>';
 
-          const colors = Array.isArray(card.color_identity)
-            ? card.color_identity
-            : [];
-
-          const image =
-            card.image_uris?.normal ||
-            card.image_uris?.large ||
-            card.image_uris?.png ||
-            (card.card_faces && card.card_faces[0]?.image_uris?.normal) ||
-            '';
-
-          state.cards.push({
-            id: key,
-            name: card.name,
-            qty: entry.qty,
-            rulesMV,
-            mv: effectiveMV,
-            mvOverride: null,
-            typeLine: card.type_line || '',
-            colors,
-            isLand,
-            image,
-            set: card.set?.toUpperCase() || entry.set,
-            number: card.collector_number || entry.number || '',
-          });
-        } catch (e) {
-          console.error('Failed to resolve card', entry, e);
-          showToast(`Could not resolve "${entry.name}" – check spelling.`, true);
-        }
-      }
-
-      // Sort by mana value, non-lands first, then lands
-      sortDeckByMV();
-
-      renderDeckTable();
-      renderSummary();
-      statusEl.textContent = `Imported ${state.cards.length} unique card(s).`;
-      statusEl.className = 'status-line success';
-      showToast('Deck imported and analyzed.');
+  htmlCurve += '<table class="summary-table"><thead><tr><th>MV</th><th>In deck</th><th>Anchor*</th><th>Δ</th></tr></thead><tbody>';
+  const graphData = [];
+  if (r.anchorInfo) {
+    for (let mv=0; mv<=10; mv++) {
+      const dq = r.curve[mv] || 0;
+      const aq = r.anchorInfo.scaled[mv] || 0;
+      if (!dq && !aq) continue;
+      const diff = dq - aq;
+      htmlCurve += `<tr><td>${mv}</td><td>${dq}</td><td>${aq}</td><td>${diff >= 0 ? '+' : ''}${diff}</td></tr>`;
+      graphData.push({mv, deckQty:dq, anchorQty:aq});
     }
-
-    function sortDeckByMV() {
-      state.cards.sort((a, b) => {
-        if (a.isLand && !b.isLand) return 1;
-        if (!a.isLand && b.isLand) return -1;
-        const mvA = a.mvOverride ?? a.mv;
-        const mvB = b.mvOverride ?? b.mv;
-        if (mvA !== mvB) return mvA - mvB;
-        return a.name.localeCompare(b.name);
-      });
+  } else {
+    for (let mv=0; mv<=10; mv++) {
+      const dq = r.curve[mv] || 0;
+      if (!dq) continue;
+      htmlCurve += `<tr><td>${mv}</td><td>${dq}</td><td>–</td><td>–</td></tr>`;
+      graphData.push({mv, deckQty:dq, anchorQty:0});
     }
+  }
+  htmlCurve += '</tbody></table>';
+  if (r.anchorInfo) {
+    htmlCurve += '<p class="muted" style="margin-top:4px;">*Anchor scaled to match your total non-land card count.</p>';
+  }
 
-    // -----------------------------
-    // Render deck table
-    // -----------------------------
-    function renderDeckTable() {
-      deckTableBody.innerHTML = '';
-      if (state.cards.length === 0) {
-        deckFooterInfo.textContent = 'No deck loaded.';
-        return;
-      }
+  // mini bar graph
+  if (graphData.length) {
+    const maxDeck = Math.max(...graphData.map(g=>g.deckQty));
+    const maxAnchor = Math.max(...graphData.map(g=>g.anchorQty));
+    const maxVal = Math.max(maxDeck, maxAnchor) || 1;
+    htmlCurve += '<div class="curve-graph">';
+    for (const g of graphData) {
+      const deckH = (g.deckQty / maxVal) * 100;
+      const anchorH = (g.anchorQty / maxVal) * 100;
+      htmlCurve += `<div class="curve-bar"><div class="curve-bar-stack"><div class="curve-bar-deck" style="height:${deckH.toFixed(1)}%;"></div><div class="curve-bar-anchor" style="height:${anchorH.toFixed(1)}%;"></div></div><span class="curve-mv">${g.mv}</span></div>`;
+    }
+    htmlCurve += '</div>';
+  }
 
-      for (const card of state.cards) {
-        const tr = document.createElement('tr');
+  htmlCurve += '</div>';
+  elCurve.innerHTML = htmlCurve;
 
-        // Qty
-        const tdQty = document.createElement('td');
+  // Lands (base)
+  let htmlLands = '';
+  htmlLands += '<div class="summary-section">';
+  htmlLands += '<div class="summary-title">Land availability (on the play, 7-card opener)</div>';
+  htmlLands += '<table class="summary-table"><thead><tr><th>Turn</th><th>Cards seen</th><th>P(≥1 land)</th><th>P(≥2)</th><th>P(≥3)</th><th>P(≥4)</th></tr></thead><tbody>';
+  for (const row of r.landTable) {
+    htmlLands += `<tr><td>${row.turn}</td><td>${row.seen}</td><td>${pct(row.p1)}</td><td>${pct(row.p2)}</td><td>${pct(row.p3)}</td><td>${pct(row.p4)}</td></tr>`;
+  }
+  htmlLands += '</tbody></table>';
+  htmlLands += '</div>';
+  elLands.innerHTML = htmlLands;
+
+  // Virtual lands
+  let htmlVirtual = '';
+  htmlVirtual += '<div class="summary-section">';
+  htmlVirtual += '<div class="summary-title">Virtual lands (ramp included – rough)</div>';
+  htmlVirtual += '<p class="muted">Each tagged ramp card is currently counted as +1 land source. This is deliberately conservative.</p>';
+  htmlVirtual += '<table class="summary-table"><thead><tr><th>Turn</th><th>Cards seen</th><th>P(≥1 land)</th><th>P(≥2)</th><th>P(≥3)</th><th>P(≥4)</th></tr></thead><tbody>';
+  for (const row of r.landTableVirtual) {
+    htmlVirtual += `<tr><td>${row.turn}</td><td>${row.seen}</td><td>${pct(row.p1)}</td><td>${pct(row.p2)}</td><td>${pct(row.p3)}</td><td>${pct(row.p4)}</td></tr>`;
+  }
+  htmlVirtual += '</tbody></table>';
+  htmlVirtual += '</div>';
+  elVirtual.innerHTML = htmlVirtual;
+
+  // Colours
+  const cols = new Set([...Object.keys(r.pipTotals), ...Object.keys(r.landSources)]);
+  let htmlColors = '';
+  htmlColors += '<div class="summary-section">';
+  htmlColors += '<div class="summary-title">Colour pips vs land sources</div>';
+  if (!cols.size) {
+    htmlColors += '<p class="muted">No coloured mana symbols were detected in mana costs yet.</p>';
+  } else {
+    htmlColors += '<p class="muted">Rule of thumb: every ~3 pips of a colour wants ~1 source of that colour.</p>';
+    htmlColors += '<table class="summary-table"><thead><tr><th>Colour</th><th>Pips</th><th>Needed</th><th>Sources</th><th>Δ</th></tr></thead><tbody>';
+    for (const col of Array.from(cols).sort()) {
+      const pips = r.pipTotals[col] || 0;
+      const need = r.neededSources[col] || 0;
+      const have = r.landSources[col] || 0;
+      const d = r.deltaSources[col] || 0;
+      htmlColors += `<tr><td>${col}</td><td>${pips}</td><td>${need}</td><td>${have}</td><td>${d >= 0 ? '+' : ''}${d}</td></tr>`;
+    }
+    htmlColors += '</tbody></table>';
+  }
+  htmlColors += '</div>';
+  elColors.innerHTML = htmlColors;
+
+  setSummaryTab(state.summaryTab || 'overview');
+}
+
+function setSummaryTab(tab) {
+  state.summaryTab = tab;
+  const panels = document.querySelectorAll('[data-summary-tab]');
+  panels.forEach(p => {
+    p.style.display = (p.getAttribute('data-summary-tab') === tab) ? '' : 'none';
+  });
+  const buttons = document.querySelectorAll('[data-summary-tab-btn]');
+  buttons.forEach(b => {
+    if (b.getAttribute('data-summary-tab-btn') === tab) b.classList.add('active');
+    else b.classList.remove('active');
+  });
+}
+
+// ===== Deck view =====
+function createPipRow(color_identity) {
+  const container = document.createElement('div');
+  container.className = 'pip-row';
+  if (!color_identity || !color_identity.length) {
+    const pip = document.createElement('span');
+    pip.className = 'pip pip-C';
+    pip.textContent = 'C';
+    container.appendChild(pip);
+    return container;
+  }
+  for (const col of color_identity) {
+    const pip = document.createElement('span');
+    pip.className = 'pip pip-' + col;
+    pip.textContent = col;
+    container.appendChild(pip);
+  }
+  return container;
+}
+
+function adjustCardQty(name, delta) {
+  const current = state.deckEntries[name] || 0;
+  let next = current + delta;
+  if (next < 0) next = 0;
+  if (next === 0) {
+    delete state.deckEntries[name];
+    delete state.tuning[name];
+  } else {
+    state.deckEntries[name] = next;
+  }
+  rebuildDeckTextFromState();
+  scheduleAnalyze();
+}
+
+function renderDeckView() {
+  const container = document.getElementById('deckContainer');
+  const badge = document.getElementById('summaryBadge');
+
+  if (!state.cardInfos.length) {
+    container.innerHTML = '<div class="muted">No cards yet. Use the search above or paste a list.</div>';
+    badge.textContent = 'Deck: 0 cards';
+    document.getElementById('cardCountSummary').textContent = '';
+    return;
+  }
+
+  const deckSize = state.cardInfos.reduce((a,c)=>a + c.qty, 0);
+  const landsAuto = state.cardInfos.reduce((a,c)=>{
+    if ((c.type_line || '').toLowerCase().includes('land')) return a + c.qty;
+    return a;
+  }, 0);
+
+  badge.textContent = `Deck: ${deckSize} cards (${landsAuto} land by type)`;
+  document.getElementById('cardCountSummary').textContent = `${deckSize} cards tracked (${landsAuto} lands detected by type).`;
+
+  const grouped = {};
+  const gm = state.groupMode;
+
+  function groupKey(c) {
+    if (gm === 'type') return (c.type_line || 'Other').split('—')[0].trim() || 'Other';
+    if (gm === 'mv') return 'MV ' + c.mv;
+    if (gm === 'color') {
+      if (!c.color_identity || !c.color_identity.length) return 'Colorless';
+      return c.color_identity.join('');
+    }
+    return 'Deck';
+  }
+
+  for (const c of state.cardInfos) {
+    const k = groupKey(c);
+    if (!grouped[k]) grouped[k] = [];
+    grouped[k].push(c);
+  }
+
+  const groups = Object.keys(grouped).sort((a,b)=>{
+    if (a === 'Deck') return -1;
+    if (b === 'Deck') return 1;
+    return a.localeCompare(b);
+  });
+
+  const viewMode = state.viewMode;
+  container.innerHTML = '';
+
+  for (const gKey of groups) {
+    const header = document.createElement('div');
+    header.className = 'muted';
+    header.style.margin = '4px 0 2px';
+    header.textContent = gKey;
+    container.appendChild(header);
+
+    const cards = grouped[gKey];
+
+    if (viewMode === 'grid') {
+      const grid = document.createElement('div');
+      grid.className = 'deck-grid';
+      for (const c of cards) {
+        const div = document.createElement('div');
+        div.className = 'deck-card';
+        div.dataset.cardName = c.name;
+
+        if (c.image_url) {
+          const img = document.createElement('img');
+          img.src = c.image_url;
+          img.alt = c.name;
+          div.appendChild(img);
+        }
+
+        const head = document.createElement('div');
+        head.className = 'deck-card-header';
+
+        const nameSpan = document.createElement('span');
+        nameSpan.textContent = c.name;
+        head.appendChild(nameSpan);
+
         const qtyWrap = document.createElement('div');
-        qtyWrap.className = 'qty-control';
-        const btnMinus = document.createElement('button');
-        btnMinus.className = 'qty-button';
-        btnMinus.textContent = '–';
-        btnMinus.addEventListener('click', () => {
-          if (card.qty > 1) {
-            card.qty -= 1;
-          } else {
-            // remove card entirely
-            state.cards = state.cards.filter(c => c.id !== card.id);
-          }
-          sortDeckByMV();
-          renderDeckTable();
-          renderSummary();
+        qtyWrap.className = 'qty-controls';
+        const minusBtn = document.createElement('button');
+        minusBtn.className = 'qty-btn';
+        minusBtn.textContent = '−';
+        minusBtn.addEventListener('click', (e)=>{
+          e.stopPropagation();
+          adjustCardQty(c.name, -1);
         });
-        const qtyValue = document.createElement('span');
-        qtyValue.className = 'qty-value';
-        qtyValue.textContent = card.qty;
-        const btnPlus = document.createElement('button');
-        btnPlus.className = 'qty-button';
-        btnPlus.textContent = '+';
-        btnPlus.addEventListener('click', () => {
-          card.qty += 1;
-          sortDeckByMV();
-          renderDeckTable();
-          renderSummary();
+        const qtySpan = document.createElement('span');
+        qtySpan.className = 'qty-pill';
+        qtySpan.textContent = `x${c.qty}`;
+        const plusBtn = document.createElement('button');
+        plusBtn.className = 'qty-btn';
+        plusBtn.textContent = '+';
+        plusBtn.addEventListener('click', (e)=>{
+          e.stopPropagation();
+          adjustCardQty(c.name, +1);
         });
-        qtyWrap.appendChild(btnMinus);
-        qtyWrap.appendChild(qtyValue);
-        qtyWrap.appendChild(btnPlus);
-        tdQty.appendChild(qtyWrap);
-        tr.appendChild(tdQty);
+        qtyWrap.appendChild(minusBtn);
+        qtyWrap.appendChild(qtySpan);
+        qtyWrap.appendChild(plusBtn);
+        head.appendChild(qtyWrap);
 
-        // Card
-        const tdCard = document.createElement('td');
-        const cardCell = document.createElement('div');
-        cardCell.className = 'card-name-cell';
-        const cardNameSpan = document.createElement('span');
-        cardNameSpan.className = 'card-name';
-        cardNameSpan.textContent = card.name;
-        const typePill = document.createElement('span');
-        typePill.className = 'card-type-pill' + (card.isLand ? ' land-pill' : '');
-        typePill.textContent = card.isLand ? 'Land' : (card.typeLine.split('—')[0].trim());
-        cardCell.appendChild(cardNameSpan);
-        cardCell.appendChild(typePill);
-        cardCell.addEventListener('click', () => openCardModal(card.id));
-        tdCard.appendChild(cardCell);
-        tr.appendChild(tdCard);
+        div.appendChild(head);
 
-        // Type
-        const tdType = document.createElement('td');
-        tdType.textContent = card.typeLine.split('—')[0].trim();
-        tr.appendChild(tdType);
+        const typeSpan = document.createElement('div');
+        typeSpan.className = 'muted';
+        typeSpan.style.fontSize = '0.75rem';
+        typeSpan.textContent = (c.type_line || '').split('—')[0].trim();
+        div.appendChild(typeSpan);
 
-        // MV
-        const tdMV = document.createElement('td');
-        const mvChip = document.createElement('span');
-        mvChip.className = 'mv-chip';
-        const labelSpan = document.createElement('span');
-        labelSpan.className = 'label';
-        labelSpan.textContent = 'MV';
-        const valSpan = document.createElement('span');
-        valSpan.textContent = (card.mvOverride ?? card.mv).toString();
-        mvChip.appendChild(labelSpan);
-        mvChip.appendChild(valSpan);
-        tdMV.appendChild(mvChip);
-        tr.appendChild(tdMV);
+        const mvSpan = document.createElement('div');
+        mvSpan.className = 'muted';
+        mvSpan.style.fontSize = '0.75rem';
+        mvSpan.textContent = `MV ${c.mv}`;
+        div.appendChild(mvSpan);
 
-        // Colors
-        const tdColors = document.createElement('td');
-        const colorsWrap = document.createElement('div');
-        colorsWrap.className = 'color-dots';
-        if (card.colors.length === 0) {
-          const dot = document.createElement('div');
-          dot.className = 'color-dot cC';
-          colorsWrap.appendChild(dot);
-        } else {
-          for (const c of card.colors) {
-            const dot = document.createElement('div');
-            dot.className = 'color-dot c' + c;
-            colorsWrap.appendChild(dot);
-          }
-        }
-        tdColors.appendChild(colorsWrap);
-        tr.appendChild(tdColors);
+        div.appendChild(createPipRow(c.color_identity));
 
-        deckTableBody.appendChild(tr);
+        div.addEventListener('click', ()=>openCardModal(c.name));
+        grid.appendChild(div);
       }
-
-      const totalCards = state.cards.reduce((sum, c) => sum + c.qty, 0);
-      const lands = state.cards.reduce((sum, c) => sum + (c.isLand ? c.qty : 0), 0);
-      const spells = totalCards - lands;
-
-      deckFooterInfo.innerHTML =
-        `<strong>${totalCards}</strong> cards – <strong>${lands}</strong> lands, <strong>${spells}</strong> spells.`;
-    }
-
-    // -----------------------------
-    // Summary (curve + counts)
-    // -----------------------------
-    function renderSummary() {
-      renderCurve();
-      renderCounts();
-    }
-
-    function renderCurve() {
-      summaryCurve.innerHTML = '';
-
-      if (state.cards.length === 0) {
-        summaryCurve.textContent = 'No deck loaded.';
-        return;
-      }
-
-      // Compute MV distribution for spells only
-      const maxMV = 10;
-      const counts = new Array(maxMV + 1).fill(0);
-      for (const card of state.cards) {
-        if (card.isLand) continue;
-        const mv = card.mvOverride ?? card.mv;
-        const bucket = Math.max(0, Math.min(maxMV, mv));
-        counts[bucket] += card.qty;
-      }
-      const maxCount = Math.max(1, ...counts);
-
-      for (let mv = 0; mv <= maxMV; mv++) {
+      container.appendChild(grid);
+    } else {
+      for (const c of cards) {
         const row = document.createElement('div');
-        row.className = 'curve-row';
+        row.className = 'deck-list-row';
+        row.dataset.cardName = c.name;
 
-        const label = document.createElement('div');
-        label.className = 'curve-label';
-        label.textContent = mv.toString();
-        row.appendChild(label);
+        const qty = document.createElement('div');
+        qty.textContent = `x${c.qty}`;
+        row.appendChild(qty);
 
-        const barWrap = document.createElement('div');
-        barWrap.className = 'curve-bar-wrap';
-        const bar = document.createElement('div');
-        bar.className = 'curve-bar';
-        bar.style.width = (counts[mv] / maxCount * 100).toFixed(1) + '%';
-        barWrap.appendChild(bar);
-        row.appendChild(barWrap);
+        const name = document.createElement('div');
+        name.textContent = c.name;
+        row.appendChild(name);
 
-        const countLabel = document.createElement('div');
-        countLabel.className = 'curve-count';
-        countLabel.textContent = counts[mv] > 0 ? counts[mv] : '';
-        row.appendChild(countLabel);
+        const type = document.createElement('div');
+        type.innerHTML = `<span class="chip">${(c.type_line || '').split('—')[0].trim()}</span>`;
+        row.appendChild(type);
 
-        summaryCurve.appendChild(row);
+        const controls = document.createElement('div');
+        controls.style.display = 'flex';
+        controls.style.justifyContent = 'flex-end';
+        const qtyWrap = document.createElement('div');
+        qtyWrap.className = 'qty-controls';
+        const minusBtn = document.createElement('button');
+        minusBtn.className = 'qty-btn';
+        minusBtn.textContent = '−';
+        minusBtn.addEventListener('click',(e)=>{
+          e.stopPropagation();
+          adjustCardQty(c.name,-1);
+        });
+        const qtySpan = document.createElement('span');
+        qtySpan.className = 'qty-pill';
+        qtySpan.textContent = `x${c.qty}`;
+        const plusBtn = document.createElement('button');
+        plusBtn.className = 'qty-btn';
+        plusBtn.textContent = '+';
+        plusBtn.addEventListener('click',(e)=>{
+          e.stopPropagation();
+          adjustCardQty(c.name,+1);
+        });
+        qtyWrap.appendChild(minusBtn);
+        qtyWrap.appendChild(qtySpan);
+        qtyWrap.appendChild(plusBtn);
+        controls.appendChild(qtyWrap);
+        row.appendChild(controls);
+
+        row.addEventListener('click', ()=>openCardModal(c.name));
+        container.appendChild(row);
       }
-
-      const totalCards = state.cards.reduce((sum, c) => sum + c.qty, 0);
-      const lands = state.cards.reduce((sum, c) => sum + (c.isLand ? c.qty : 0), 0);
-      const spells = totalCards - lands;
-
-      const infoLine = document.createElement('div');
-      infoLine.className = 'summary-line';
-      infoLine.innerHTML =
-        `<span>Total cards: <strong>${totalCards}</strong></span>` +
-        `<span>Lands: <strong>${lands}</strong> – Spells: <strong>${spells}</strong></span>`;
-      summaryCurve.appendChild(infoLine);
     }
+  }
+}
 
-    function renderCounts() {
-      summaryCounts.innerHTML = '';
-      if (state.cards.length === 0) {
-        summaryCounts.textContent = 'No deck loaded.';
-        return;
-      }
+// ===== status chip =====
+function updateDeckStatusChip(result = null) {
+  const chip = document.getElementById('deckStatusChip');
+  const sizeTarget = parseInt(document.getElementById('deckSizeInput').value,10) || 60;
+  const formatSel = document.getElementById('deckFormat').value;
+  const deckSize = result ? result.deckSize : 0;
 
-      const total = state.cards.reduce((sum, c) => sum + c.qty, 0);
-      const lands = state.cards.reduce((sum, c) => sum + (c.isLand ? c.qty : 0), 0);
-      const spells = total - lands;
+  let status = '';
+  let cls = 'chip';
 
-      const p1 = document.createElement('div');
-      p1.className = 'summary-line';
-      p1.innerHTML = `<span>Total cards</span><span><strong>${total}</strong></span>`;
-      summaryCounts.appendChild(p1);
-
-      const p2 = document.createElement('div');
-      p2.className = 'summary-line';
-      p2.innerHTML = `<span>Lands</span><span><strong>${lands}</strong></span>`;
-      summaryCounts.appendChild(p2);
-
-      const p3 = document.createElement('div');
-      p3.className = 'summary-line';
-      p3.innerHTML = `<span>Spells</span><span><strong>${spells}</strong></span>`;
-      summaryCounts.appendChild(p3);
-
-      // Color counts (by color identity)
-      const colorCounts = { W: 0, U: 0, B: 0, R: 0, G: 0, C: 0 };
-      for (const card of state.cards) {
-        const nonLandQty = card.isLand ? 0 : card.qty;
-        if (nonLandQty === 0) continue;
-        if (card.colors.length === 0) {
-          colorCounts.C += nonLandQty;
-        } else {
-          for (const c of card.colors) {
-            colorCounts[c] += nonLandQty;
-          }
-        }
-      }
-
-      const p4 = document.createElement('div');
-      p4.className = 'summary-line';
-      p4.innerHTML = `<span>Color weight (spells)</span><span></span>`;
-      summaryCounts.appendChild(p4);
-
-      const colorsRow = document.createElement('div');
-      colorsRow.style.display = 'flex';
-      colorsRow.style.flexWrap = 'wrap';
-      colorsRow.style.gap = '6px';
-      colorsRow.style.marginTop = '4px';
-
-      for (const c of ['W', 'U', 'B', 'R', 'G', 'C']) {
-        const val = colorCounts[c];
-        const pill = document.createElement('span');
-        pill.className = 'pill-tag';
-        pill.innerHTML = `<strong>${c}</strong>: ${val}`;
-        colorsRow.appendChild(pill);
-      }
-      summaryCounts.appendChild(colorsRow);
+  if (!deckSize) {
+    status = 'No cards yet';
+  } else {
+    const diff = deckSize - sizeTarget;
+    const abs = Math.abs(diff);
+    if (formatSel === 'constructed' && deckSize < 60) {
+      status = `Invalid: ${deckSize}/60 for constructed`;
+      cls += ' bad';
+    } else if (formatSel === 'limited' && deckSize < 40) {
+      status = `Invalid: ${deckSize}/40 for limited`;
+      cls += ' bad';
+    } else if (formatSel === 'commander' && deckSize !== 99 && deckSize !== 100) {
+      status = `Warn: ${deckSize} cards; EDH is usually 99+1`;
+      cls += ' warn';
+    } else if (abs <= 2) {
+      status = `${deckSize}/${sizeTarget} (within band)`;
+      cls += ' ok';
+    } else {
+      status = `${deckSize}/${sizeTarget} (±${diff})`;
+      cls += ' warn';
     }
+  }
 
-    // -----------------------------
-    // Card modal (MV override, details)
-    // -----------------------------
-    function openCardModal(cardId) {
-      const card = state.cards.find(c => c.id === cardId);
-      if (!card) return;
-      modalCardId = cardId;
+  chip.className = cls;
+  chip.textContent = status;
+}
 
-      modalArt.src = card.image || '';
-      modalArt.alt = card.name;
-      modalPrintInfo.textContent = card.set
-        ? `${card.set} #${card.number || '?'}` : '';
+// ===== modal =====
+let modalCurrentName = null;
 
-      modalTitle.textContent = card.name;
-      modalType.textContent = card.typeLine;
+function buildCardMiniSummary(card, profile) {
+  const r = state.lastResult;
+  const lines = [];
 
-      modalRulesMV.textContent = card.rulesMV.toString();
-      modalMVOverride.value = card.mvOverride != null ? card.mvOverride : '';
+  const totalWeight = r ? r.deckWeight : null;
+  const weight = card.mv * card.qty;
+  if (totalWeight && totalWeight > 0) {
+    const pctWeight = (weight / totalWeight) * 100;
+    lines.push(`• Contributes ~${weight.toFixed(1)} MV of non-land weight (~${pctWeight.toFixed(1)}% of total).`);
+  } else {
+    lines.push(`• Effective MV ${card.mv} × ${card.qty} copies = ${weight.toFixed(1)} weight.`);
+  }
 
-      modalDeckQty.textContent = card.qty.toString();
+  if (profile.effMV !== null && profile.effMV !== undefined && !Number.isNaN(profile.effMV)) {
+    lines.push(`• Using override MV ${profile.effMV} (printed MV ${card.printed_mv}).`);
+  } else {
+    lines.push(`• Using printed MV ${card.printed_mv} for curve analysis.`);
+  }
 
-      cardModal.classList.add('show');
+  if (profile.rampType) {
+    lines.push(`• Tagged as ramp (${profile.rampType}) – counts as +1 virtual land in land odds.`);
+  }
+
+  if (profile.cantripExtra) {
+    const totalExtra = profile.cantripExtra * card.qty;
+    lines.push(`• Tagged as cantrip: ~${profile.cantripExtra.toFixed(2)} extra cards seen per cast (~${totalExtra.toFixed(2)} total if all copies are used).`);
+  }
+
+  const plans = profile.plans || [];
+  if (plans.length) {
+    lines.push(`• Included in plan(s): ${plans.join(', ')}.`);
+  }
+
+  const pe = profile.planEffMV || {};
+  const overrides = Object.entries(pe).filter(([k,v]) => Number.isFinite(v));
+  if (overrides.length) {
+    const parts = overrides.map(([k,v]) => `${k}: ${v}`);
+    lines.push(`• Plan-specific MV overrides: ${parts.join(', ')} (used for that plan's draw buckets).`);
+  }
+
+  return lines.join('\n');
+}
+
+function openCardModal(name) {
+  const card = state.cardInfos.find(c => c.name === name);
+  if (!card) return;
+  modalCurrentName = name;
+  const profile = state.tuning[name] || {};
+
+  document.getElementById('modalCardName').textContent = card.name;
+  document.getElementById('modalCardType').textContent = card.type_line || '';
+
+  const imgEl = document.getElementById('modalCardImg');
+  if (card.image_url) {
+    imgEl.src = card.image_url;
+    imgEl.style.display = '';
+  } else {
+    imgEl.style.display = 'none';
+  }
+
+  document.getElementById('modalQty').value = card.qty;
+
+  const effMVEl = document.getElementById('modalEffMV');
+  effMVEl.value = (profile.effMV !== undefined && profile.effMV !== null && !Number.isNaN(profile.effMV))
+    ? String(profile.effMV)
+    : '';
+
+  document.getElementById('modalRampType').value = profile.rampType || '';
+  document.getElementById('modalRampTurn').value = profile.rampTurn || '';
+  document.getElementById('modalRampNet').value =
+    (profile.rampNet !== undefined && profile.rampNet !== null) ? String(profile.rampNet) : '';
+  document.getElementById('modalCantrip').value =
+    (profile.cantripExtra !== undefined && profile.cantripExtra !== null) ? String(profile.cantripExtra) : '';
+
+  const plans = profile.plans || [];
+  document.getElementById('modalPlanA').checked = plans.includes('A');
+  document.getElementById('modalPlanB').checked = plans.includes('B');
+  document.getElementById('modalPlanC').checked = plans.includes('C');
+  document.getElementById('modalPlanD').checked = plans.includes('D');
+  document.getElementById('modalPlanE').checked = plans.includes('E');
+
+  const pe = profile.planEffMV || {};
+  document.getElementById('planEffA').value = Number.isFinite(pe.A) ? String(pe.A) : '';
+  document.getElementById('planEffB').value = Number.isFinite(pe.B) ? String(pe.B) : '';
+  document.getElementById('planEffC').value = Number.isFinite(pe.C) ? String(pe.C) : '';
+  document.getElementById('planEffD').value = Number.isFinite(pe.D) ? String(pe.D) : '';
+  document.getElementById('planEffE').value = Number.isFinite(pe.E) ? String(pe.E) : '';
+
+  document.getElementById('modalSummary').textContent = buildCardMiniSummary(card, profile);
+
+  document.getElementById('cardModalBackdrop').style.display = 'flex';
+}
+function closeCardModal() {
+  document.getElementById('cardModalBackdrop').style.display = 'none';
+  modalCurrentName = null;
+}
+function saveCardProfile() {
+  if (!modalCurrentName) return;
+  const name = modalCurrentName;
+  const qtyRaw = document.getElementById('modalQty').value.trim();
+  let qty = qtyRaw === '' ? null : Number(qtyRaw);
+
+  const effMVRaw = document.getElementById('modalEffMV').value.trim();
+  const effMV = effMVRaw === '' ? null : Number(effMVRaw);
+
+  const rampType = document.getElementById('modalRampType').value || null;
+  const rampTurnRaw = document.getElementById('modalRampTurn').value.trim();
+  const rampTurn = rampTurnRaw === '' ? null : Number(rampTurnRaw);
+  const rampNetRaw = document.getElementById('modalRampNet').value.trim();
+  const rampNet = rampNetRaw === '' ? null : Number(rampNetRaw);
+
+  const cantripRaw = document.getElementById('modalCantrip').value.trim();
+  const cantripExtra = cantripRaw === '' ? null : Number(cantripRaw);
+
+  const plans = [];
+  if (document.getElementById('modalPlanA').checked) plans.push('A');
+  if (document.getElementById('modalPlanB').checked) plans.push('B');
+  if (document.getElementById('modalPlanC').checked) plans.push('C');
+  if (document.getElementById('modalPlanD').checked) plans.push('D');
+  if (document.getElementById('modalPlanE').checked) plans.push('E');
+
+  const planEffMV = {};
+  const rawA = document.getElementById('planEffA').value.trim();
+  const rawB = document.getElementById('planEffB').value.trim();
+  const rawC = document.getElementById('planEffC').value.trim();
+  const rawD = document.getElementById('planEffD').value.trim();
+  const rawE = document.getElementById('planEffE').value.trim();
+  const parsePlan = (raw) => {
+    if (raw === '') return null;
+    const v = Number(raw);
+    return Number.isFinite(v) ? v : null;
+  };
+  const vA = parsePlan(rawA);
+  const vB = parsePlan(rawB);
+  const vC = parsePlan(rawC);
+  const vD = parsePlan(rawD);
+  const vE = parsePlan(rawE);
+  if (vA !== null) planEffMV.A = vA;
+  if (vB !== null) planEffMV.B = vB;
+  if (vC !== null) planEffMV.C = vC;
+  if (vD !== null) planEffMV.D = vD;
+  if (vE !== null) planEffMV.E = vE;
+
+  if (qty === null || !Number.isFinite(qty) || qty < 0) qty = 0;
+  if (qty === 0) {
+    delete state.deckEntries[name];
+    delete state.tuning[name];
+    rebuildDeckTextFromState();
+    closeCardModal();
+    scheduleAnalyze();
+    return;
+  } else {
+    state.deckEntries[name] = Math.round(qty);
+  }
+
+  const profile = {
+    effMV: Number.isFinite(effMV) ? effMV : null,
+    rampType,
+    rampTurn: Number.isFinite(rampTurn) ? rampTurn : null,
+    rampNet: Number.isFinite(rampNet) ? rampNet : null,
+    cantripExtra: Number.isFinite(cantripExtra) ? cantripExtra : null,
+    plans
+  };
+  if (Object.keys(planEffMV).length) profile.planEffMV = planEffMV;
+  state.tuning[name] = profile;
+
+  const card = state.cardInfos.find(c => c.name === name);
+  if (card) {
+    card.qty = state.deckEntries[name];
+    card.mv = (profile.effMV !== null && profile.effMV !== undefined && !Number.isNaN(profile.effMV))
+      ? profile.effMV
+      : card.printed_mv;
+    document.getElementById('modalSummary').textContent = buildCardMiniSummary(card, profile);
+  }
+
+  rebuildDeckTextFromState();
+  closeCardModal();
+  scheduleAnalyze();
+}
+
+// ===== auto analyze debounce =====
+let analyzeTimer = null;
+function scheduleAnalyze() {
+  clearTimeout(analyzeTimer);
+  analyzeTimer = setTimeout(()=> {
+    analyzeDeck().catch(err => {
+      console.error(err);
+      document.getElementById('summaryError').textContent = String(err);
+    });
+  }, 250);
+}
+
+// ===== local storage =====
+const STORAGE_KEY = 'coast_decks_v9';
+
+function getSavedDecks() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return {};
+    const obj = JSON.parse(raw);
+    return typeof obj === 'object' && obj ? obj : {};
+  } catch { return {}; }
+}
+function refreshSavedSelect() {
+  const decks = getSavedDecks();
+  const select = document.getElementById('savedDecksSelect');
+  const current = select.value;
+  select.innerHTML = '<option value="">Saved decks…</option>';
+  Object.keys(decks).sort().forEach(name => {
+    const opt = document.createElement('option');
+    opt.value = name;
+    opt.textContent = name;
+    select.appendChild(opt);
+  });
+  if (decks[current]) select.value = current;
+}
+function saveDeckLocally() {
+  const name = document.getElementById('deckName').value.trim() || 'Untitled deck';
+  const decks = getSavedDecks();
+  decks[name] = {
+    entries: state.deckEntries,
+    tuning: state.tuning,
+    format: document.getElementById('deckFormat').value,
+    targetSize: parseInt(document.getElementById('deckSizeInput').value,10) || 60,
+    landCount: parseInt(document.getElementById('landCountInput').value,10) || 0,
+    planSettings: state.planSettings
+  };
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(decks));
+  refreshSavedSelect();
+  const msg = `Saved deck "${name}" locally.`;
+  document.getElementById('builderStatus').textContent = msg;
+  showToast(msg);
+}
+function loadDeckLocally() {
+  const select = document.getElementById('savedDecksSelect');
+  const name = select.value;
+  if (!name) return;
+  const decks = getSavedDecks();
+  const data = decks[name];
+  if (!data) return;
+  document.getElementById('deckName').value = name;
+  document.getElementById('deckFormat').value = data.format || 'auto';
+  document.getElementById('deckSizeInput').value = data.targetSize || 60;
+  document.getElementById('landCountInput').value = data.landCount || 0;
+  state.deckEntries = data.entries || {};
+  state.tuning = data.tuning || {};
+  state.planSettings = data.planSettings || state.planSettings;
+  rebuildDeckTextFromState();
+  const msg = `Loaded deck "${name}".`;
+  document.getElementById('builderStatus').textContent = msg;
+  const active = state.activePlan;
+  const pt = state.planSettings[active] && state.planSettings[active].targetTurn || 3;
+  document.getElementById('planTargetTurn').value = pt;
+  showToast(msg);
+  scheduleAnalyze();
+}
+function deleteDeckLocally() {
+  const select = document.getElementById('savedDecksSelect');
+  const name = select.value;
+  if (!name) return;
+  const decks = getSavedDecks();
+  delete decks[name];
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(decks));
+  refreshSavedSelect();
+  const msg = `Deleted deck "${name}".`;
+  document.getElementById('builderStatus').textContent = msg;
+  showToast(msg);
+}
+
+// ===== Plan panel =====
+function shuffleInPlace(arr) {
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    const tmp = arr[i];
+    arr[i] = arr[j];
+    arr[j] = tmp;
+  }
+  return arr;
+}
+
+function renderPlanPanel() {
+  const content = document.getElementById('planContent');
+  const meta = document.getElementById('planMeta');
+  const plan = state.activePlan;
+  const settings = state.planSettings[plan] || { targetTurn: 3 };
+  const targetTurn = settings.targetTurn || 3;
+  document.getElementById('planTargetTurn').value = targetTurn;
+
+  const cards = state.cardInfos;
+  if (!cards.length) {
+    content.innerHTML = '<div class="muted">(No deck yet. Tag cards with Plan A–E in their detail panels.)</div>';
+    meta.textContent = '';
+    return;
+  }
+
+  const planCards = [];
+  let deckSize = 0;
+  for (const c of cards) {
+    deckSize += c.qty;
+    const profile = state.tuning[c.name] || {};
+    const plans = profile.plans || [];
+    if (plans.includes(plan)) {
+      planCards.push({ card: c, profile, qty: c.qty });
     }
+  }
 
-    function closeCardModal(save = true) {
-      if (save && modalCardId) {
-        const card = state.cards.find(c => c.id === modalCardId);
-        if (card) {
-          const raw = modalMVOverride.value.trim();
-          if (raw === '') {
-            card.mvOverride = null;
-          } else {
-            const val = parseInt(raw, 10);
-            if (!isNaN(val) && val >= 0) {
-              card.mvOverride = val;
-            }
-          }
-          // re-sort and redraw
-          sortDeckByMV();
-          renderDeckTable();
-          renderSummary();
-        }
-      }
-      modalCardId = null;
-      cardModal.classList.remove('show');
+  meta.textContent = `${planCards.length} different card(s) tagged for Plan ${plan}, deck size ${deckSize}.`;
+
+  if (!planCards.length) {
+    content.innerHTML = `<div class="muted">(No cards currently tagged for Plan ${plan}. Open a card and toggle the Plan tag.)</div>`;
+    return;
+  }
+
+  let seen = 7 + (targetTurn - 1);
+  if (seen > deckSize) seen = deckSize;
+
+  let planProbApprox = 1;
+  const cardLines = [];
+  for (const pc of planCards) {
+    const K = pc.qty;
+    const pSeen = probAtLeast(1, K, deckSize, seen);
+    planProbApprox *= pSeen;
+    cardLines.push({
+      name: pc.card.name,
+      qty: pc.qty,
+      pSeen
+    });
+  }
+  if (!Number.isFinite(planProbApprox)) planProbApprox = 0;
+
+  const expanded = [];
+  for (const pc of planCards) {
+    for (let i = 0; i < pc.qty; i++) expanded.push(pc.card.name);
+  }
+  shuffleInPlace(expanded);
+  const handNames = expanded.slice(0,7);
+  if (handNames.length < 7) {
+    const allNames = [];
+    for (const c of cards) {
+      for (let i = 0; i < c.qty; i++) allNames.push(c.name);
     }
+    shuffleInPlace(allNames);
+    for (const n of allNames) {
+      if (handNames.length >= 7) break;
+      handNames.push(n);
+    }
+  }
 
-    modalCloseBtn.addEventListener('click', () => closeCardModal(true));
-    cardModal.addEventListener('click', (e) => {
-      if (e.target === cardModal) {
-        closeCardModal(true);
-      }
-    });
+  // Bucket classification using plan-specific MV overrides if present
+  let landCount = 0;
+  let cheapCount = 0;
+  let midCount = 0;
+  let bigCount = 0;
+  for (const c of cards) {
+    const isLand = (c.type_line || '').toLowerCase().includes('land');
+    if (isLand) {
+      landCount += c.qty;
+    } else {
+      const profile = state.tuning[c.name] || {};
+      const mvOverride = profile.planEffMV && profile.planEffMV[plan];
+      const mvForBuckets = Number.isFinite(mvOverride) ? mvOverride : c.mv;
+      if (mvForBuckets <= 2) cheapCount += c.qty;
+      else if (mvForBuckets <= 4) midCount += c.qty;
+      else bigCount += c.qty;
+    }
+  }
+  const totalCards = landCount + cheapCount + midCount + bigCount || 1;
+  const landPct = landCount / totalCards;
+  const cheapPct = cheapCount / totalCards;
+  const midPct = midCount / totalCards;
+  const bigPct = bigCount / totalCards;
 
-    // -----------------------------
-    // Builder minimal add
-    // -----------------------------
-    const builderName = document.getElementById('builderName');
-    const builderQty = document.getElementById('builderQty');
-    const builderAdd = document.getElementById('builderAdd');
+  const sortedBySeen = [...cardLines].sort((a,b)=>a.pSeen - b.pSeen);
+  const worst1 = sortedBySeen[0];
+  const worst2 = sortedBySeen[1];
 
-    builderAdd.addEventListener('click', async () => {
-      const name = builderName.value.trim();
-      const qty = parseInt(builderQty.value, 10) || 1;
-      if (!name) {
-        showToast('Enter a card name first.', true);
-        return;
-      }
-      try {
-        statusEl.textContent = `Resolving "${name}"…`;
-        statusEl.className = 'status-line';
-        const cardData = await resolveCardFromScryfall({ name, set: null, number: null });
-        const key = [cardData.name.toLowerCase(), cardData.set || '', cardData.collector_number || ''].join('|');
-        const existing = state.cards.find(c => c.id === key);
-        if (existing) {
-          existing.qty += qty;
-        } else {
-          const isLand = (cardData.type_line || '').toLowerCase().includes('land');
-          const rulesMV = typeof cardData.cmc === 'number' ? cardData.cmc : 0;
-          const effectiveMV = isLand ? 0 : Math.round(rulesMV);
-          const colors = Array.isArray(cardData.color_identity)
-            ? cardData.color_identity
-            : [];
-          const image =
-            cardData.image_uris?.normal ||
-            cardData.image_uris?.large ||
-            cardData.image_uris?.png ||
-            (cardData.card_faces && cardData.card_faces[0]?.image_uris?.normal) ||
-            '';
-          state.cards.push({
-            id: key,
-            name: cardData.name,
-            qty,
-            rulesMV,
-            mv: effectiveMV,
-            mvOverride: null,
-            typeLine: cardData.type_line || '',
-            colors,
-            isLand,
-            image,
-            set: cardData.set?.toUpperCase() || '',
-            number: cardData.collector_number || '',
-          });
-        }
-        sortDeckByMV();
-        renderDeckTable();
-        renderSummary();
-        statusEl.textContent = 'Card added via builder.';
-        statusEl.className = 'status-line success';
-        showToast(`Added ${qty}× ${name}.`);
-      } catch (e) {
-        console.error(e);
-        statusEl.textContent = 'Error adding card.';
-        statusEl.className = 'status-line error';
-        showToast('Could not resolve that card name.', true);
-      }
-    });
+  let html = '';
 
-    // -----------------------------
-    // Event wiring
-    // -----------------------------
-    importButton.addEventListener('click', () => {
-      importDeck().catch(err => {
-        console.error(err);
-        statusEl.textContent = 'Error importing deck.';
-        statusEl.className = 'status-line error';
-      });
-    });
+  html += '<div class="plan-section-title">Plan completion odds</div>';
+  html += `<div class="plan-metric">Target turn: <b>T${targetTurn}</b>, cards seen (no mulligan model): ~<b>${seen}</b>.</div>`;
+  html += `<div class="plan-metric">Approx P(all Plan ${plan} pieces seen by T${targetTurn}): <b>${pct(planProbApprox)}</b></div>`;
 
-    clearButton.addEventListener('click', () => {
-      deckInput.value = '';
-      state.cards = [];
-      deckTableBody.innerHTML = '';
-      summaryCurve.innerHTML = '';
-      summaryCounts.innerHTML = '';
-      deckFooterInfo.textContent = 'No deck loaded.';
-      statusEl.textContent = '';
-    });
-  </script>
+  html += '<div class="plan-section-title">Per-card appearance</div>';
+  html += '<table class="summary-table"><thead><tr><th>Card</th><th>Copies</th><th>P(seen ≥1 by T)</th></tr></thead><tbody>';
+  for (const cl of cardLines) {
+    html += `<tr><td>${cl.name}</td><td>${cl.qty}</td><td>${pct(cl.pSeen)}</td></tr>`;
+  }
+  html += '</tbody></table>';
+
+  html += '<div class="plan-section-title">Wishlist hand (example)</div>';
+  html += '<div class="tiny-label">Sample 7-card opener including Plan cards (not a guarantee, just one roll).</div>';
+  html += '<div class="plan-hand">';
+  for (const n of handNames) {
+    html += `<div class="plan-hand-card">${n}</div>`;
+  }
+  html += '</div>';
+
+  html += '<div class="plan-section-title">Likely follow-up draws (whole deck)</div>';
+  html += `<div class="plan-metric">Land: <b>${pct(landPct)}</b></div>`;
+  html += `<div class="plan-metric">1–2 MV spells: <b>${pct(cheapPct)}</b></div>`;
+  html += `<div class="plan-metric">3–4 MV spells: <b>${pct(midPct)}</b></div>`;
+  html += `<div class="plan-metric">5+ MV spells: <b>${pct(bigPct)}</b></div>`;
+
+  html += '<div class="plan-section-title">Bottlenecks</div>';
+  html += '<div class="tiny-label">Cards that most often fail to show up by the target turn.</div>';
+  html += '<ul style="padding-left:18px;margin-top:2px;">';
+  if (worst1) {
+    html += `<li>${worst1.name}: seen by T${targetTurn} only ~${pct(worst1.pSeen)}</li>`;
+  }
+  if (worst2) {
+    html += `<li>${worst2.name}: seen by T${targetTurn} ~${pct(worst2.pSeen)}</li>`;
+  }
+  html += '</ul>';
+
+  content.innerHTML = html;
+}
+
+// ===== land calc standalone =====
+function runLandCalc() {
+  const N = parseInt(document.getElementById('lcDeckSize').value,10) || 60;
+  const K = parseInt(document.getElementById('lcLandCount').value,10) || 24;
+  const maxTurn = parseInt(document.getElementById('lcMaxTurn').value,10) || 5;
+  const pd = document.getElementById('lcPlayDraw').value;
+  const resultsEl = document.getElementById('lcResults');
+
+  let txt = '';
+  txt += `Deck size: ${N}, lands: ${K}, on the ${pd === 'play' ? 'play' : 'draw'}\n\n`;
+  txt += `Turn  Seen  P(≥1)   P(≥2)   P(≥3)   P(≥4)\n`;
+
+  for (let t=1; t<=maxTurn; t++) {
+    let seen = 7 + (t - 1);
+    if (pd === 'draw') seen += 1;
+    if (seen > N) seen = N;
+    const p1 = probAtLeast(1, K, N, seen);
+    const p2 = probAtLeast(2, K, N, seen);
+    const p3 = probAtLeast(3, K, N, seen);
+    const p4 = probAtLeast(4, K, N, seen);
+    txt += `${String(t).padStart(4)}  ${String(seen).padStart(4)}  ${pct(p1).padStart(6)}  ${pct(p2).padStart(6)}  ${pct(p3).padStart(6)}  ${pct(p4).padStart(6)}\n`;
+  }
+
+  resultsEl.textContent = txt;
+}
+
+// ===== Diagnostics / tests =====
+function runSelfTests() {
+  const out = [];
+  out.push('CoAST self-check\n------------------');
+
+  out.push('\n[1] Hypergeometric P(≥1 land) monotonicity:');
+  let ok1 = true;
+  const N = 60, K = 24;
+  let last = 0;
+  for (let n = 7; n <= 14; n++) {
+    const p = probAtLeast(1, K, N, n);
+    out.push(`  Seen ${n} -> P(≥1 land) = ${pct(p)}`);
+    if (p + 1e-9 < last) ok1 = false;
+    last = p;
+  }
+  out.push(`  Result: ${ok1 ? 'PASS' : 'FAIL (P decreased when more cards were seen)'}`);
+
+  out.push('\n[2] Synthetic deck weight sanity:');
+  const testNonlands = 20;
+  const testMV = 1;
+  const testLands = 20;
+  const totalWeight = testNonlands * testMV;
+  const wpl = totalWeight / testLands;
+  out.push(`  20 nonlands at MV1, 20 lands => weight=${totalWeight}, WPL=${wpl.toFixed(3)}`);
+  out.push(`  Expected WPL = 1.000 -> ${Math.abs(wpl - 1) < 1e-9 ? 'PASS' : 'FAIL'}`);
+
+  out.push('\n[3] Anchor hill scaling:');
+  const anchor = getAnchor(60, 24);
+  if (!anchor) {
+    out.push('  No anchor found for (60,24).');
+  } else {
+    const rawTotal = Object.values(anchor).reduce((a,b)=>a+b,0);
+    const targetNonlands = 36;
+    const scale = rawTotal ? targetNonlands / rawTotal : 1;
+    const scaledTotal = Object.values(anchor).reduce((a,b)=>a + Math.round(b*scale),0);
+    out.push(`  Raw anchor nonlands = ${rawTotal}, target = ${targetNonlands}, scaled sum = ${scaledTotal}`);
+    out.push(`  Result: ${Math.abs(scaledTotal - targetNonlands) <= 2 ? 'PASS (within 2 cards tolerance)' : 'WARN (off by more than 2)'}`);
+  }
+
+  out.push('\n[4] Probability bounds check:');
+  const pEx = probAtLeast(2, 24, 60, 10);
+  out.push(`  Example P(≥2 lands | N=60, K=24, seen=10) = ${pct(pEx)}`);
+  out.push(`  Result: ${(pEx >= -1e-9 && pEx <= 1+1e-9) ? 'PASS' : 'FAIL (outside [0,1])'}`);
+
+  document.getElementById('testsOutput').textContent = out.join('\n');
+}
+
+// ===== wiring =====
+document.getElementById('btnBuild').addEventListener('click', () => {
+  hide('startScreen'); show('deckApp');
+  state.mode = 'build';
+  document.getElementById('builderMode').value = 'build';
+  document.getElementById('builderTitle').textContent = 'Deck builder';
+});
+
+document.getElementById('btnImport').addEventListener('click', () => {
+  hide('startScreen'); show('deckApp');
+  state.mode = 'import';
+  document.getElementById('builderMode').value = 'import';
+  document.getElementById('builderTitle').textContent = 'Deck importer';
+  rebuildDeckTextFromState();
+  show('importControls'); hide('buildControls');
+});
+
+document.getElementById('btnLandCalc').addEventListener('click', () => {
+  hide('startScreen'); show('landCalcApp');
+});
+
+document.getElementById('backToHome').addEventListener('click', () => {
+  hide('deckApp'); show('startScreen');
+});
+document.getElementById('backFromLand').addEventListener('click', () => {
+  hide('landCalcApp'); show('startScreen');
+});
+
+document.getElementById('builderMode').addEventListener('change', e => {
+  const mode = e.target.value;
+  state.mode = mode;
+  if (mode === 'build') {
+    show('buildControls'); hide('importControls');
+    document.getElementById('builderTitle').textContent = 'Deck builder';
+  } else {
+    hide('buildControls'); show('importControls');
+    document.getElementById('builderTitle').textContent = 'Deck importer';
+    rebuildDeckTextFromState();
+  }
+});
+
+document.getElementById('cardSearchName').addEventListener('keydown', e => {
+  if (e.key === 'Enter') document.getElementById('addCardBtn').click();
+});
+document.getElementById('addCardBtn').addEventListener('click', async () => {
+  const name = document.getElementById('cardSearchName').value.trim();
+  const qty = parseInt(document.getElementById('cardSearchQty').value,10) || 1;
+  const status = document.getElementById('builderStatus');
+  if (!name) { status.textContent = 'Enter a card name.'; return; }
+  status.textContent = 'Searching Scryfall…';
+  try {
+    const info = await fetchCardData(name, 'fuzzy');
+    const actual = info.name || name;
+    state.deckEntries[actual] = (state.deckEntries[actual] || 0) + qty;
+    document.getElementById('cardSearchName').value = '';
+    document.getElementById('cardSearchQty').value = '1';
+    status.textContent = `Added ${qty}× ${actual}.`;
+    rebuildDeckTextFromState();
+    scheduleAnalyze();
+  } catch (err) {
+    console.error(err);
+    status.textContent = 'Failed to add card.';
+  }
+});
+
+document.getElementById('deckText').addEventListener('input', e => {
+  const text = e.target.value;
+  const entries = deckEntriesFromText(text);
+  state.deckEntries = entries;
+  const count = Object.values(entries).reduce((a,b)=>a+b,0);
+  if (count > 0) {
+    document.getElementById('builderStatus').textContent = `Deck from text: ${count} cards.`;
+  } else {
+    document.getElementById('builderStatus').textContent = 'No cards parsed from text.';
+  }
+  scheduleAnalyze();
+});
+document.getElementById('deckText').addEventListener('blur', e => {
+  const entries = deckEntriesFromText(e.target.value);
+  const count = Object.values(entries).reduce((a,b)=>a+b,0);
+  if (count > 0) {
+    showToast(`Imported deck from text (${count} cards).`);
+  }
+});
+
+document.getElementById('viewMode').addEventListener('change', e => {
+  state.viewMode = e.target.value;
+  renderDeckView();
+});
+document.getElementById('groupMode').addEventListener('change', e => {
+  state.groupMode = e.target.value;
+  renderDeckView();
+});
+
+document.getElementById('deckSizeInput').addEventListener('input', () => {
+  updateDeckStatusChip(state.lastResult);
+});
+document.getElementById('landCountInput').addEventListener('input', () => {
+  scheduleAnalyze();
+});
+document.getElementById('deckFormat').addEventListener('change', () => {
+  scheduleAnalyze();
+});
+
+document.getElementById('modalSaveBtn').addEventListener('click', saveCardProfile);
+// Close button should also save updates
+document.getElementById('closeModalBtn').addEventListener('click', saveCardProfile);
+// Clicking outside modal saves & closes
+document.getElementById('cardModalBackdrop').addEventListener('click', e => {
+  if (e.target.id === 'cardModalBackdrop') {
+    saveCardProfile();
+  }
+});
+
+document.getElementById('saveDeckBtn').addEventListener('click', saveDeckLocally);
+document.getElementById('loadDeckBtn').addEventListener('click', loadDeckLocally);
+document.getElementById('deleteDeckBtn').addEventListener('click', deleteDeckLocally);
+
+document.getElementById('lcCalcBtn').addEventListener('click', runLandCalc);
+
+// Summary tabs
+document.querySelectorAll('[data-summary-tab-btn]').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const tab = btn.getAttribute('data-summary-tab-btn');
+    setSummaryTab(tab);
+  });
+});
+
+// Plan tab switching
+document.querySelectorAll('.plan-tab-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const plan = btn.dataset.plan;
+    state.activePlan = plan;
+    document.querySelectorAll('.plan-tab-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    const settings = state.planSettings[plan] || { targetTurn: 3 };
+    document.getElementById('planTargetTurn').value = settings.targetTurn || 3;
+    renderPlanPanel();
+  });
+});
+
+document.getElementById('planTargetTurn').addEventListener('input', e => {
+  const v = parseInt(e.target.value,10);
+  const plan = state.activePlan;
+  if (!state.planSettings[plan]) state.planSettings[plan] = { targetTurn: 3 };
+  if (Number.isFinite(v) && v >= 1) {
+    state.planSettings[plan].targetTurn = v;
+    renderPlanPanel();
+  }
+});
+
+// About toggle
+document.getElementById('toggleAboutBtn').addEventListener('click', () => {
+  const content = document.getElementById('aboutContent');
+  const btn = document.getElementById('toggleAboutBtn');
+  const isHidden = content.style.display === 'none' || !content.style.display;
+  content.style.display = isHidden ? 'block' : 'none';
+  btn.textContent = isHidden ? 'Hide details' : 'Show details';
+});
+
+// Diagnostics (still callable if you unhide testsCard in dev)
+const runTestsBtn = document.getElementById('runTestsBtn');
+if (runTestsBtn) runTestsBtn.addEventListener('click', runSelfTests);
+
+// init
+refreshSavedSelect();
+setSummaryTab('overview');
+</script>
 </body>
 </html>
