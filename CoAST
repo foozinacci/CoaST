@@ -75,7 +75,7 @@
     display: inline-flex;
     align-items: center;
     gap: 6px;
-    background: linear-gradient(135deg, #22c55e, #38bdf8);
+    background: linear-gradient(135deg, var(--accent2), var(--accent));
     color: white;
     box-shadow: 0 10px 22px rgba(56,189,248,0.4);
   }
@@ -99,7 +99,7 @@
   input[type="number"],
   select,
   textarea {
-    background: #020617;
+    background: var(--panel);
     color: var(--text);
     border-radius: 999px;
     border: 1px solid var(--border);
@@ -131,7 +131,7 @@
   /* Input spaces bevel in */
   .panel-inset {
     border-radius: var(--radius);
-    background: #020617;
+    background: var(--panel);
     border: 1px solid #020617;
     box-shadow: inset 0 0 0 1px #111827, inset 0 8px 16px rgba(0,0,0,0.7);
     padding: 10px;
@@ -406,7 +406,7 @@
     box-shadow: 0 0 0 1px rgba(56,189,248,0.6);
   }
 
-  /* Curve hill mini-graph */
+  /* Curve hill mini-graph with neon-ish colors */
   .curve-graph {
     display: flex;
     align-items: flex-end;
@@ -430,19 +430,22 @@
     overflow: hidden;
     border: 1px solid #111827;
   }
+  /* Deck = orange/pink gradient */
   .curve-bar-deck {
     position: absolute;
     bottom: 0;
     left: 0;
     right: 0;
-    background: rgba(34,197,94,0.9);
+    background: linear-gradient(180deg, #fb7185, #f97316);
   }
+  /* Anchor = purple/cyan gradient */
   .curve-bar-anchor {
     position: absolute;
     bottom: 0;
     left: 20%;
     right: 20%;
-    background: rgba(56,189,248,0.6);
+    background: linear-gradient(180deg, #a855f7, #06b6d4);
+    opacity: 0.9;
   }
   .curve-mv {
     font-size: 0.65rem;
@@ -751,6 +754,14 @@
       <div>
         <label>Land count</label><br/>
         <input type="number" id="landCountInput" min="0" step="1" value="24" />
+      </div>
+      <div>
+        <label>Theme</label><br/>
+        <select id="themeSelect">
+          <option value="dark">Dark</option>
+          <option value="light">Light</option>
+          <option value="neon">Neon</option>
+        </select>
       </div>
       <div class="topbar-right">
         <span id="deckStatusChip" class="chip">No cards yet</span>
@@ -1193,7 +1204,9 @@ const state = {
     D: { targetTurn: 3 },
     E: { targetTurn: 3 }
   },
-  summaryTab: 'overview'
+  summaryTab: 'overview',
+  landsPerspective: 'play',
+  theme: 'dark'
 };
 
 // Anchor hills (skeleton)
@@ -1246,6 +1259,72 @@ function rebuildDeckTextFromState() {
   const textarea = document.getElementById('deckText');
   if (!textarea) return;
   textarea.value = deckEntriesToText(state.deckEntries);
+}
+
+// ===== theme handling (light/dark/neon) =====
+function computeNeonPalette() {
+  const root = document.documentElement;
+  const r = state.lastResult;
+  const neonMap = {
+    W: '#facc15',
+    U: '#38bdf8',
+    B: '#a855f7',
+    R: '#fb7185',
+    G: '#4ade80'
+  };
+  let used = [];
+  if (r && r.pipTotals) {
+    used = Object.entries(r.pipTotals)
+      .filter(([col, n]) => n > 0 && neonMap[col])
+      .sort((a,b) => b[1] - a[1])
+      .map(([col]) => neonMap[col]);
+  }
+  if (!used.length) used = ['#fb7185', '#a855f7', '#22c55e'];
+
+  const accent = used[0];
+  const accent2 = used[1] || used[0];
+
+  root.style.setProperty('--accent', accent);
+  root.style.setProperty('--accent2', accent2);
+  root.style.setProperty('--border', 'rgba(148,163,184,0.6)');
+  root.style.setProperty('--panel', '#020617');
+  root.style.setProperty('--bg', '#020617');
+  root.style.setProperty('--text', '#f9fafb');
+  root.style.setProperty('--muted', '#9ca3c7');
+
+  const grad = `radial-gradient(circle at top left, ${accent}22 0, #020617 45%, #000 100%)`;
+  document.body.style.background = grad;
+  document.body.style.color = 'var(--text)';
+}
+
+function applyTheme(theme) {
+  state.theme = theme;
+  const root = document.documentElement;
+  if (theme === 'dark') {
+    root.style.setProperty('--bg','#020617');
+    root.style.setProperty('--panel','#020617');
+    root.style.setProperty('--accent','#38bdf8');
+    root.style.setProperty('--accent2','#22c55e');
+    root.style.setProperty('--border','#1f2937');
+    root.style.setProperty('--text','#e5e7ff');
+    root.style.setProperty('--muted','#9ca3c7');
+    document.body.style.background =
+      'radial-gradient(circle at top left, #0f172a 0, #020617 40%, #000814 100%)';
+    document.body.style.color = 'var(--text)';
+  } else if (theme === 'light') {
+    root.style.setProperty('--bg','#f9fafb');
+    root.style.setProperty('--panel','#ffffff');
+    root.style.setProperty('--accent','#2563eb');
+    root.style.setProperty('--accent2','#16a34a');
+    root.style.setProperty('--border','#d1d5db');
+    root.style.setProperty('--text','#020617');
+    root.style.setProperty('--muted','#6b7280');
+    document.body.style.background =
+      'radial-gradient(circle at top left, #e5e7eb 0, #f9fafb 40%, #e5e7eb 100%)';
+    document.body.style.color = 'var(--text)';
+  } else if (theme === 'neon') {
+    computeNeonPalette();
+  }
 }
 
 // ===== analysis =====
@@ -1316,17 +1395,28 @@ async function analyzeDeck() {
 
   const wpl = landCount ? deckWeight / landCount : 0;
 
-  const landTable = [];
+  const landTablePlay = [];
+  const landTableDraw = [];
   for (let turn=1; turn<=5; turn++) {
-    let seen = 7 + (turn - 1);
-    if (seen > deckSize) seen = deckSize;
-    landTable.push({
+    let seenPlay = 7 + (turn - 1);
+    if (seenPlay > deckSize) seenPlay = deckSize;
+    let seenDraw = 8 + (turn - 1);
+    if (seenDraw > deckSize) seenDraw = deckSize;
+    landTablePlay.push({
       turn,
-      seen,
-      p1: probAtLeast(1, landCount, deckSize, seen),
-      p2: probAtLeast(2, landCount, deckSize, seen),
-      p3: probAtLeast(3, landCount, deckSize, seen),
-      p4: probAtLeast(4, landCount, deckSize, seen)
+      seen: seenPlay,
+      p1: probAtLeast(1, landCount, deckSize, seenPlay),
+      p2: probAtLeast(2, landCount, deckSize, seenPlay),
+      p3: probAtLeast(3, landCount, deckSize, seenPlay),
+      p4: probAtLeast(4, landCount, deckSize, seenPlay)
+    });
+    landTableDraw.push({
+      turn,
+      seen: seenDraw,
+      p1: probAtLeast(1, landCount, deckSize, seenDraw),
+      p2: probAtLeast(2, landCount, deckSize, seenDraw),
+      p3: probAtLeast(3, landCount, deckSize, seenDraw),
+      p4: probAtLeast(4, landCount, deckSize, seenDraw)
     });
   }
 
@@ -1339,17 +1429,28 @@ async function analyzeDeck() {
   }
 
   const virtualLandCount = landCount + totalRampCopies;
-  const landTableVirtual = [];
+  const landTableVirtualPlay = [];
+  const landTableVirtualDraw = [];
   for (let turn=1; turn<=5; turn++) {
-    let seen = 7 + (turn - 1);
-    if (seen > deckSize) seen = deckSize;
-    landTableVirtual.push({
+    let seenPlay = 7 + (turn - 1);
+    if (seenPlay > deckSize) seenPlay = deckSize;
+    let seenDraw = 8 + (turn - 1);
+    if (seenDraw > deckSize) seenDraw = deckSize;
+    landTableVirtualPlay.push({
       turn,
-      seen,
-      p1: probAtLeast(1, virtualLandCount, deckSize, seen),
-      p2: probAtLeast(2, virtualLandCount, deckSize, seen),
-      p3: probAtLeast(3, virtualLandCount, deckSize, seen),
-      p4: probAtLeast(4, virtualLandCount, deckSize, seen)
+      seen: seenPlay,
+      p1: probAtLeast(1, virtualLandCount, deckSize, seenPlay),
+      p2: probAtLeast(2, virtualLandCount, deckSize, seenPlay),
+      p3: probAtLeast(3, virtualLandCount, deckSize, seenPlay),
+      p4: probAtLeast(4, virtualLandCount, deckSize, seenPlay)
+    });
+    landTableVirtualDraw.push({
+      turn,
+      seen: seenDraw,
+      p1: probAtLeast(1, virtualLandCount, deckSize, seenDraw),
+      p2: probAtLeast(2, virtualLandCount, deckSize, seenDraw),
+      p3: probAtLeast(3, virtualLandCount, deckSize, seenDraw),
+      p4: probAtLeast(4, virtualLandCount, deckSize, seenDraw)
     });
   }
 
@@ -1415,8 +1516,10 @@ async function analyzeDeck() {
     deckWeight,
     wpl,
     curve,
-    landTable,
-    landTableVirtual,
+    landTablePlay,
+    landTableDraw,
+    landTableVirtualPlay,
+    landTableVirtualDraw,
     pipTotals,
     landSources,
     neededSources,
@@ -1427,6 +1530,12 @@ async function analyzeDeck() {
   };
 
   state.lastResult = result;
+
+  // If neon theme is active, re-adapt accent colors to deck’s colours
+  if (state.theme === 'neon') {
+    computeNeonPalette();
+  }
+
   renderDeckView();
   updateDeckStatusChip(result);
   renderSummary(result);
@@ -1478,7 +1587,7 @@ function renderSummary(r) {
   let htmlCurve = '';
   htmlCurve += '<div class="summary-section">';
   htmlCurve += '<div class="summary-title">Curve vs anchor hill</div>';
-  htmlCurve += '<p class="muted">Anchor hill is a “default” curve for your deck size &amp; land count. Bars show deck (green) vs anchor (blue).</p>';
+  htmlCurve += '<p class="muted">Anchor hill is a “default” curve for your deck size &amp; land count. Bars show deck (orange/pink) vs anchor (purple/cyan).</p>';
 
   htmlCurve += '<table class="summary-table"><thead><tr><th>MV</th><th>In deck</th><th>Anchor*</th><th>Δ</th></tr></thead><tbody>';
   const graphData = [];
@@ -1504,7 +1613,6 @@ function renderSummary(r) {
     htmlCurve += '<p class="muted" style="margin-top:4px;">*Anchor scaled to match your total non-land card count.</p>';
   }
 
-  // mini bar graph
   if (graphData.length) {
     const maxDeck = Math.max(...graphData.map(g=>g.deckQty));
     const maxAnchor = Math.max(...graphData.map(g=>g.anchorQty));
@@ -1521,25 +1629,44 @@ function renderSummary(r) {
   htmlCurve += '</div>';
   elCurve.innerHTML = htmlCurve;
 
-  // Lands (base)
+  // Lands (play/draw toggle)
+  const perspective = state.landsPerspective || 'play';
+  const landTableBase = perspective === 'play' ? r.landTablePlay : r.landTableDraw;
+  const landLabel = perspective === 'play' ? 'On the play' : 'On the draw';
   let htmlLands = '';
   htmlLands += '<div class="summary-section">';
-  htmlLands += '<div class="summary-title">Land availability (on the play, 7-card opener)</div>';
+  htmlLands += '<div class="summary-title">Land availability</div>';
+  htmlLands += `<div class="row" style="margin-bottom:4px;">
+      <div class="tiny-label">Perspective</div>
+      <div style="display:flex;gap:4px;flex-wrap:wrap;">
+        <button class="summary-tab-btn ${perspective==='play'?'active':''}" data-lands-toggle="play">Play</button>
+        <button class="summary-tab-btn ${perspective==='draw'?'active':''}" data-lands-toggle="draw">Draw</button>
+      </div>
+    </div>`;
+  htmlLands += `<p class="muted">${landLabel}, 7-card opener (no mulligan model).</p>`;
   htmlLands += '<table class="summary-table"><thead><tr><th>Turn</th><th>Cards seen</th><th>P(≥1 land)</th><th>P(≥2)</th><th>P(≥3)</th><th>P(≥4)</th></tr></thead><tbody>';
-  for (const row of r.landTable) {
+  for (const row of landTableBase) {
     htmlLands += `<tr><td>${row.turn}</td><td>${row.seen}</td><td>${pct(row.p1)}</td><td>${pct(row.p2)}</td><td>${pct(row.p3)}</td><td>${pct(row.p4)}</td></tr>`;
   }
   htmlLands += '</tbody></table>';
   htmlLands += '</div>';
   elLands.innerHTML = htmlLands;
 
-  // Virtual lands
+  // Virtual lands (also obey play/draw toggle)
+  const landTableVirt = perspective === 'play' ? r.landTableVirtualPlay : r.landTableVirtualDraw;
   let htmlVirtual = '';
   htmlVirtual += '<div class="summary-section">';
   htmlVirtual += '<div class="summary-title">Virtual lands (ramp included – rough)</div>';
-  htmlVirtual += '<p class="muted">Each tagged ramp card is currently counted as +1 land source. This is deliberately conservative.</p>';
+  htmlVirtual += `<div class="row" style="margin-bottom:4px;">
+      <div class="tiny-label">Perspective</div>
+      <div style="display:flex;gap:4px;flex-wrap:wrap;">
+        <button class="summary-tab-btn ${perspective==='play'?'active':''}" data-lands-toggle="play">Play</button>
+        <button class="summary-tab-btn ${perspective==='draw'?'active':''}" data-lands-toggle="draw">Draw</button>
+      </div>
+    </div>`;
+  htmlVirtual += `<p class="muted">${landLabel}, counting each tagged ramp card as +1 land source.</p>`;
   htmlVirtual += '<table class="summary-table"><thead><tr><th>Turn</th><th>Cards seen</th><th>P(≥1 land)</th><th>P(≥2)</th><th>P(≥3)</th><th>P(≥4)</th></tr></thead><tbody>';
-  for (const row of r.landTableVirtual) {
+  for (const row of landTableVirt) {
     htmlVirtual += `<tr><td>${row.turn}</td><td>${row.seen}</td><td>${pct(row.p1)}</td><td>${pct(row.p2)}</td><td>${pct(row.p3)}</td><td>${pct(row.p4)}</td></tr>`;
   }
   htmlVirtual += '</tbody></table>';
@@ -1583,6 +1710,16 @@ function setSummaryTab(tab) {
     else b.classList.remove('active');
   });
 }
+
+// delegate lands play/draw toggle clicks inside summary panel
+document.getElementById('summaryPanel').addEventListener('click', e => {
+  const btn = e.target.closest('[data-lands-toggle]');
+  if (!btn) return;
+  const mode = btn.getAttribute('data-lands-toggle');
+  if (mode !== 'play' && mode !== 'draw') return;
+  state.landsPerspective = mode;
+  if (state.lastResult) renderSummary(state.lastResult);
+});
 
 // ===== Deck view =====
 function createPipRow(color_identity) {
@@ -2182,7 +2319,6 @@ function renderPlanPanel() {
     }
   }
 
-  // Bucket classification using plan-specific MV overrides if present
   let landCount = 0;
   let cheapCount = 0;
   let midCount = 0;
@@ -2429,9 +2565,7 @@ document.getElementById('deckFormat').addEventListener('change', () => {
 });
 
 document.getElementById('modalSaveBtn').addEventListener('click', saveCardProfile);
-// Close button should also save updates
 document.getElementById('closeModalBtn').addEventListener('click', saveCardProfile);
-// Clicking outside modal saves & closes
 document.getElementById('cardModalBackdrop').addEventListener('click', e => {
   if (e.target.id === 'cardModalBackdrop') {
     saveCardProfile();
@@ -2475,6 +2609,14 @@ document.getElementById('planTargetTurn').addEventListener('input', e => {
   }
 });
 
+// Theme select
+document.getElementById('themeSelect').addEventListener('change', e => {
+  applyTheme(e.target.value);
+  if (state.theme === 'neon' && state.lastResult) {
+    computeNeonPalette();
+  }
+});
+
 // About toggle
 document.getElementById('toggleAboutBtn').addEventListener('click', () => {
   const content = document.getElementById('aboutContent');
@@ -2484,13 +2626,14 @@ document.getElementById('toggleAboutBtn').addEventListener('click', () => {
   btn.textContent = isHidden ? 'Hide details' : 'Show details';
 });
 
-// Diagnostics (still callable if you unhide testsCard in dev)
+// Diagnostics
 const runTestsBtn = document.getElementById('runTestsBtn');
 if (runTestsBtn) runTestsBtn.addEventListener('click', runSelfTests);
 
 // init
 refreshSavedSelect();
 setSummaryTab('overview');
+applyTheme('dark');
 </script>
 </body>
 </html>
