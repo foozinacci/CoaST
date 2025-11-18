@@ -2753,5 +2753,472 @@ if (runTestsBtn) runTestsBtn.addEventListener('click', runSelfTests);
   renderPlanPanel();
 })();
 </script>
+  <script>
+// ===== Simple browser test runner for CoAST =====
+// No npm, no build step. Uses the existing functions already in index.html.
+//
+// It hooks into the existing Diagnostics & Tests card:
+//  - Button id="runTestsBtn"
+//  - Output <pre id="testsOutput">
+
+(function () {
+  // --- tiny test framework: describe / test / expect ---
+  const suites = [];
+  let currentSuite = null;
+
+  function describe(name, fn) {
+    const suite = { name, tests: [] };
+    suites.push(suite);
+    const prev = currentSuite;
+    currentSuite = suite;
+    try {
+      fn();
+    } finally {
+      currentSuite = prev;
+    }
+  }
+
+  function test(name, fn) {
+    if (!currentSuite) {
+      throw new Error('test() called outside describe()');
+    }
+    currentSuite.tests.push({
+      name,
+      fn,
+      status: 'pending',
+      error: null
+    });
+  }
+
+  function expect(actual) {
+    return {
+      toBe(expected) {
+        if (actual !== expected) {
+          throw new Error(`Expected ${String(actual)} to be ${String(expected)}`);
+        }
+      },
+      toBeCloseTo(expected, tol = 1e-9) {
+        if (!Number.isFinite(actual) || Math.abs(actual - expected) > tol) {
+          throw new Error(`Expected ${actual} to be within ${tol} of ${expected}`);
+        }
+      },
+      toBeGreaterThanOrEqual(expected) {
+        if (!(actual >= expected)) {
+          throw new Error(`Expected ${actual} ≥ ${expected}`);
+        }
+      },
+      toBeLessThanOrEqual(expected) {
+        if (!(actual <= expected)) {
+          throw new Error(`Expected ${actual} ≤ ${expected}`);
+        }
+      },
+      toBeBetween(min, max) {
+        if (!(actual >= min && actual <= max)) {
+          throw new Error(`Expected ${actual} in [${min}, ${max}]`);
+        }
+      },
+      toBeDefined() {
+        if (actual === undefined) {
+          throw new Error('Expected value to be defined');
+        }
+      },
+      toBeTruthy() {
+        if (!actual) {
+          throw new Error(`Expected ${actual} to be truthy`);
+        }
+      },
+      toThrow() {
+        if (typeof actual !== 'function') {
+          throw new Error('toThrow() expects a function');
+        }
+        let threw = false;
+        try {
+          actual();
+        } catch (e) {
+          threw = true;
+        }
+        if (!threw) {
+          throw new Error('Expected function to throw');
+        }
+      }
+    };
+  }
+
+  // Make them visible in console if needed
+  window.describe = describe;
+  window.test = test;
+  window.expect = expect;
+
+  // --- helper: light-weight mocks for localStorage + Scryfall fetch ---
+  function withEnvironmentMocks(fn) {
+    const originalLocalStorage = window.localStorage;
+    const originalFetchCardData = window.fetchCardData;
+
+    // Very small fake storage
+    const fakeStorage = {
+      _data: {},
+      getItem(k) { return Object.prototype.hasOwnProperty.call(this._data, k) ? this._data[k] : null; },
+      setItem(k, v) { this._data[k] = String(v); },
+      removeItem(k) { delete this._data[k]; },
+      clear() { this._data = {}; }
+    };
+
+    // Try to monkey-patch localStorage (if browser allows)
+    let restoredLocal = false;
+    try {
+      Object.defineProperty(window, 'localStorage', {
+        value: fakeStorage,
+        configurable: true
+      });
+    } catch (e) {
+      // If redefining fails, we just don't use the mock.
+    }
+
+    // Mock Scryfall fetch function (we **do not** want real requests in tests)
+    if (typeof originalFetchCardData === 'function') {
+      window.fetchCardData = async function mockFetchCardData(name) {
+        // Very small stub – enough for tests if they ever hit it.
+        return {
+          name,
+          cmc: 1,
+          mana_cost: '{R}',
+          type_line: 'Creature',
+          colors: ['R'],
+          color_identity: ['R']
+        };
+      };
+    }
+
+    // Run tests / callback, then restore
+    return Promise.resolve()
+      .then(fn)
+      .finally(() => {
+        window.fetchCardData = originalFetchCardData;
+        try {
+          Object.defineProperty(window, 'localStorage', {
+            value: originalLocalStorage,
+            configurable: true
+          });
+          restoredLocal = true;
+        } catch (e) {
+          // If we can't restore via defineProperty, just fall back silently
+        }
+        if (!restoredLocal) {
+          // Last resort: direct assignment (may also fail, but harmless if so)
+          try { window.localStorage = originalLocalStorage; } catch (e) {}
+        }
+      });
+  }
+
+  // --- TEST GROUPS ------------------------------------------------------
+
+  function defineMathTests() {
+    describe('Math core (comb / hyper / probAtLeast / pct)', () => {
+      test('comb basic identities', () => {
+        expect(comb(0, 0)).toBe(1);
+        expect(comb(5, 0)).toBe(1);
+        expect(comb(5, 5)).toBe(1);
+        expect(comb(5, 2)).toBe(10);
+      });
+
+      test('comb edge cases: k < 0 or k > n returns 0', () => {
+        expect(comb(5, -1)).toBe(0);
+        expect(comb(5, 6)).toBe(0);
+      });
+
+      test('comb large(ish) numbers finite', () => {
+        const c = comb(50, 3);
+        expect(Number.isFinite(c)).toBeTruthy();
+        expect(c).toBeGreaterThanOrEqual(0);
+      });
+
+      test('hyperPMF sums to 1 for N=60,K=24,n=7', () => {
+        const N = 60, K = 24, n = 7;
+        let sum = 0;
+        for (let k = 0; k <= n; k++) sum += hyperPMF(k, K, N, n);
+        expect(sum).toBeCloseTo(1, 1e-6);
+      });
+
+      test('probAtLeast monotone in cards seen', () => {
+        const N = 60, K = 24;
+        let last = 0;
+        for (let seen = 1; seen <= 14; seen++) {
+          const p = probAtLeast(1, K, N, seen);
+          if (seen > 1) {
+            expect(p + 1e-9).toBeGreaterThanOrEqual(last);
+          }
+          last = p;
+        }
+      });
+
+      test('probAtLeast bounds [0,1]', () => {
+        const p1 = probAtLeast(1, 0, 60, 7);  // no successes in deck
+        const p2 = probAtLeast(1, 60, 60, 7); // all cards are successes
+        expect(p1).toBeBetween(0, 1);
+        expect(p2).toBeBetween(0, 1);
+      });
+
+      test('pct formatting', () => {
+        expect(pct(0)).toBe('0.0%');
+        expect(pct(1)).toBe('100.0%');
+        expect(pct(0.1234)).toBe('12.3%');
+      });
+    });
+  }
+
+  function defineParsingTests() {
+    describe('Parsing (deckEntriesFromText)', () => {
+      test('parses "4 Lightning Bolt" style lines', () => {
+        const text = [
+          '4 Lightning Bolt',
+          '2 Monastery Swiftspear',
+          '1 Ragavan, Nimble Pilferer'
+        ].join('\n');
+        const entries = deckEntriesFromText(text);
+        expect(entries['Lightning Bolt']).toBe(4);
+        expect(entries['Monastery Swiftspear']).toBe(2);
+        expect(entries['Ragavan, Nimble Pilferer']).toBe(1);
+      });
+
+      test('ignores comment and blank lines', () => {
+        const text = [
+          '',
+          '# comment',
+          '// another comment',
+          '   ',
+          '4 Lightning Bolt'
+        ].join('\n');
+        const entries = deckEntriesFromText(text);
+        expect(entries['Lightning Bolt']).toBe(4);
+      });
+
+      test('handles lines with set code and collector number', () => {
+        const text = '4 Lightning Bolt (2XM) 123\n2 Shock (M21) 156';
+        const entries = deckEntriesFromText(text);
+        expect(entries['Lightning Bolt']).toBe(4);
+        expect(entries['Shock']).toBe(2);
+      });
+
+      test('malformed lines with no leading count are ignored', () => {
+        const text = [
+          'Lightning Bolt',       // no number
+          'whatever some junk',
+          '3 Opt'
+        ].join('\n');
+        const entries = deckEntriesFromText(text);
+        expect(entries['Opt']).toBe(3);
+        expect(entries['Lightning Bolt']).toBe(undefined);
+      });
+    });
+  }
+
+  function defineAnchorTests() {
+    describe('Data (getAnchor)', () => {
+      test('returns an object for 40/60/99-card baselines', () => {
+        const a40 = getAnchor(40, 17);
+        const a60 = getAnchor(60, 24);
+        const a99 = getAnchor(99, 37);
+
+        expect(typeof a40).toBe('object');
+        expect(typeof a60).toBe('object');
+        expect(typeof a99).toBe('object');
+      });
+
+      test('anchor values are non-negative', () => {
+        const a60 = getAnchor(60, 24);
+        if (!a60) return; // skip if undefined
+        Object.values(a60).forEach(v => {
+          expect(v).toBeGreaterThanOrEqual(0);
+        });
+      });
+    });
+  }
+
+  function defineAnalysisTests() {
+    describe('Analysis & WPL / curve sanity', () => {
+      test('WPL sanity check (20 nonlands @ MV1, 20 lands)', () => {
+        const testNonlands = 20;
+        const testMV = 1;
+        const testLands = 20;
+        const totalWeight = testNonlands * testMV;
+        const wpl = totalWeight / testLands;
+        expect(wpl).toBeCloseTo(1.0, 1e-9);
+      });
+
+      test('land calc outputs valid probabilities', () => {
+        const N = 60, K = 24, maxTurn = 5;
+        for (let t = 1; t <= maxTurn; t++) {
+          let seen = 7 + (t - 1);
+          if (seen > N) seen = N;
+          const p1 = probAtLeast(1, K, N, seen);
+          const p2 = probAtLeast(2, K, N, seen);
+          const p3 = probAtLeast(3, K, N, seen);
+          const p4 = probAtLeast(4, K, N, seen);
+          [p1, p2, p3, p4].forEach(p => {
+            expect(p).toBeBetween(0, 1);
+          });
+        }
+      });
+
+      test('analyzeDeck runs on empty deck without throwing', () => {
+        // We just verify no crash; we don't need a full probability check here.
+        const originalEntries = Object.assign({}, state.deckEntries);
+        const originalResult = state.lastResult;
+        state.deckEntries = {};
+        state.lastResult = null;
+
+        return withEnvironmentMocks(() =>
+          Promise.resolve()
+            .then(() => analyzeDeck())
+            .then(() => {
+              // If we got here, it did not throw.
+              expect(true).toBe(true);
+            })
+        ).finally(() => {
+          state.deckEntries = originalEntries;
+          state.lastResult = originalResult;
+        });
+      });
+    });
+  }
+
+  function definePlanTests() {
+    describe('Plan odds (multi-card probability)', () => {
+      test('multi-piece plan gets more reliable with more cards seen', () => {
+        const N = 60;
+        const pieces = [
+          { copies: 4 },  // e.g. 4x of card A
+          { copies: 3 }   // and 3x of card B
+        ];
+
+        function planProb(seen) {
+          return pieces.reduce((pAcc, piece) => {
+            const pPiece = probAtLeast(1, piece.copies, N, seen);
+            return pAcc * pPiece;
+          }, 1);
+        }
+
+        const pSeen7 = planProb(7);
+        const pSeen10 = planProb(10);
+        const pSeen14 = planProb(14);
+
+        expect(pSeen7).toBeBetween(0, 1);
+        expect(pSeen10).toBeBetween(0, 1);
+        expect(pSeen14).toBeBetween(0, 1);
+
+        expect(pSeen10 + 1e-9).toBeGreaterThanOrEqual(pSeen7);
+        expect(pSeen14 + 1e-9).toBeGreaterThanOrEqual(pSeen10);
+      });
+
+      test('wishlist-style 1-ofs have small probabilities by T3', () => {
+        const N = 60;
+        const pieces = [
+          { copies: 1 },
+          { copies: 1 },
+          { copies: 1 }
+        ];
+        const seenByT3 = 7 + (3 - 1); // 9 cards seen by turn 3 on the play
+
+        const pPlan = pieces.reduce((acc, piece) => {
+          return acc * probAtLeast(1, piece.copies, N, seenByT3);
+        }, 1);
+
+        expect(pPlan).toBeBetween(0, 0.5); // should be quite low
+      });
+    });
+  }
+
+  // --- Runner + UI integration ------------------------------------------
+
+  async function runAllCoastTests() {
+    suites.length = 0;
+
+    // Define all tests
+    defineMathTests();
+    defineParsingTests();
+    defineAnchorTests();
+    defineAnalysisTests();
+    definePlanTests();
+
+    // Execute
+    let total = 0;
+    let passed = 0;
+    let failed = 0;
+
+    for (const suite of suites) {
+      for (const t of suite.tests) {
+        total++;
+        try {
+          const res = t.fn();
+          if (res && typeof res.then === 'function') {
+            await res;
+          }
+          t.status = 'pass';
+          passed++;
+        } catch (err) {
+          t.status = 'fail';
+          t.error = err;
+          failed++;
+        }
+      }
+    }
+
+    renderTestResults({ total, passed, failed, suites });
+  }
+
+  function renderTestResults(summary) {
+    const outEl = document.getElementById('testsOutput');
+    if (!outEl) return;
+
+    const lines = [];
+    const { total, passed, failed, suites } = summary;
+
+    lines.push('CoAST unit tests');
+    lines.push('=================');
+    lines.push('');
+    lines.push(`Total: ${total}, Passed: ${passed}, Failed: ${failed}`);
+    lines.push('');
+
+    suites.forEach(suite => {
+      lines.push(`⎯ ${suite.name}`);
+      suite.tests.forEach(t => {
+        const mark = t.status === 'pass' ? '✓' : '✗';
+        let line = `  ${mark} ${t.name}`;
+        if (t.status === 'fail' && t.error) {
+          line += `  (${t.error.message || t.error})`;
+        }
+        lines.push(line);
+      });
+      lines.push('');
+    });
+
+    outEl.textContent = lines.join('\n');
+  }
+
+  // Expose runner if you want to call from console
+  window.runAllCoastTests = runAllCoastTests;
+
+  // Hook up button + make the Diagnostics card visible
+  document.addEventListener('DOMContentLoaded', () => {
+    const card = document.getElementById('testsCard');
+    if (card) {
+      card.style.display = ''; // unhide
+    }
+    const btn = document.getElementById('runTestsBtn');
+    if (btn) {
+      btn.textContent = 'Run unit tests';
+      btn.addEventListener('click', () => {
+        runAllCoastTests().catch(err => {
+          const outEl = document.getElementById('testsOutput');
+          if (outEl) {
+            outEl.textContent = 'Test runner crashed: ' + String(err);
+          }
+          console.error(err);
+        });
+      });
+    }
+  });
+})();
+              </script>
 </body>
 </html>
